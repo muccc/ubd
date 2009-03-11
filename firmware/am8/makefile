@@ -28,20 +28,20 @@ TARGET = am
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = \
-../Src_AM/softuart.c \
-../Src_AM/main.c \
-../Src_AM/output.c \
-../Src_common/Platform_AVR/hal_atmel.c \
-../Src_common/msg.c \
-../Src_common/phc.c \
-../Src_common/timer.c \
-../Src_common/uart.c \
-../Src_common/random.c \
-../Src_common/errlog.c
+../output/softuart.c \
+../output/main.c \
+../output/output.c \
+../lib/Platform_AVR/hal_atmel.c \
+../lib/msg.c \
+../lib/phc.c \
+../lib/timer.c \
+../lib/uart.c \
+../lib/random.c \
+../lib/errlog.c
 
 # Place -D or -U options here for C sources
 CDEFS = -DCFG_OUTPUT
 #-DCFG_ADC
 
 # now call the big common makefile part
-include ../Src_common/Platform_AVR/makefile.common
+include ../lib/Platform_AVR/makefile.common
