@@ -34,7 +34,6 @@
 #define HZ 100UL // ticks per second
 
 #define TIMER_TICK_ISR    SIGNAL(SIG_OVERFLOW0)
-#define TIMER_CAPTURE_ISR SIGNAL(SIG_INPUT_CAPTURE1)
 
 inline static void hal_timer_init(uint8_t initvalue)
 {
@@ -46,9 +45,6 @@ inline static void hal_timer_init(uint8_t initvalue)
 
     // timer1 init
     TCCR1B = _BV(ICNC1) | _BV(CS10); // capture filter, set prescale=1, (free running)
-#ifdef CFG_IR
-    TIMSK1 |= _BV(TICIE1); // capture interrupt, ToDo: move this?
-#endif // CFG_IR
 
 }
 

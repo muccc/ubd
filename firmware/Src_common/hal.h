@@ -83,24 +83,9 @@ uint8_t hal_get_addr(void); // read the module address from the DIP switches
 
 void hal_set_led(uint8_t byte); // set the feedback LEDs
 
-#ifdef CFG_INPUT
-uint16_t hal_get_switch(void); // read the input switches
-#elif CFG_OUTPUT
+#ifdef CFG_OUTPUT
 void hal_set_output(uint8_t byte); // set the outputs
 void hal_set_pwm(uint8_t byte); // pulsed PWM output to save relay power
 #endif
-
-#ifdef CFG_IR
-uint16_t hal_get_capture(void); // read the timer capture
-uint8_t hal_get_edge(void); // query the capture edge, returns 0=falling, 1=rising
-void hal_set_edge(uint8_t edge); // set the capture edge, 0=falling, 1=rising
-#endif
-
-#ifdef CFG_ADC
-uint16_t hal_read_voltage(void); // return the measured supply voltage (in mV)
-void hal_start_adc(void); // start an ADC conversion
-
-#endif
-
 
 #endif // #ifndef _HAL_H
