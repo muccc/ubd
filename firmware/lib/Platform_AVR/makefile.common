@@ -40,6 +40,10 @@
 #----------------------------------------------------------------------------
 
 
+AVRDUDE_LFUSE_FLAGS = -U lfuse:w:0xe7:m
+AVRDUDE_HFUSE_FLAGS = -U hfuse:w:0xd0:m
+AVRDUDE_EFUSE_FLAGS = -U efuse:w:0xfd:m
+
 
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the 
@@ -55,11 +59,11 @@
          F_CPU =  7372800
 #         F_CPU =  8000000
 #         F_CPU = 11059200
+#         F_CPU = 12000000
 #         F_CPU = 14745600
 #         F_CPU = 16000000
 #         F_CPU = 18432000
 #         F_CPU = 20000000
-#F_CPU = 3686400
 
 
 # Output format. (can be srec, ihex, binary)
@@ -70,11 +74,9 @@ FORMAT = ihex
 #     To put object files in current directory, use a dot (.), do NOT make
 #     this an empty or blank macro!
 OBJDIR = .
-#obj/dummy
 
 
 # List C source files here. (C dependencies are automatically generated.)
-
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
@@ -87,27 +89,27 @@ CPPSRC =
 #     Even though the DOS/Win* filesystem matches both .s and .S the same,
 #     it will preserve the spelling of the filenames, and gcc itself does
 #     care about how the name is spelled on its command-line.
-ASRC = 
+ASRC =
 
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 #     0 = turn off optimization. s = optimize for size.
 #     (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
-OPT = s
+OPT = 2
 
 
 # Debugging format.
 #     Native formats for AVR-GCC's -g are dwarf-2 [default] or stabs.
 #     AVR Studio 4.10 requires dwarf-2.
 #     AVR [Extended] COFF format requires stabs, plus an avr-objcopy run.
-DEBUG = dwarf-2
+DEBUG = stabs
 
 
 # List any extra directories to look for include files here.
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = ../lib ../lib/Platform_AVR
+EXTRAINCDIRS = ../lib ../lib/Platform_AVR 
 
 
 # Compiler flag to set the C Standard level.
@@ -115,25 +117,17 @@ EXTRAINCDIRS = ../lib ../lib/Platform_AVR
 #     gnu89 = c89 plus GCC extensions
 #     c99   = ISO C99 standard (not yet fully implemented)
 #     gnu99 = c99 plus GCC extensions
-CSTANDARD = -std=gnu99
+CSTANDARD = -std=gnu89
 
 
 # Place -D or -U options here for C sources
 CDEFS += -DF_CPU=$(F_CPU)UL
 
-
 # Place -D or -U options here for C++ sources
-CPPDEFS = -DF_CPU=$(F_CPU)UL
+#CPPDEFS = -DF_CPU=$(F_CPU)UL
 #CPPDEFS += -D__STDC_LIMIT_MACROS
 #CPPDEFS += -D__STDC_CONSTANT_MACROS
 
-
-# round down for a stack position below 256 byte boundary, for -mtiny-stack
-ifeq ($(MCU), atmega8)
-RAM_END = 0x8003ff # else it would be 0x45f naturally, leaving only 0x5f=95 bytes stack
-else
-RAM_END = 0x8004ff # mega88 (and 48,168) have 0x4ff naturally, already OK
-endif
 
 
 #---------------- Compiler Options C ----------------
@@ -160,12 +154,6 @@ CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
-
-#CFLAGS += -mtiny-stack # 8 bit stack pointer should be enough
-#CFLAGS += -Wl,--defsym=__stack=$(RAM_END) # with -mtiny-stack, align the stack
-# -mint8 is hairy, use only if size matters, beware of compile-time constants evaluated smaller,
-# don't call library functions which have non-fixed (int/long) parameters
-#CFLAGS += -mint8 # all type sizes are cut in half, use <stdint.h> to be independent
 
 
 #---------------- Compiler Options C++ ----------------
@@ -277,13 +265,14 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 # Type: avrdude -c ?
 # to get a full listing.
 #
-#AVRDUDE_PROGRAMMER = pony-stk200
-
+#AVRDUDE_PROGRAMMER = usbasp 
+#AVRDUDE_PROGRAMMER = avr910
 # com1 = serial port. Use lpt1 to connect to parallel port.
-AVRDUDE_PORT = lpt1
+AVRDUDE_PORT = /dev/ttyUSB0
 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
-#AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
+AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
+
 
 
 # Uncomment the following if you want avrdude's erase cycle counter.
@@ -299,12 +288,16 @@ AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 # reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
 # to submit bug reports.
 #AVRDUDE_VERBOSE = -v -v
+#AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT)
+AVRDUDE_FLAGS = -p $(MCU) 
 
-AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT)
+ifdef AVRDUDE_PROGRAMMER
+AVRDUDE_FLAGS += -c $(AVRDUDE_PROGRAMMER)
+endif
+
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
 AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
-
 
 
 #---------------- Debugging Options ----------------
@@ -400,16 +393,15 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 # Default target.
 all: begin gccversion sizebefore build sizeafter end
-
 # Change the build target to build a HEX file or a library.
 build: elf hex eep lss sym
 #build: lib
 
 
 elf: $(TARGET).elf
-hex: $(TARGET)_$(MCU).hex
+hex: $(TARGET).hex
 eep: $(TARGET).eep
-lss: $(TARGET).lss 
+lss: $(TARGET).lss
 sym: $(TARGET).sym
 LIBNAME=lib$(TARGET).a
 lib: $(LIBNAME)
@@ -430,8 +422,8 @@ end:
 
 # Display size of file.
 HEXSIZE = $(SIZE) --target=$(FORMAT) $(TARGET).hex
+#ELFSIZE = $(SIZE) --format=avr $(TARGET).elf
 ELFSIZE = $(SIZE) $(TARGET).elf
-
 sizebefore:
 	@if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); \
 	2>/dev/null; echo; fi
@@ -446,13 +438,18 @@ sizeafter:
 gccversion : 
 	@$(CC) --version
 
+fuse:
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_HFUSE_FLAGS)
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_LFUSE_FLAGS)
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_EFUSE_FLAGS)
 
 
 # Program the device.  
 program: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
-
+program-flash: $(TARGET).hex $(TARGET).eep
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 # Generate avr-gdb config/init file which does the following:
 #     define the reset signal, load the target file, connect to target, and set 
 #     a breakpoint at main().
@@ -465,22 +462,22 @@ gdb-config:
 	@echo target remote $(DEBUG_HOST):$(DEBUG_PORT)  >> $(GDBINIT_FILE)
 ifeq ($(DEBUG_BACKEND),simulavr)
 	@echo load  >> $(GDBINIT_FILE)
-endif	
+endif
 	@echo break main >> $(GDBINIT_FILE)
-	
+
 debug: gdb-config $(TARGET).elf
 ifeq ($(DEBUG_BACKEND), avarice)
 	@echo Starting AVaRICE - Press enter when "waiting to connect" message displays.
 	@$(WINSHELL) /c start avarice --jtag $(JTAG_DEV) --erase --program --file \
 	$(TARGET).elf $(DEBUG_HOST):$(DEBUG_PORT)
 	@$(WINSHELL) /c pause
-	
+
 else
 	@$(WINSHELL) /c start simulavr --gdbserver --device $(MCU) --clock-freq \
 	$(DEBUG_MFREQ) --port $(DEBUG_PORT)
 endif
 	@$(WINSHELL) /c start avr-$(DEBUG_UI) --command=$(GDBINIT_FILE)
-	
+
 
 
 
@@ -593,6 +590,7 @@ clean_list :
 	@echo
 	@echo $(MSG_CLEANING)
 	$(REMOVE) $(TARGET).hex
+	$(REMOVE) $(TARGET).bin
 	$(REMOVE) $(TARGET).eep
 	$(REMOVE) $(TARGET).cof
 	$(REMOVE) $(TARGET).elf
@@ -618,5 +616,6 @@ $(shell mkdir $(OBJDIR) 2>/dev/null)
 # Listing of phony targets.
 .PHONY : all begin finish end sizebefore sizeafter gccversion \
 build elf hex eep lss sym coff extcoff \
-clean clean_list program debug gdb-config
+clean clean_list program program-flash debug gdb-config
+
 
