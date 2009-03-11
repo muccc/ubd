@@ -1,0 +1,18 @@
+SELECTDEVICE atmega8
+
+LOAD-PROG main.hex
+LOAD-DATA eeprom_errlog.hex
+
+
+#Fuse High Byte: {"RSTDISBL", "WDTON", "SPIEN", "CKOPT", "EESAVED", "BOOTSZ1", "BOOTSZ0", "BOOTRST"}
+#                  0           0        1        0        0          1          1          1
+
+#Fuse Low Byte: {"BODLEVEL", "BODEN", "SUT1", "SUT0", "CKSEL3", "CKSEL2", "CKSEL1", "CKSEL0"}
+#                 0           1        0       0       0         0         0         0
+
+
+
+ERASE-ALL
+WRITE&VERIFY-PROG
+WRITE&VERIFY-DATA
+WRITE-FUSE 0x2740
