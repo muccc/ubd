@@ -20,8 +20,8 @@
     \brief Serial port driver interface.
 */
 
-#ifndef _UART_H
-#define _UART_H
+#ifndef _BUSUART_H
+#define _BUSUART_H
 #include "frame.h"
 // uses message queue for incoming packets
 void uart_init(uint8_t timeout); // (timeout ends up useful for collision recovery)

@@ -29,13 +29,14 @@ TARGET = am
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = \
+../bridge/uart.c \
 ../bridge/main.c \
 ../bridge/output.c \
 ../lib/Platform_AVR/hal_atmel.c \
 ../lib/msg.c \
-../lib/phc.c \
+../lib/bus.c \
 ../lib/timer.c \
-../lib/uart.c \
+../lib/busuart.c \
 ../lib/random.c \
 ../lib/errlog.c
 

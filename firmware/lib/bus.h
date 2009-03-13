@@ -16,20 +16,21 @@
  *
  ****************************************************************************/ 
 
-/*! \file uart.h
-    \brief Serial port driver interface.
-*/
 
-#ifndef _UART_H
-#define _UART_H
+#ifndef _BUS_H_
+#define _BUS_H_
 #include "frame.h"
-// uses message queue for incoming packets
-void uart_init(uint8_t timeout); // (timeout ends up useful for collision recovery)
 
-// send count bytes, blocking and verified
-uint8_t uart_send(const uint8_t* buf, uint8_t count);
+void bus_init(void);
 
-// used for waiting for "idle line"
-uint8_t uart_is_busy(void);
+// compose an outgoing packet and send it, return error when failed
+uint8_t bus_send(struct frame * f,  uint8_t addcrc);
 
-#endif // #ifndef _UART_H
+// receive a byte, generic packet parsing (interrupt context)
+void bus_rcv_byte(uint8_t byte);
+
+// receive timeout (interrupt context)
+void bus_timeout(void);
+
+extern volatile struct frame * bus_frame;
+#endif // #ifndef _PHC_PROTOCOL_H
