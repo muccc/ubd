@@ -42,6 +42,8 @@
 #define IS_EM16 // 16 inputs, HSM layout
 #elif defined(CFG_OUTPUT)
 #define IS_AM // 8 outputs, HSM layout
+#elif defined(CFG_BRIDGE)
+#define IS_BRIDGE // 8 outputs, HSM layout
 #else
 #error No hardware setup defined!
 #endif
@@ -84,15 +86,22 @@ void hal_sysinit(void)
 #elif defined(IS_AM)
 	DDRC = 0x1F | _BV(5); // output bits 0...4 and RS485 data enable
 	DDRB = 0x07 | _BV(3) | _BV(4) | _BV(5); // output bits 5...7, PWM, aux outputs on ISP connector
+#elif defined(IS_BRIDGE)
+    DDRC |= (1<<PC5) | (1<<PC4);
+    PORTC &= (1<<PC5);
 #endif
 
 #ifdef CFG_ADC
     ADMUX = 0xC7; // measure channel 7, internal 2.56V reference
 #endif
 
+#if defined (__AVR_ATmega644P__)
+    EICRA = _BV(ISC21); // interrupt on falling edge of INT0 
+    EIMSK |= _BV(INT2); // enable INT0
+#else
     EICRA = _BV(ISC01); // interrupt on falling edge of INT0 
     EIMSK |= _BV(INT0); // enable INT0
-
+#endif
     sei(); // globally enable interrupts
 }
 

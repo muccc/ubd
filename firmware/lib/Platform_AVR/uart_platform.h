@@ -30,15 +30,21 @@
 #include <avr/io.h>     // for device register definitions
 #include <avr/interrupt.h> // for interrupt handlers
 
-#define UART_RX_ISR          SIGNAL(SIG_UART_RECV)
-#define UART_TX_ISR          SIGNAL(SIG_UART_DATA)
-#define UART_TX_DONE_ISR     SIGNAL(SIG_UART_TRANS)
-#define UART_RX_TIMEOUT_ISR  SIGNAL(SIG_OUTPUT_COMPARE1A)
-#define UART_RX_TIMEOUT2_ISR SIGNAL(SIG_OUTPUT_COMPARE1B)
-#define UART_RX_EDGE_ISR     SIGNAL(SIG_INTERRUPT0)
+#define UART_RX_ISR          ISR(SIG_UART_RECV)
+#define UART_TX_ISR          ISR(SIG_UART_DATA)
+#define UART_TX_DONE_ISR     ISR(SIG_UART_TRANS)
+#define UART_RX_TIMEOUT_ISR  ISR(SIG_OUTPUT_COMPARE1A)
+#define UART_RX_TIMEOUT2_ISR ISR(SIG_OUTPUT_COMPARE1B)
+
+#if defined (__AVR_ATmega644P__)
+#define UART_RX_EDGE_ISR     ISR(SIG_INTERRUPT2)
+#else
+#define UART_RX_EDGE_ISR     ISR(SIG_INTERRUPT0)
+#endif
 
 #define BAUDRATE 19200ULL // ULL for being 32 bit with -mint8
-
+//#define BAUDRATE 57600ULL // ULL for being 32 bit with -mint8
+//
 // this timeout also controls our answer time, to allow for STM turnaround
 #define RX_TIMEOUT (1+8+2 + 5) // allow byte time 5 bits grace time between bytes (so slow because of fat ISRs?)
 
@@ -52,23 +58,41 @@ static uint16_t uart_timeout; // receive timeout, when do we dare start sending
 
 inline static void hal_uart_rs485_disable(void) 
 {
-    PORTC &= ~_BV(PC5); 
+#if defined __AVR_ATmega644P__
+    PORTC &= ~_BV(PC4); 
+#else
+    PORTC &= ~_BV(PC5);
+#endif
 }
 
 inline static void hal_uart_rs485_enable(void) 
 {
-	PORTC |= _BV(PC5); // enable the RS485 driver
+#if defined __AVR_ATmega644P__
+	PORTC |= _BV(PC4); // enable the RS485 driver
+#else
+    PORTC |= _BV(PC4); // enable the RS485 driver
+#endif
 }
 
 inline static void hal_uart_rx_edge_disable(void) 
 {
-    EIMSK &= ~_BV(INT0); // disable INT0
+#if defined __AVR_ATmega644P__
+    EIMSK &= ~_BV(INT2); // disable INT0
+#else
+    EIMSK &= ~_BV(INT0);
+#endif
 }
 
 inline static void hal_uart_rx_edge_enable(void) 
 {
+#if defined __AVR_ATmega644P__
+    EIFR = _BV(INTF2); // clear any possibly pending
+    EIMSK |= _BV(INT2); // enable INT0
+#else
     EIFR = _BV(INTF0); // clear any possibly pending
     EIMSK |= _BV(INT0); // enable INT0
+#endif
+
 }
 
 inline static void hal_uart_init_receive_timeout(uint8_t timeout)

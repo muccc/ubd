@@ -39,9 +39,10 @@
 // adapt Mega8 names to the newer Mega88 register+bit names
 
 // interrupts
-#define SIG_UART_RECV SIG_USART_RECV
-#define SIG_UART_DATA SIG_USART_DATA
-#define SIG_UART_TRANS SIG_USART_TRANS
+#define SIG_UART_RECV SIG_USART_RECV0
+#define SIG_UART_DATA SIG_USART0_DATA
+#define SIG_UART_TRANS SIG_USART0_TRANS
+
 
 // registers with changed names, but same function
 #define OCR2 OCR2A
@@ -54,6 +55,44 @@
 // registers with changed function
 #define GICR EIMSK
 #define GIFR EIFR
+#define UCSRC UCSR0C
+
+// register bits with changed names, but same function
+#define COM21 COM2A1
+#define RXCIE RXCIE0
+#define RXEN RXEN0
+#define TXCIE TXCIE0
+#define TXEN TXEN0
+#define UDRIE UDRIE0
+#define UCSZ0 UCSZ00
+#define UCSZ1 UCSZ01
+#define USBS USBS0
+#define OCF2 OCF2A
+#define OCIE2 OCIE2A
+
+// deprecated register bits
+#define URSEL USBS // hack to get rid of deprecated URSEL
+
+// interrupt
+#define SIG_OUTPUT_COMPARE2 SIG_OUTPUT_COMPARE2A
+
+
+#elif defined (__AVR_ATmega644P__)
+// interrupts
+#define SIG_UART_RECV USART0_RX_vect
+#define SIG_UART_DATA USART0_UDRE_vect
+#define SIG_UART_TRANS USART0_TX_vect
+// registers with changed names, but same function
+#define OCR2 OCR2A
+#define TCCR0 TCCR0B
+#define UBRRL UBRR0L
+#define UCSRA UCSR0A
+#define UCSRB UCSR0B
+#define UDR UDR0
+
+// registers with changed function
+//#define GICR EIMSK
+//#define GIFR EIFR
 #define UCSRC UCSR0C
 
 // register bits with changed names, but same function
