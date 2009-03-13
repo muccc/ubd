@@ -5,7 +5,7 @@
 #error
 #endif
 
-#define SOFTUART_BAUD_RATE      2400
+#define SOFTUART_BAUD_RATE      9600
 
 #define SOFTUART_RXPIN   PIND
 #define SOFTUART_RXDDR   DDRD
@@ -24,8 +24,8 @@
 
 #define SOFTUART_CMPINT_EN_MASK    (1<<OCIE2)
 
-#define SOFTUART_CTC_MASKA         (1<<WGM21)
-#define SOFTUART_CTC_MASKB         (0)
+#define SOFTUART_CTC_MASKB         (1<<WGM21)
+#define SOFTUART_CTC_MASKA         (0)
 
 /* "A timer interrupt must be set to interrupt at three times 
    the required baud rate." */
