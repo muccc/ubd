@@ -32,5 +32,5 @@ void bus_rcv_byte(uint8_t byte);
 // receive timeout (interrupt context)
 void bus_timeout(void);
 
-extern volatile struct frame * bus_frame;
+extern struct frame * volatile bus_frame;
 #endif // #ifndef _PHC_PROTOCOL_H

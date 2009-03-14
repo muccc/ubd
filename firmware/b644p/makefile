@@ -31,7 +31,7 @@ TARGET = am
 SRC = \
 ../bridge/uart.c \
 ../bridge/main.c \
-../bridge/output.c \
+../bridge/bridge.c \
 ../lib/Platform_AVR/hal_atmel.c \
 ../lib/msg.c \
 ../lib/bus.c \

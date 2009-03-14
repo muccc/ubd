@@ -43,7 +43,7 @@
 /*************** module state ***************/
 
 // received packet info
-volatile struct frame * bus_frame;
+struct frame * volatile  bus_frame;
 volatile struct frame  * bus_in;
 
 volatile struct frame bus_buf[2];
@@ -96,8 +96,8 @@ static void packet_init(void)
 void bus_init(void)
 {
 	packet_init(); // reset receiver state machine
-    bus_buf[0].new = 0;
-    bus_buf[1].new = 0;
+    bus_buf[0].isnew = 0;
+    bus_buf[1].isnew = 0;
     bus_in = /*(struct frame *)*/&bus_buf[0];
     bus_current = 0;
     printf("bus init\r\n");
@@ -105,7 +105,7 @@ void bus_init(void)
 
 uint8_t bus_receive(void)
 {
-   return bus_frame->new; 
+   return bus_frame->isnew; 
 }
 
 
@@ -129,7 +129,7 @@ void bus_rcv_byte(uint8_t byte)
 	{
 	case rcv_len:
         rand_randomize(timer_performance_counter());
-//        if(bus_in->new){
+//        if(bus_in->isnew){
 //            packet_init();
 //            return;
 //        }
@@ -160,7 +160,6 @@ void bus_rcv_byte(uint8_t byte)
         {
             uint8_t valid, same;
             bus_in->crc |= (uint16_t)byte << 8;
-            printf("crccalc:%x crcrecv:%x\r\n",bus_crc_calc,bus_in->crc);
 		    valid = (bus_crc_calc == bus_in->crc); 
             same = ((bus_in->crc == bus_last_crc) && (timer_ticks - bus_last_time) <= RETRY_INTERVAL); // same as last, recently
             if (valid) // if valid
@@ -168,8 +167,8 @@ void bus_rcv_byte(uint8_t byte)
                 bus_last_crc = bus_in->crc; // remember compare values
                 bus_last_time = timer_ticks;
                 bus_frame = &bus_buf[bus_current];
-                bus_frame->new = 1;
-                printf("valid bus_frame==%u\r\n",bus_frame);
+                bus_frame->isnew = 1;
+                printf("valid bus_frame=%u\r\n",bus_frame);
                 bus_current = bus_current?0:1;
                 bus_in=/*(struct frame *)*/&bus_buf[bus_current];
             }

@@ -29,7 +29,7 @@
 #include "msg.h"
 #include "bus.h"
 #include "random.h"
-#include "output.h"
+#include "bridge.h"
 #include "uart.h"
 
 #define UART_BAUDRATE  115200
@@ -59,8 +59,8 @@ int main(void)
     uart_init(addr); // timeout affects collision recovery, use address
     rand_seed(((uint16_t)addr << 8) | (uint16_t)addr);
 	bus_init();
-	timer_init(output_tick, addr); // init with system-wide unique value
-	output_init(addr);
-	output_mainloop();
+	timer_init(bridge_tick, addr); // init with system-wide unique value
+	bridge_init(addr);
+	bridge_mainloop();
 	return 0; // we won't get here
 }

@@ -5,10 +5,10 @@
 #define FRAME_MAX 50
 
 struct frame {
-    volatile uint8_t len;
-    volatile uint8_t data[FRAME_MAX];
-    volatile uint16_t crc;
-    volatile uint8_t new;
+    uint8_t len;
+    uint8_t data[FRAME_MAX];
+    uint16_t crc;
+    uint8_t isnew;
 };
 
 #endif
