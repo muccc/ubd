@@ -52,7 +52,7 @@ LICENSE:
 #error "This library requires AVR-GCC 3.4 or later, update to newer AVR-GCC compiler !"
 #endif
 
-
+#include <avr/io.h>
 /*
 ** constants and macros
 */
@@ -99,6 +99,7 @@ LICENSE:
 ** function prototypes
 */
 
+#if defined( USART_USE_0)
 /**
    @brief   Initialize UART and set baudrate 
    @param   baudrate Specify baudrate using macro UART_BAUD_SELECT()
@@ -176,7 +177,7 @@ extern void uart_puts_p(const char *s );
  */
 #define uart_puts_P(__s)       uart_puts_p(PSTR(__s))
 
-
+#endif
 
 /** @brief  Initialize USART1 (only available on selected ATmegas) @see uart_init */
 extern void uart1_init(unsigned int baudrate);

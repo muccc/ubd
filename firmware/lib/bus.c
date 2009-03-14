@@ -98,6 +98,7 @@ void bus_init(void)
 	packet_init(); // reset receiver state machine
     bus_buf[0].isnew = 0;
     bus_buf[1].isnew = 0;
+    bus_frame = &bus_buf[1];
     bus_in = /*(struct frame *)*/&bus_buf[0];
     bus_current = 0;
     printf("bus init\r\n");
@@ -129,14 +130,14 @@ void bus_rcv_byte(uint8_t byte)
 	{
 	case rcv_len:
         rand_randomize(timer_performance_counter());
-//        if(bus_in->isnew){
-//            packet_init();
-//            return;
-//        }
+        if(bus_in->isnew){
+            packet_init();
+            return;
+        }
 		bus_in->len =2;// byte; // without mask bit
         bus_pos = 0;
 		bus_rcv_state = rcv_payload;
-        printf("len:%u\r\n",bus_in->len);
+        //printf("len:%u\r\n",bus_in->len);
 		break;
 
 	case rcv_payload:
@@ -168,7 +169,7 @@ void bus_rcv_byte(uint8_t byte)
                 bus_last_time = timer_ticks;
                 bus_frame = &bus_buf[bus_current];
                 bus_frame->isnew = 1;
-                printf("valid bus_frame=%u\r\n",bus_frame);
+                //printf("valid bus_frame=%u\r\n",bus_frame);
                 bus_current = bus_current?0:1;
                 bus_in=/*(struct frame *)*/&bus_buf[bus_current];
             }

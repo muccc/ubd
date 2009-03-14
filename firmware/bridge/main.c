@@ -31,6 +31,7 @@
 #include "random.h"
 #include "bridge.h"
 #include "uart.h"
+#include "serial_handler.h"
 
 #define UART_BAUDRATE  115200
 

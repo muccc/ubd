@@ -29,7 +29,8 @@ TARGET = am
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = \
-../bridge/uart.c \
+../bridge/serial_handler.c \
+../bridge/usart.c \
 ../bridge/main.c \
 ../bridge/bridge.c \
 ../lib/Platform_AVR/hal_atmel.c \

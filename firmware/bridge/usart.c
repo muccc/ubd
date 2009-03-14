@@ -39,7 +39,7 @@ LICENSE:
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
-#include "uart.h"
+#include "usart.h"
 #include "stdio.h"
 
 /*
