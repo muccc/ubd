@@ -55,7 +55,7 @@ class SerialInterface:
                     data = ""
                     stop = False
                 else:
-                    self.log.debug('received message: len=%d data=%s'%(len(data), data))
+                    self.log.debug('received message: len=%d data=%s'%(len(data), list(data)))
                     return data
             elif escaped == False:
                 data += str(d)
