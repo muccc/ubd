@@ -25,7 +25,7 @@ MCU = atmega644p
 
 F_CPU = 18432000
 # Target file name (without extension).
-TARGET = am
+TARGET = bridge
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = \

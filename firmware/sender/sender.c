@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include "timer.h"
+#include <string.h>
+
 #include "hal.h"
 #include "bus.h"
 #include "uart.h"
@@ -16,7 +18,7 @@ void sender_mainloop(void)
     struct frame * f;
     struct frame s;
     s.len = 6;
-    strcpy(s.data,"FNORD77");
+    strcpy((char*)s.data,"FNORD77");
 	while (1){
         cli();
         f = bus_frame;

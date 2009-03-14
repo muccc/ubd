@@ -7,6 +7,7 @@
 #include "bridge.h"
 #include "frame.h"
 #include "serial_handler.h"
+#include <string.h>
 
 void bridge_init(uint8_t addr)
 {
@@ -17,22 +18,35 @@ void bridge_mainloop(void)
     struct frame * f;
     struct frame s;
     s.len = 6;
-    strcpy(s.data,"FNORD2");
+    strcpy((char*)s.data,"FNORD2");
 	while (1){
         cli();
         f = bus_frame;
         sei();
         if( f->isnew == 1){
             f->data[f->len]=0;
-            DEBUG("new frame len=%u data=%s",f->len, f->data);
+            //DEBUG("new frame len=%u data=%s",f->len, f->data);
+            serial_putStart();
+            serial_putcenc('I');
+            serial_putenc((char*)f,f->len);
+            serial_putcenc(f->crc & 0xFF);
+            serial_putcenc((f->crc >> 8)  & 0xFF);
+            serial_putStop();
             f->isnew = 0;
         }
-        if(flag){
+        uint8_t len = serial_readline();
+        if(len){
             //DEBUG("TICK");
-            flag = 0;
-            DEBUG("S");
-            bus_send(&s,1);
+            //flag = 0;
+            //DEBUG("S");
+            //bus_send(&,1);
             //DEBUG("D");
+            s.len = len;
+            memcpy(s.data,len,serial_buffer);
+            bus_send(&s,1);
+            serial_putStart();
+            serial_putcenc('S');
+            serial_putStop();
         }
         wdt_reset();
 	}

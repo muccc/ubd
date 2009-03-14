@@ -42,8 +42,8 @@
 struct frame * volatile  bus_frame;
 volatile struct frame  * bus_in;
 
-volatile struct frame bus_buf[2];
-volatile uint8_t bus_current = 0;
+static struct frame bus_buf[2];
+static uint8_t bus_current = 0;
 
 static uint8_t bus_pos; // current payload byte count
 static uint16_t bus_crc_calc; // calculated CRC
