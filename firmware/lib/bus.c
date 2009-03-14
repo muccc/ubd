@@ -34,10 +34,6 @@
 #include "frame.h"
 #include "stdio.h"
 
-#ifdef DEBUG
-#include "monitor.h" // for debug dump  ToDo: encapsulate into HAL
-#endif
-
 #define RETRY_INTERVAL (HZ/2) // interval within which we view twice the same packet as a retry
 
 /*************** module state ***************/
@@ -74,10 +70,10 @@ uint16_t bus_last_crc; // just compare the CRC, not saving the full packet
 static uint16_t crc16_frame(const struct frame * f)
 {
     uint16_t crc = 0xFFFF; // start value
-    uint8_t n = f->len;
-    while(n--)
-    {
-		crc = _crc_ccitt_update(crc, f->data[n]);
+    uint8_t i = 0;
+    crc = _crc_ccitt_update(crc, f->len);
+    for(i=0;i<f->len;i++){
+		crc = _crc_ccitt_update(crc, f->data[i]);
     }
     
     return crc ^ 0xFFFF; // inverted output
@@ -101,7 +97,7 @@ void bus_init(void)
     bus_frame = &bus_buf[1];
     bus_in = /*(struct frame *)*/&bus_buf[0];
     bus_current = 0;
-    printf("bus init\r\n");
+//    printf("bus init\r\n");
 }
 
 uint8_t bus_receive(void)
@@ -115,6 +111,9 @@ uint8_t bus_send(struct frame * f, uint8_t addcrc)
 {
     if(addcrc)
         f->crc = crc16_frame(f); // size up to CRC
+    f->data[f->len] = f->crc & 0xFF;
+    f->data[f->len+1] = (f->crc >> 8)&0xFF;            //TODO: FIESER HACK!
+    //printf("calculated %x %x\r\n",f->data[f->len],f->data[f->len+1]);
     return uart_send((uint8_t *)f,f->len+3);
 }
 
@@ -134,7 +133,7 @@ void bus_rcv_byte(uint8_t byte)
             packet_init();
             return;
         }
-		bus_in->len =2;// byte; // without mask bit
+		bus_in->len = byte; // without mask bit
         bus_pos = 0;
 		bus_rcv_state = rcv_payload;
         //printf("len:%u\r\n",bus_in->len);
@@ -161,6 +160,7 @@ void bus_rcv_byte(uint8_t byte)
         {
             uint8_t valid, same;
             bus_in->crc |= (uint16_t)byte << 8;
+            //printf("crc calc: %x %x\r\n",bus_crc_calc&0xFF, bus_crc_calc >> 8);
 		    valid = (bus_crc_calc == bus_in->crc); 
             same = ((bus_in->crc == bus_last_crc) && (timer_ticks - bus_last_time) <= RETRY_INTERVAL); // same as last, recently
             if (valid) // if valid
@@ -172,6 +172,8 @@ void bus_rcv_byte(uint8_t byte)
                 //printf("valid bus_frame=%u\r\n",bus_frame);
                 bus_current = bus_current?0:1;
                 bus_in=/*(struct frame *)*/&bus_buf[bus_current];
+            }else{
+                //printf("frame invalid\r\n",bus_frame);
             }
 		    packet_init(); // reset state machine
         }

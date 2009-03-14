@@ -20,27 +20,25 @@
 
 # MCU name
 MCU = atmega8
-#MCU = atmega16
-#MCU = atmega88
+
 F_CPU = 7372000
 # Target file name (without extension).
-TARGET = am
+TARGET = sender
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = \
-../output/softuart.c \
-../output/main.c \
-../output/output.c \
+../sender/main.c \
+../sender/sender.c \
 ../lib/Platform_AVR/hal_atmel.c \
 ../lib/msg.c \
-../lib/phc.c \
+../lib/bus.c \
 ../lib/timer.c \
-../lib/uart.c \
+../lib/busuart.c \
 ../lib/random.c \
 ../lib/errlog.c
 
 # Place -D or -U options here for C sources
-CDEFS = -DCFG_OUTPUT
+CDEFS = -DCFG_SENDER
 #-DCFG_ADC
 
 # now call the big common makefile part

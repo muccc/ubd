@@ -44,6 +44,8 @@
 #define IS_AM // 8 outputs, HSM layout
 #elif defined(CFG_BRIDGE)
 #define IS_BRIDGE // 8 outputs, HSM layout
+#elif defined(CFG_SENDER)
+#define IS_SENDER
 #else
 #error No hardware setup defined!
 #endif
@@ -72,6 +74,9 @@ void hal_sysinit(void)
     // early port init for DIP switches, so the pullups have time to settle
     DDRD &= 0x07; // input, the bootloader may have left them as output
     PORTD |= 0xF8; // pullups on DIP switch
+#if defined(IS_SENDER)
+    DDRC =  _BV(4) | _BV(5);
+#endif
 
 #if defined(IS_UEM) // hardware for UEM
     DDRC =  _BV(4) | _BV(5); // output channel and RS485 data enable

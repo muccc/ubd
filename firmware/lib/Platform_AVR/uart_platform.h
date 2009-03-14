@@ -70,7 +70,7 @@ inline static void hal_uart_rs485_enable(void)
 #if defined __AVR_ATmega644P__
 	PORTC |= _BV(PC4); // enable the RS485 driver
 #else
-    PORTC |= _BV(PC4); // enable the RS485 driver
+    PORTC |= _BV(PC5); // enable the RS485 driver
 #endif
 }
 
