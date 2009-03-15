@@ -65,7 +65,7 @@ void hal_assert(const char* file, uint16_t line)
 void hal_assert(uint8_t filenum, uint16_t line)
 {
 	// hal_set_led(0xFF); this was convenient for debugging
-    errlog(filenum, line);
+//    errlog(filenum, line);
 }
 #endif
 
@@ -75,7 +75,7 @@ void hal_sysinit(void)
     DDRD &= 0x07; // input, the bootloader may have left them as output
     PORTD |= 0xF8; // pullups on DIP switch
 #if defined(IS_SENDER)
-    DDRC =  _BV(4) | _BV(5);
+    DDRC =  _BV(PC4) | _BV(PC5) | _BV(PC3);
 #endif
 
 #if defined(IS_UEM) // hardware for UEM

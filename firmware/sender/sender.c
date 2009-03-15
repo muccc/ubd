@@ -17,8 +17,8 @@ void sender_mainloop(void)
 {
     struct frame * f;
     struct frame s;
-    s.len = 6;
-    strcpy((char*)s.data,"FNORD77");
+    s.len = 12;
+    strcpy((char*)s.data,"FNORD23FUBAR");
 	while (1){
         cli();
         f = bus_frame;
@@ -40,6 +40,6 @@ void sender_tick(void)
     static uint16_t i = 1;
     if(--i == 0){
         flag = 1;
-        i = 2;
+        i = 1000;
     }
 }

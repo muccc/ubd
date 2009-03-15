@@ -102,7 +102,7 @@ inline static void hal_uart_init_receive_timeout(uint8_t timeout)
     uart_timeout += (uint16_t)timeout * F_CPU/BAUDRATE/3; // add timeout as 1/3 bits
 }
 
-inline static void hal_uart_init_transmit_timeout(void)
+/*inline static void hal_uart_init_transmit_timeout(void)
 {   // not necessary on AVR, we have TX done interrupt
 }
 
@@ -116,7 +116,7 @@ inline static void hal_uart_stop_transmit_timeout(void)
 
 inline static void hal_uart_clear_transmit_timeout(void)
 {   // not necessary on AVR, we have TX done interrupt
-}
+}*/
 
 inline static void hal_uart_start_receive_timeout(void)
 {

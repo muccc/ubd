@@ -42,7 +42,7 @@ void bridge_mainloop(void)
             //bus_send(&,1);
             //DEBUG("D");
             s.len = len;
-            memcpy(s.data,len,serial_buffer);
+            memcpy(s.data,serial_buffer,len);
             bus_send(&s,1);
             serial_putStart();
             serial_putcenc('S');

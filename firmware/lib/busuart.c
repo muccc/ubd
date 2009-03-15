@@ -86,7 +86,7 @@ void uart_init(uint8_t timeout)
     hal_uart_init_receive_timeout(timeout);
 			
 	// timer for transmit timeout, if no echo received
-    hal_uart_init_transmit_timeout();
+///    hal_uart_init_transmit_timeout();
 
 	// init UART hardware
     hal_uart_init_hardware();
@@ -181,12 +181,11 @@ UART_TX_ISR
 	}   
 
 	// (re)start the tx timeout
-    hal_uart_start_transmit_timeout();
+    ///    hal_uart_start_transmit_timeout();
     PROFILE(PF_ISREND_TX);
 }
 
 // transmit done, this comes later than the RX echo, can use this for timeout
-#ifdef UART_TX_DONE_ISR
 UART_TX_DONE_ISR // all is sent
 {
     PROFILE(PF_ISRSTART_TX_DONE);
@@ -199,26 +198,6 @@ UART_TX_DONE_ISR // all is sent
 
     PROFILE(PF_ISREND_TX_DONE);
 }
-// tx timeout, the way to go for less sophisticated UARTs
-#elif defined(UART_TX_TIMEOUT_ISR)
-UART_TX_TIMEOUT_ISR
-{
-    PROFILE(PF_ISRSTART_TX_TIMEOUT);
-
-    hal_uart_clear_transmit_timeout(); // clear interrupt
-    hal_uart_stop_transmit_timeout();
-    hal_uart_rs485_disable();
-    
-    if (uart.tx_active) // missed the echo or sending too slow
-    {
-    	tx_end(4); // tx timeout error
-    }
-    
-    PROFILE(PF_ISREND_TX_TIMEOUT);
-}
-#else
-#error "no end of transmission implementation"
-#endif
 
 
 // no more bytes following back to back on the line
@@ -252,6 +231,7 @@ UART_RX_TIMEOUT2_ISR
 uint8_t uart_send(const uint8_t* buf, uint8_t count)
 {
 	uint32_t timeout;
+    PORTC |= (1<<PC3);
 	
 	ASSERT(count > 0);
 
@@ -269,11 +249,12 @@ uint8_t uart_send(const uint8_t* buf, uint8_t count)
 			SREG = sreg; // sei();
 			break;
 		}
-        PROFILE(PF_SLEEP);
+		SREG = sreg; // sei();
+        /*PROFILE(PF_SLEEP);
         hal_sleep_enable();
         SREG = sreg; // sei();
 	    hal_sleep_cpu(); // trick: the instruction behind sei gets executed atomic, too
-	    hal_sleep_disable();
+	    hal_sleep_disable();*/
     }
 
     // not needed any more, we waited for the timeout
@@ -296,9 +277,9 @@ uint8_t uart_send(const uint8_t* buf, uint8_t count)
     ASSERT(!uart.tx_active);
     hal_uart_start_tx_irq(); // enable tx interrupt, let the ISR send the first byte
 	
+    uint8_t sreg;
 	for (;;)
 	{
-        uint8_t sreg;
 
 		sreg = SREG;
         cli(); // make the check below atomic, else in rare race condition we may oversleep
@@ -307,19 +288,23 @@ uint8_t uart_send(const uint8_t* buf, uint8_t count)
 			SREG = sreg; // sei();
 			break;
 		}
-        PROFILE(PF_SLEEP);
+        SREG=sreg;
+        /*PROFILE(PF_SLEEP);
         hal_sleep_enable();
         SREG = sreg; // sei();
 	    hal_sleep_cpu(); // trick: the instruction behind sei gets executed atomic, too
-	    hal_sleep_disable();
+	    hal_sleep_disable();*/
     }
 
 	ASSERT(uart.tx_result != 0); // must not time out
+    sreg = SREG;
+    cli(); // make the check below atomic, else in rare race condition we may oversleep
     if ((timer_ticks - timeout) >= TIMEOUT)
     {
         hal_uart_rs485_disable(); // should never happen, but better be safe
         ASSERT(0);
     }
+    sreg = SREG;
     //ASSERT(GICR & _BV(INT0)); // must be enabled again  ToDo: triggers sometimes, still happens with rev. 91
     ASSERT(!uart.tx_active); // must be cleared         ToDo: triggers rarely
 
@@ -328,7 +313,7 @@ uint8_t uart_send(const uint8_t* buf, uint8_t count)
     // Apparently tx_end() wasn't called by ISR or did an incomplete job!!??
     // However, the transmission loop ended, with no timeout.
     tx_end(0); // symptom fix, should never stay on
-
+    PORTC &= ~(1<<PC3);
     return uart.tx_result == 1 ? 0 : uart.tx_result; // 0 on success, else error code
 }
 
