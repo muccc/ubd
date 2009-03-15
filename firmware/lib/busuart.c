@@ -63,6 +63,8 @@ static struct _global_uart_context
     uint8_t tx_size; // # of bytes in above buffer to send
 
     uint8_t tx_done;
+
+    uint8_t tx_wait;
 } uart;
 
 
@@ -92,6 +94,8 @@ void uart_init(uint8_t timeout)
 
 	// init UART hardware
     hal_uart_init_hardware();
+    uart.tx_wait = 0;
+    uart.tx_done = 1;
 }
 
 void uart_randomize(uint8_t rand)
@@ -228,6 +232,14 @@ UART_RX_TIMEOUT2_ISR
     hal_uart_clear_receive_timeout2(); // single shot, disable this interrupt
     uart.rx_notidle = 0; // signal to the foreground
     PORTD ^= (1<<PD6);
+    if(uart.tx_wait){
+        hal_uart_rx_edge_disable(); // disable while sending, avoids excessive interrupts
+	    hal_uart_rs485_enable(); // enable the RS485 driver
+	//hal_delay_us(0.5 * 1000000.0/BAUDRATE); // wait for 0.5 bits time, driver settling
+        hal_uart_start_tx_irq(); // enable tx interrupt, let the ISR send the first byte
+        uart.tx_wait = 0;
+    }
+
     PROFILE(PF_ISREND_RX_TIMEOUT2);
 }
 
@@ -238,42 +250,7 @@ UART_RX_TIMEOUT2_ISR
 // FG
 void uart_send(const uint8_t* buf, uint8_t count)
 {
-    //uint32_t timeout;
-	
-	//ASSERT(count > 0);
-#if 0
-	// wait for the receive timeout, in case we're just turning from listening to sending
-    // (using the timeout for this 2nd purpose has the slight disadvantage that we 
-    // could actually reply earlier, this way we always respond after > 1 byte idle)
-    for (;;) 
-    {
-        uint8_t sreg;
-
-		sreg = SREG;
-		cli(); // make the check below atomic, else in rare race condition we may oversleep
-		if (!uart.rx_active) // OK, exit
-		{
-			SREG = sreg; // sei();
-			break;
-		}
-		SREG = sreg; // sei();
-        /*PROFILE(PF_SLEEP);
-        hal_sleep_enable();
-        SREG = sreg; // sei();
-	    hal_sleep_cpu(); // trick: the instruction behind sei gets executed atomic, too
-	    hal_sleep_disable();*/
-    }
-#endif
-    // not needed any more, we waited for the timeout
-    //hal_uart_clear_receive_timeout(); // important, the ISR would enable rx_edge
-
-    hal_uart_rx_edge_disable(); // disable while sending, avoids excessive interrupts
-	hal_uart_rs485_enable(); // enable the RS485 driver
-	hal_delay_us(0.5 * 1000000.0/BAUDRATE); // wait for 0.5 bits time, driver settling
-
-	//uart.rx_active = 0; // in case this was still set
-	uart.rx_notidle = 0; // in case this was still set
-
+   
     uart.tx_buf = buf;
 	uart.tx_size = count;
 	uart.tx_send = 0;
@@ -281,9 +258,14 @@ void uart_send(const uint8_t* buf, uint8_t count)
 	uart.tx_result = 0; // will be changed by ISR
     uart.tx_done = 0;
     uart.tx_result = 0;
-	//timeout = timer_ticks; // debug
-    //ASSERT(!uart.tx_active);
-    hal_uart_start_tx_irq(); // enable tx interrupt, let the ISR send the first byte
+    if(uart.rx_notidle == 0){
+         hal_uart_rx_edge_disable(); // disable while sending, avoids excessive interrupts
+	    hal_uart_rs485_enable(); // enable the RS485 driver
+	//hal_delay_us(0.5 * 1000000.0/BAUDRATE); // wait for 0.5 bits time, driver settling
+        hal_uart_start_tx_irq(); // enable tx interrupt, let the ISR send the first byte
+    }else{
+        uart.tx_wait = 1;
+    }
 	
 //        return uart.tx_result == 1 ? 0 : uart.tx_result; // 0 on success, else error code
 }
