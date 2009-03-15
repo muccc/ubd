@@ -111,6 +111,7 @@ void bus_tick(void)
         break;
         case 1:                     //packet was transmitted
             state = 1;
+            PORTC &= ~(1<<PC3);
             uart_txreset();
             break;
         default:                    //an error occoured
