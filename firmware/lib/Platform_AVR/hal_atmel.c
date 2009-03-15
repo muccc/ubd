@@ -76,6 +76,7 @@ void hal_sysinit(void)
     PORTD |= 0xF8; // pullups on DIP switch
 #if defined(IS_SENDER)
     DDRC =  _BV(PC4) | _BV(PC5) | _BV(PC3);
+    DDRD |= (1<<PD6);
 #endif
 
 #if defined(IS_UEM) // hardware for UEM
@@ -94,6 +95,7 @@ void hal_sysinit(void)
 #elif defined(IS_BRIDGE)
     DDRC |= (1<<PC5) | (1<<PC4);
     PORTC &= (1<<PC5);
+    DDRD |= (1<<PD6);
 #endif
 
 #ifdef CFG_ADC

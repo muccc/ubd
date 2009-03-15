@@ -32,4 +32,5 @@ uint8_t uart_send(const uint8_t* buf, uint8_t count);
 // used for waiting for "idle line"
 uint8_t uart_is_busy(void);
 
+void uart_randomize(uint8_t rand);
 #endif // #ifndef _UART_H

@@ -92,6 +92,11 @@ void uart_init(uint8_t timeout)
     hal_uart_init_hardware();
 }
 
+void uart_randomize(uint8_t rand)
+{
+    hal_uart_init_receive_timeout(rand);
+}
+
 // RX activity ISR
 #ifdef UART_RX_EDGE_ISR
 UART_RX_EDGE_ISR
@@ -220,6 +225,7 @@ UART_RX_TIMEOUT2_ISR
     PROFILE(PF_ISRSTART_RX_TIMEOUT2);
     hal_uart_clear_receive_timeout2(); // single shot, disable this interrupt
     uart.rx_notidle = 0; // signal to the foreground
+    PORTD ^= (1<<PD6);
     PROFILE(PF_ISREND_RX_TIMEOUT2);
 }
 
@@ -231,10 +237,9 @@ UART_RX_TIMEOUT2_ISR
 uint8_t uart_send(const uint8_t* buf, uint8_t count)
 {
 	uint32_t timeout;
-    PORTC |= (1<<PC3);
 	
 	ASSERT(count > 0);
-
+#if 0
 	// wait for the receive timeout, in case we're just turning from listening to sending
     // (using the timeout for this 2nd purpose has the slight disadvantage that we 
     // could actually reply earlier, this way we always respond after > 1 byte idle)
@@ -256,7 +261,7 @@ uint8_t uart_send(const uint8_t* buf, uint8_t count)
 	    hal_sleep_cpu(); // trick: the instruction behind sei gets executed atomic, too
 	    hal_sleep_disable();*/
     }
-
+#endif
     // not needed any more, we waited for the timeout
     //hal_uart_clear_receive_timeout(); // important, the ISR would enable rx_edge
 
@@ -313,9 +318,9 @@ uint8_t uart_send(const uint8_t* buf, uint8_t count)
     // Apparently tx_end() wasn't called by ISR or did an incomplete job!!??
     // However, the transmission loop ended, with no timeout.
     tx_end(0); // symptom fix, should never stay on
-    PORTC &= ~(1<<PC3);
     return uart.tx_result == 1 ? 0 : uart.tx_result; // 0 on success, else error code
 }
+
 
 // used for waiting for "idle line"
 
