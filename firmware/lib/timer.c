@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include "hal.h"
 #include "timer.h"
+#include "bus.h"
+#include "busuart.h"
 
 /*************** module state ***************/
 
@@ -65,7 +67,7 @@ TIMER_TICK_ISR
     hal_timer_clear_irq();
 
 	timer_ticks++; // the global counter
-
+    uart_tick();
 	// test if a delay message is due
 	if (timer_delay_ticks && --timer_delay_ticks == 0)
 	{

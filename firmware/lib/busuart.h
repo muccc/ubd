@@ -27,10 +27,13 @@
 void uart_init(uint8_t timeout); // (timeout ends up useful for collision recovery)
 
 // send count bytes, blocking and verified
-uint8_t uart_send(const uint8_t* buf, uint8_t count);
+void uart_send(const uint8_t* buf, uint8_t count);
 
 // used for waiting for "idle line"
 uint8_t uart_is_busy(void);
 
 void uart_randomize(uint8_t rand);
+void uart_tick(void);
+uint8_t uart_txresult(void);
+
 #endif // #ifndef _UART_H

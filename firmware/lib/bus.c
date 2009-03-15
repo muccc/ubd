@@ -116,10 +116,11 @@ uint8_t bus_send(struct frame * f, uint8_t addcrc)
     //printf("calculated %x %x\r\n",f->data[f->len],f->data[f->len+1]);
     PORTC |= (1<<PC3);
     uart_randomize(rand());
-    while(uart_is_busy());
-    uint8_t r= uart_send((uint8_t *)f,f->len+3);
+    //while(uart_is_busy());
+    uart_send((uint8_t *)f,f->len+3);
+    while(!uart_txresult());
     PORTC &= ~(1<<PC3);
-    return r;
+    return uart_txresult();
 }
 
 

@@ -28,7 +28,7 @@
 #include "hal.h"
 #include "msg.h"
 #include "bus.h"
-#include "uart.h"
+#include "busuart.h"
 #include "timer.h"
 
 // pick the right "mini driver" to resolve hardware dependencies
@@ -61,6 +61,8 @@ static struct _global_uart_context
 
     // ISR read, FG write
     uint8_t tx_size; // # of bytes in above buffer to send
+
+    uint8_t tx_done;
 } uart;
 
 
@@ -234,11 +236,11 @@ UART_RX_TIMEOUT2_ISR
 // returns 0 on success (no collision detected)
 
 // FG
-uint8_t uart_send(const uint8_t* buf, uint8_t count)
+void uart_send(const uint8_t* buf, uint8_t count)
 {
-	uint32_t timeout;
+    //uint32_t timeout;
 	
-	ASSERT(count > 0);
+	//ASSERT(count > 0);
 #if 0
 	// wait for the receive timeout, in case we're just turning from listening to sending
     // (using the timeout for this 2nd purpose has the slight disadvantage that we 
@@ -277,48 +279,29 @@ uint8_t uart_send(const uint8_t* buf, uint8_t count)
 	uart.tx_send = 0;
 	uart.tx_echo = 0;
 	uart.tx_result = 0; // will be changed by ISR
-
-	timeout = timer_ticks; // debug
-    ASSERT(!uart.tx_active);
+    uart.tx_done = 0;
+    uart.tx_result = 0;
+	//timeout = timer_ticks; // debug
+    //ASSERT(!uart.tx_active);
     hal_uart_start_tx_irq(); // enable tx interrupt, let the ISR send the first byte
 	
-    uint8_t sreg;
-	for (;;)
-	{
+//        return uart.tx_result == 1 ? 0 : uart.tx_result; // 0 on success, else error code
+}
 
-		sreg = SREG;
-        cli(); // make the check below atomic, else in rare race condition we may oversleep
-		if (uart.tx_result || (timer_ticks - timeout) >= TIMEOUT)
-		{
-			SREG = sreg; // sei();
-			break;
-		}
-        SREG=sreg;
-        /*PROFILE(PF_SLEEP);
-        hal_sleep_enable();
-        SREG = sreg; // sei();
-	    hal_sleep_cpu(); // trick: the instruction behind sei gets executed atomic, too
-	    hal_sleep_disable();*/
+void uart_tick(void)
+{
+    if(uart.tx_done)
+        return;
+    if (uart.tx_result){
+        uart.tx_done=1;
+        // Nasty workaround for an open bug:
+        // It happens that the edge interrupt is not re-enabled or uart.tx_active is not cleared.
+        // Apparently tx_end() wasn't called by ISR or did an incomplete job!!??
+        // However, the transmission loop ended, with no timeout.
+        // symptom fix, should never stay on
+    	uart.tx_active = 0;
+        hal_uart_rx_edge_enable(); // watch for falling RX again
     }
-
-	ASSERT(uart.tx_result != 0); // must not time out
-    sreg = SREG;
-    cli(); // make the check below atomic, else in rare race condition we may oversleep
-    if ((timer_ticks - timeout) >= TIMEOUT)
-    {
-        hal_uart_rs485_disable(); // should never happen, but better be safe
-        ASSERT(0);
-    }
-    sreg = SREG;
-    //ASSERT(GICR & _BV(INT0)); // must be enabled again  ToDo: triggers sometimes, still happens with rev. 91
-    ASSERT(!uart.tx_active); // must be cleared         ToDo: triggers rarely
-
-    // Nasty workaround for an open bug:
-    // It happens that the edge interrupt is not re-enabled or uart.tx_active is not cleared.
-    // Apparently tx_end() wasn't called by ISR or did an incomplete job!!??
-    // However, the transmission loop ended, with no timeout.
-    tx_end(0); // symptom fix, should never stay on
-    return uart.tx_result == 1 ? 0 : uart.tx_result; // 0 on success, else error code
 }
 
 
@@ -328,4 +311,9 @@ uint8_t uart_send(const uint8_t* buf, uint8_t count)
 uint8_t uart_is_busy(void)
 {
 	return uart.rx_notidle;
+}
+
+uint8_t uart_txresult(void)
+{
+    return uart.tx_result;
 }
