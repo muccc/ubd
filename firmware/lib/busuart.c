@@ -299,3 +299,8 @@ uint8_t uart_txresult(void)
 {
     return uart.tx_result;
 }
+
+void uart_txreset(void)
+{
+    uart.tx_result = 0;
+}

@@ -24,13 +24,19 @@
 void bus_init(void);
 
 // compose an outgoing packet and send it, return error when failed
-uint8_t bus_send(struct frame * f,  uint8_t addcrc);
+void bus_send(struct frame * f, uint8_t addcrc);
 
 // receive a byte, generic packet parsing (interrupt context)
 void bus_rcv_byte(uint8_t byte);
 
 // receive timeout (interrupt context)
 void bus_timeout(void);
+
+// check id packet went through
+uint8_t bus_done(void);
+
+// call this periodicaly
+void bus_tick(void);
 
 extern struct frame * volatile bus_frame;
 #endif // #ifndef _PHC_PROTOCOL_H

@@ -36,4 +36,5 @@ void uart_randomize(uint8_t rand);
 void uart_tick(void);
 uint8_t uart_txresult(void);
 
+void uart_txreset(void);
 #endif // #ifndef _UART_H
