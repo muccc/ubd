@@ -24,13 +24,12 @@
 
 #include <stdint.h>
 #include "hal.h"
-#include "uart.h"
+#include "busuart.h"
 #include "timer.h"
 #include "msg.h"
 #include "bus.h"
 #include "random.h"
 #include "bridge.h"
-#include "uart.h"
 #include "serial_handler.h"
 
 #define UART_BAUDRATE  115200

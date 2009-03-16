@@ -4,7 +4,7 @@
 
 #include "hal.h"
 #include "bus.h"
-#include "uart.h"
+#include "busuart.h"
 #include "random.h"
 #include "sender.h"
 #include "frame.h"

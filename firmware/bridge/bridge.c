@@ -2,7 +2,7 @@
 #include "timer.h"
 #include "hal.h"
 #include "bus.h"
-#include "uart.h"
+#include "busuart.h"
 #include "random.h"
 #include "bridge.h"
 #include "frame.h"
@@ -36,17 +36,24 @@ void bridge_mainloop(void)
         }
         uint8_t len = serial_readline();
         if(len){
-            //DEBUG("TICK");
-            //flag = 0;
-            //DEBUG("S");
-            //bus_send(&,1);
-            //DEBUG("D");
             s.len = len;
             memcpy(s.data,serial_buffer,len);
             bus_send(&s,1);
-            serial_putStart();
-            serial_putcenc('S');
-            serial_putStop();
+        }
+        uint8_t r = bus_done();
+        switch(r){
+            case 0:
+                break;
+            case 1:
+                serial_putStart();
+                serial_putcenc('S');
+                serial_putStop();
+            break;
+            default:
+                serial_putStart();
+                serial_putcenc('T');
+                serial_putStop();
+            break;
         }
         wdt_reset();
 	}

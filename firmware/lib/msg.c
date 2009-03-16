@@ -30,7 +30,7 @@
 #include <stdint.h>
 #include "hal.h"
 #include "msg.h"
-#include "uart.h"
+#include "busuart.h"
 
 #define MSG_QUEUESIZE 8
 
