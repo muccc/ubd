@@ -330,8 +330,8 @@ void uart_init(unsigned int baudrate)
     /* Set baud rate */
     if ( baudrate & 0x8000 )
     {
-    	 UART0_STATUS = (1<<U2X);  //Enable 2x speed 
-    	 baudrate &= ~0x8000;
+         UART0_STATUS = (1<<U2X);  //Enable 2x speed 
+         baudrate &= ~0x8000;
     }
     UBRRH = (unsigned char)(baudrate>>8);
     UBRRL = (unsigned char) baudrate;
@@ -350,9 +350,9 @@ void uart_init(unsigned int baudrate)
     /* Set baud rate */
     if ( baudrate & 0x8000 ) 
     {
-   		UART0_STATUS = (1<<U2X0);  //Enable 2x speed 
-   		baudrate &= ~0x8000;
-   	}
+        UART0_STATUS = (1<<U2X0);  //Enable 2x speed 
+        baudrate &= ~0x8000;
+    }
     UBRR0H = (unsigned char)(baudrate>>8);
     UBRR0L = (unsigned char) baudrate;
 
@@ -370,8 +370,8 @@ void uart_init(unsigned int baudrate)
     /* set baud rate */
     if ( baudrate & 0x8000 ) 
     {
-    	UART0_STATUS = (1<<U2X);  //Enable 2x speed 
-    	baudrate &= ~0x8000;
+        UART0_STATUS = (1<<U2X);  //Enable 2x speed 
+        baudrate &= ~0x8000;
     }
     UBRRHI = (unsigned char)(baudrate>>8);
     UBRR   = (unsigned char) baudrate;
@@ -546,7 +546,7 @@ void uart1_init(unsigned int baudrate)
     /* Set baud rate */
     if ( baudrate & 0x8000 ) 
     {
-    	UART1_STATUS = (1<<U2X1);  //Enable 2x speed 
+        UART1_STATUS = (1<<U2X1);  //Enable 2x speed 
       baudrate &= ~0x8000;
     }
     UBRR1H = (unsigned char)(baudrate>>8);

@@ -19,7 +19,7 @@ void bridge_mainloop(void)
     struct frame s;
     s.len = 6;
     strcpy((char*)s.data,"FNORD2");
-	while (1){
+    while (1){
         cli();
         f = bus_frame;
         sei();
@@ -56,7 +56,7 @@ void bridge_mainloop(void)
             break;
         }
         wdt_reset();
-	}
+    }
 }
 
 void bridge_tick(void)

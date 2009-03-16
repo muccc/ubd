@@ -45,7 +45,7 @@ int uart_putc_file(char c, FILE *stream)
 
 int main(void)
 {
-	uint8_t addr;
+    uint8_t addr;
     hal_sysinit();
 
     uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
@@ -58,9 +58,9 @@ int main(void)
     hal_watchdog_enable();
     uart_init(addr); // timeout affects collision recovery, use address
     rand_seed(((uint16_t)addr << 8) | (uint16_t)addr);
-	bus_init();
-	timer_init(bridge_tick, addr); // init with system-wide unique value
-	bridge_init(addr);
-	bridge_mainloop();
-	return 0; // we won't get here
+    bus_init();
+    timer_init(bridge_tick, addr); // init with system-wide unique value
+    bridge_init(addr);
+    bridge_mainloop();
+    return 0; // we won't get here
 }
