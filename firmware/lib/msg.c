@@ -36,7 +36,7 @@
 
 #define MSG_MASK (MSG_QUEUESIZE - 1)
 #if (MSG_QUEUESIZE & MSG_MASK)
-	#error MSG_QUEUESIZE is not a power of 2
+    #error MSG_QUEUESIZE is not a power of 2
 #endif
 
 
@@ -48,27 +48,27 @@ static volatile uint8_t msg_tail;
 // post a message, also allowed from interrupt context
 uint8_t msg_post(struct msg* message)
 {
-	uint8_t tmphead;
+    uint8_t tmphead;
 
-	tmphead = (msg_head + 1) & MSG_MASK;
+    tmphead = (msg_head + 1) & MSG_MASK;
 
     if (tmphead != msg_tail)
-	{
-		msg_head = tmphead; // store new index
-		msg_queue[tmphead] = *message; // store received message in queue
-		return 0;
-	}
-	else
-	{	// ERROR! Message queue full
-		// set debug bit for indication
-		return 1;
-	}
+    {
+        msg_head = tmphead; // store new index
+        msg_queue[tmphead] = *message; // store received message in queue
+        return 0;
+    }
+    else
+    {   // ERROR! Message queue full
+        // set debug bit for indication
+        return 1;
+    }
 }
 
 // wait for a message
 struct msg msg_get(void)
 {
-	uint8_t tmptail;
+    uint8_t tmptail;
 
     for(;;) 
     {
@@ -76,7 +76,7 @@ struct msg msg_get(void)
 
         hal_watchdog_reset(); // nice place to retrigger
 
-		sreg = SREG;
+        sreg = SREG;
         cli(); // make the check below atomic, else in rare race condition we may sleep despite new msg.
         if (msg_head != msg_tail)
         {
@@ -86,14 +86,14 @@ struct msg msg_get(void)
         PROFILE(PF_SLEEP);
         hal_sleep_enable();
         SREG = sreg; // sei();
-	    hal_sleep_cpu(); // trick: the instruction behind sei gets executed atomic, too
-	    hal_sleep_disable();
+        hal_sleep_cpu(); // trick: the instruction behind sei gets executed atomic, too
+        hal_sleep_disable();
     }
 
     //pointless ASSERT((msg_head != msg_tail));
 
-	tmptail = (msg_tail + 1) & MSG_MASK; // calculate buffer index
-	
-	msg_tail = tmptail; // store new index
-	return msg_queue[tmptail]; // return message
+    tmptail = (msg_tail + 1) & MSG_MASK; // calculate buffer index
+    
+    msg_tail = tmptail; // store new index
+    return msg_queue[tmptail]; // return message
 }

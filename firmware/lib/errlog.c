@@ -39,7 +39,7 @@ void errlog(uint8_t filenum, uint16_t linenum)
     uint8_t pos;
     uint8_t sreg;
 
-	sreg = SREG;
+    sreg = SREG;
     cli(); // make the writing atomic
     idx = eeprom_read_byte(0); // next write position
     if (idx == 0xFF) // virgin

@@ -19,7 +19,7 @@ void sender_mainloop(void)
     struct frame s;
     s.len = 12;
     strcpy((char*)s.data,"FNORD23FUBAR");
-	while (1){
+    while (1){
         cli();
         f = bus_frame;
         sei();
@@ -32,7 +32,7 @@ void sender_mainloop(void)
             bus_send(&s,1);
         }
         wdt_reset();
-	}
+    }
 }
 
 void sender_tick(void)

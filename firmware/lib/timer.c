@@ -54,8 +54,8 @@ void timer_msg(uint32_t ticks)
     uint8_t sreg;
 
     //UDR = 'C';
-	sreg = SREG;
-	cli(); // avoid access while writing the uint32_t
+    sreg = SREG;
+    cli(); // avoid access while writing the uint32_t
     timer_delay_ticks = ticks;
     SREG = sreg; // sei();
 }
@@ -66,20 +66,20 @@ TIMER_TICK_ISR
     PROFILE(PF_ISRSTART_TIMER);
     hal_timer_clear_irq();
 
-	timer_ticks++; // the global counter
+    timer_ticks++; // the global counter
     uart_tick();
-	// test if a delay message is due
-	if (timer_delay_ticks && --timer_delay_ticks == 0)
-	{
+    // test if a delay message is due
+    if (timer_delay_ticks && --timer_delay_ticks == 0)
+    {
         //UDR = 'B';while(1);
-		struct msg message;
-		message.id = e_timer;
-		message.data = 0; // unused
-		if (msg_post(&message) != 0) // queue full?
-		{
-			timer_delay_ticks = 1; // try again @ next tick
-		}
-	}
+        struct msg message;
+        message.id = e_timer;
+        message.data = 0; // unused
+        if (msg_post(&message) != 0) // queue full?
+        {
+            timer_delay_ticks = 1; // try again @ next tick
+        }
+    }
 
     timer_tick_callback();
 

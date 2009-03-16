@@ -52,11 +52,11 @@ static uint16_t bus_crc_calc; // calculated CRC
 
 static enum
 {
-	rcv_address, // 1st byte, module address
-	rcv_len, // 2nd byte, length and toggle
-	rcv_payload, // within packet payload, byte count done by input_pos
-	rcv_crc_lsb, // 2nd last byte, CRC LSB
-	rcv_crc_msb, // last byte, CRC MSB
+    rcv_address, // 1st byte, module address
+    rcv_len, // 2nd byte, length and toggle
+    rcv_payload, // within packet payload, byte count done by input_pos
+    rcv_crc_lsb, // 2nd last byte, CRC LSB
+    rcv_crc_msb, // last byte, CRC MSB
 } bus_rcv_state; // state machine for incoming bytes
 
 // previous packet info
@@ -76,7 +76,7 @@ static uint16_t crc16_frame(const struct frame * f)
     uint8_t i = 0;
     crc = _crc_ccitt_update(crc, f->len);
     for(i=0;i<f->len;i++){
-		crc = _crc_ccitt_update(crc, f->data[i]);
+        crc = _crc_ccitt_update(crc, f->data[i]);
     }
     
     return crc ^ 0xFFFF; // inverted output
@@ -85,8 +85,8 @@ static uint16_t crc16_frame(const struct frame * f)
 // (re)init, start new packet (possibly interrupt context)
 static void packet_init(void)
 {
-	bus_rcv_state = rcv_len; // reset state: 1st byte for receiver
-	bus_crc_calc = 0xFFFF;
+    bus_rcv_state = rcv_len; // reset state: 1st byte for receiver
+    bus_crc_calc = 0xFFFF;
 }
 
 
@@ -94,7 +94,7 @@ static void packet_init(void)
 
 void bus_init(void)
 {
-	packet_init(); // reset receiver state machine
+    packet_init(); // reset receiver state machine
     bus_buf[0].isnew = 0;
     bus_buf[1].isnew = 0;
     bus_frame = &bus_buf[1];
@@ -163,47 +163,47 @@ void bus_send(struct frame * f, uint8_t addcrc)
 // receive a byte, generic packet parsing (interrupt context)
 void bus_rcv_byte(uint8_t byte)
 {
-	if (bus_rcv_state < rcv_crc_lsb)
+    if (bus_rcv_state < rcv_crc_lsb)
     {
-		bus_crc_calc = _crc_ccitt_update(bus_crc_calc, byte); // update CRC
+        bus_crc_calc = _crc_ccitt_update(bus_crc_calc, byte); // update CRC
     }
     switch (bus_rcv_state)
-	{
-	case rcv_len:
+    {
+    case rcv_len:
         rand_randomize(timer_performance_counter());
         if(bus_in->isnew){
             packet_init();
             return;
         }
-		bus_in->len = byte; // without mask bit
+        bus_in->len = byte; // without mask bit
         bus_pos = 0;
-		bus_rcv_state = rcv_payload;
+        bus_rcv_state = rcv_payload;
         //printf("len:%u\r\n",bus_in->len);
-		break;
+        break;
 
-	case rcv_payload:
-		bus_in->data[bus_pos++] =  byte; // call handler function
+    case rcv_payload:
+        bus_in->data[bus_pos++] =  byte; // call handler function
         if(bus_pos == BUS_MTU)
             bus_pos = BUS_MTU-1;
 
-		if (bus_pos == bus_in->len)
-		{
-			bus_crc_calc ^= 0xFFFF; // finalize calculated CRC
-			bus_rcv_state = rcv_crc_lsb;
-		}
-		break;
-		
-	case rcv_crc_lsb:
-		bus_in->crc = byte;
-		bus_rcv_state = rcv_crc_msb;
-		break;
-	
-	case rcv_crc_msb:
+        if (bus_pos == bus_in->len)
+        {
+            bus_crc_calc ^= 0xFFFF; // finalize calculated CRC
+            bus_rcv_state = rcv_crc_lsb;
+        }
+        break;
+        
+    case rcv_crc_lsb:
+        bus_in->crc = byte;
+        bus_rcv_state = rcv_crc_msb;
+        break;
+    
+    case rcv_crc_msb:
         {
             uint8_t valid, same;
             bus_in->crc |= (uint16_t)byte << 8;
             //printf("crc calc: %x %x\r\n",bus_crc_calc&0xFF, bus_crc_calc >> 8);
-		    valid = (bus_crc_calc == bus_in->crc); 
+            valid = (bus_crc_calc == bus_in->crc); 
             same = ((bus_in->crc == bus_last_crc) && (timer_ticks - bus_last_time) <= RETRY_INTERVAL); // same as last, recently
             if (valid) // if valid
             {
@@ -217,19 +217,19 @@ void bus_rcv_byte(uint8_t byte)
             }else{
                 //printf("frame invalid\r\n",bus_frame);
             }
-		    packet_init(); // reset state machine
+            packet_init(); // reset state machine
         }
-		break;
+        break;
 
-	default:
-		ASSERT(0);
-	
-	}
+    default:
+        ASSERT(0);
+    
+    }
 }
 
 // receive timeout (interrupt context)
 void bus_timeout(void)
 {
-	packet_init();
+    packet_init();
 }
 

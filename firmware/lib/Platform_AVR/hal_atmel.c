@@ -59,12 +59,12 @@ static uint16_t hal_adc_val; // a place for the last ADC readout
 #ifdef DEBUG // verbose, with filename
 void hal_assert(const char* file, uint16_t line)
 {
-	hal_panic();
+    hal_panic();
 }
 #else // log only a file number
 void hal_assert(uint8_t filenum, uint16_t line)
 {
-	// hal_set_led(0xFF); this was convenient for debugging
+    // hal_set_led(0xFF); this was convenient for debugging
 //    errlog(filenum, line);
 }
 #endif
@@ -81,17 +81,17 @@ void hal_sysinit(void)
 
 #if defined(IS_UEM) // hardware for UEM
     DDRC =  _BV(4) | _BV(5); // output channel and RS485 data enable
-	DDRB =  _BV(4) | _BV(5); // aux outputs on ISP connector
+    DDRB =  _BV(4) | _BV(5); // aux outputs on ISP connector
     //PORTB |= 0x0F; // internal pullups for input (only necessary for breadboard)
     //PORTC |= 0x0F; // internal pullups for input (only necessary for breadboard)
 #elif defined(IS_EM16) // hardware for EM16
-	DDRC = _BV(5); // RS485 data enable
-	DDRB = _BV(3) | _BV(4) | _BV(5); // select, aux outputs on ISP connector
+    DDRC = _BV(5); // RS485 data enable
+    DDRB = _BV(3) | _BV(4) | _BV(5); // select, aux outputs on ISP connector
     //PORTB |= 0x07; // internal pullups for input (only necessary for breadboard)
     //PORTC |= 0x1F; // internal pullups for input (only necessary for breadboard)
 #elif defined(IS_AM)
-	DDRC = 0x1F | _BV(5); // output bits 0...4 and RS485 data enable
-	DDRB = 0x07 | _BV(3) | _BV(4) | _BV(5); // output bits 5...7, PWM, aux outputs on ISP connector
+    DDRC = 0x1F | _BV(5); // output bits 0...4 and RS485 data enable
+    DDRB = 0x07 | _BV(3) | _BV(4) | _BV(5); // output bits 5...7, PWM, aux outputs on ISP connector
 #elif defined(IS_BRIDGE)
     DDRC |= (1<<PC5) | (1<<PC4);
     PORTC &= (1<<PC5);
@@ -124,15 +124,15 @@ void hal_suspend(void)
 void hal_panic(void)
 {
     cli(); // disable interrupts
-	while (1)
-	{	// wild flashing LEDs
-		volatile uint16_t i;
-		for (i=0; i<20000; i++);
-		PORTB ^= _BV(4) | _BV(5); // aux outputs on ISP connector
+    while (1)
+    {   // wild flashing LEDs
+        volatile uint16_t i;
+        for (i=0; i<20000; i++);
+        PORTB ^= _BV(4) | _BV(5); // aux outputs on ISP connector
 #ifdef IS_UEM // this has one more
-		PORTC ^= _BV(4); // output channel
+        PORTC ^= _BV(4); // output channel
 #endif
-	}
+    }
 }
 //#endif
 
@@ -238,8 +238,8 @@ void hal_set_pwm(uint8_t byte)
     if (byte != 0)
     {
         // fast PWM, clear OC2 on match, clk/1 -> 14400 wraps/sec
-		TCCR2A = _BV(WGM21) | _BV(WGM20) | _BV(COM21) | _BV(CS20); 
-		TCCR2B |= _BV(CS20); // note: same as TCCR2A on Mega8
+        TCCR2A = _BV(WGM21) | _BV(WGM20) | _BV(COM21) | _BV(CS20); 
+        TCCR2B |= _BV(CS20); // note: same as TCCR2A on Mega8
         OCR2 = byte;
     }
     else // special case: instead of minimum needle pulse, we want 0V DC
@@ -283,26 +283,26 @@ uint16_t hal_get_capture(void)
 {
     uint16_t result;
     result = ICR1; // compiler does low/high read sequence
-	return result;
+    return result;
 }
 
 // query the capture edge, returns 0=falling, 1=rising
 uint8_t hal_get_edge(void)
 {
-	uint8_t value = TCCR1B;
-	return (value & _BV(ICES1)) >> ICES1; // return edge setting
+    uint8_t value = TCCR1B;
+    return (value & _BV(ICES1)) >> ICES1; // return edge setting
 }
 
 // set the capture edge, 0=falling, 1=rising
 void hal_set_edge(uint8_t edge)
 {
-	uint8_t value = TCCR1B;
+    uint8_t value = TCCR1B;
 
     if (edge)
-		value |= _BV(ICES1); // set for rising
+        value |= _BV(ICES1); // set for rising
     else
         value &= ~_BV(ICES1); // clear for falling
 
-	TCCR1B = value;
+    TCCR1B = value;
 }
 #endif // CFG_IR

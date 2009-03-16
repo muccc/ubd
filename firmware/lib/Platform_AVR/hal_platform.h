@@ -161,7 +161,7 @@ inline static void hal_start_adc(void)
 // busy loop for foreground delay
 inline static void hal_delay_us(const double us)
 {
-	_delay_us(us);
+    _delay_us(us);
 }
 
 // prepare sleeping

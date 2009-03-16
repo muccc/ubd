@@ -79,10 +79,10 @@ enum uart_error{
 // ISR, one FG exception
 void tx_end(uint8_t errcode)
 {
-	// don't disable the RS485 driver here, in normal case the 2nd stop bit
+    // don't disable the RS485 driver here, in normal case the 2nd stop bit
     //  is still being transferred, will disable in TX done interrupt
     uart.tx_result = errcode;
-	uart.tx_active = 0;
+    uart.tx_active = 0;
     hal_uart_rx_edge_enable(); // watch for falling RX again
 }
 
@@ -92,13 +92,13 @@ void tx_end(uint8_t errcode)
 // FG
 void uart_init(uint8_t timeout)
 {
-	// timer for receive timeout
+    // timer for receive timeout
     hal_uart_init_receive_timeout(timeout);
-			
-	// timer for transmit timeout, if no echo received
+            
+    // timer for transmit timeout, if no echo received
 ///    hal_uart_init_transmit_timeout();
 
-	// init UART hardware
+    // init UART hardware
     hal_uart_init_hardware();
     uart.tx_wait = 0;
     uart.tx_done = 1;
@@ -116,12 +116,12 @@ UART_RX_EDGE_ISR
     PROFILE(PF_ISRSTART_RX_EDGE);
     //ASSERT(!uart.tx_active); // ToDo: this assertion is triggering!
     if (!uart.tx_active)
-	{
-		// spawn receive timeout
+    {
+        // spawn receive timeout
         hal_uart_start_receive_timeout(); // in case no RX interrupt follows (spike)
-		uart.rx_active = 1;
-		uart.rx_notidle = 1;
-	}
+        uart.rx_active = 1;
+        uart.rx_notidle = 1;
+    }
     hal_uart_rx_edge_disable(); // disable ourself, avoid excessive interrupt load during receive
     PROFILE(PF_ISREND_RX_EDGE);
 }
@@ -132,53 +132,53 @@ UART_RX_ISR
 {
     PROFILE(PF_ISRSTART_RX);
     if (!uart.tx_active)
-	{
-		// (re)spawn receive timeout
+    {
+        // (re)spawn receive timeout
         hal_uart_start_receive_timeout();
-		uart.rx_active = 1; // strictly speaking, only needed if no edge detection, but better be safe
+        uart.rx_active = 1; // strictly speaking, only needed if no edge detection, but better be safe
         uart.rx_notidle = 1;
-	}
+    }
 
-	if (hal_uart_has_errors()) // framing, overrun, parity error?
-	{
-		hal_uart_clear_errors(); // clear error flags (and interrupt)
-		
-		if (uart.tx_active) // we're transmitting, waiting for echo
-		{
-			tx_end(UART_ERROR); // tx error
-		}
-		// else ignore error
-	}
+    if (hal_uart_has_errors()) // framing, overrun, parity error?
+    {
+        hal_uart_clear_errors(); // clear error flags (and interrupt)
+        
+        if (uart.tx_active) // we're transmitting, waiting for echo
+        {
+            tx_end(UART_ERROR); // tx error
+        }
+        // else ignore error
+    }
 
-	if (hal_uart_has_data()) // received data?
-	{
-		uint8_t data;
+    if (hal_uart_has_data()) // received data?
+    {
+        uint8_t data;
 
-		data = hal_uart_read_data(); // read the received data, clear interrupt
+        data = hal_uart_read_data(); // read the received data, clear interrupt
 
-		if (uart.tx_active) // we're transmitting, waiting for echo
-		{
-			uint8_t verify;
-			
-			verify = uart.tx_buf[uart.tx_echo++];
-			
-			if (data != verify) // must match previously sent
-			{
-				tx_end(UART_VERIFY); // tx verify error
-			}
-			else if (uart.tx_echo == uart.tx_size)  // done?
-			{
-				tx_end(UART_OK); // proper end of transmission
-			}
-			ASSERT(uart.tx_echo <= uart.tx_size);
-			
-			return; // exit, don't do normal RX processing
-		}
-		else
-		{	// receiving
-			bus_rcv_byte(data); // pass to input state machine
-		}
-	}
+        if (uart.tx_active) // we're transmitting, waiting for echo
+        {
+            uint8_t verify;
+            
+            verify = uart.tx_buf[uart.tx_echo++];
+            
+            if (data != verify) // must match previously sent
+            {
+                tx_end(UART_VERIFY); // tx verify error
+            }
+            else if (uart.tx_echo == uart.tx_size)  // done?
+            {
+                tx_end(UART_OK); // proper end of transmission
+            }
+            ASSERT(uart.tx_echo <= uart.tx_size);
+            
+            return; // exit, don't do normal RX processing
+        }
+        else
+        {   // receiving
+            bus_rcv_byte(data); // pass to input state machine
+        }
+    }
     PROFILE(PF_ISREND_RX);
 }
 
@@ -186,18 +186,18 @@ UART_RX_ISR
 UART_TX_ISR
 {
     PROFILE(PF_ISRSTART_TX);
-	uart.tx_active = 1;
-	ASSERT(uart.tx_send <= uart.tx_size);
-	if (uart.tx_send < uart.tx_size) // check if there is data left
-	{
-		hal_uart_send_data(uart.tx_buf[uart.tx_send++]); // start/continue transmition
-	}
-	else
-	{
+    uart.tx_active = 1;
+    ASSERT(uart.tx_send <= uart.tx_size);
+    if (uart.tx_send < uart.tx_size) // check if there is data left
+    {
+        hal_uart_send_data(uart.tx_buf[uart.tx_send++]); // start/continue transmition
+    }
+    else
+    {
         hal_uart_stop_tx_irq(); // disable tx interrupt
-	}   
+    }   
 
-	// (re)start the tx timeout
+    // (re)start the tx timeout
     ///    hal_uart_start_transmit_timeout();
     PROFILE(PF_ISREND_TX);
 }
@@ -210,7 +210,7 @@ UART_TX_DONE_ISR // all is sent
     hal_uart_rs485_disable();
     if (uart.tx_active)
     {
-    	tx_end(UART_TIMEOUT); // tx timeout error
+        tx_end(UART_TIMEOUT); // tx timeout error
     }
 
     PROFILE(PF_ISREND_TX_DONE);
@@ -223,10 +223,10 @@ UART_RX_TIMEOUT_ISR
     PROFILE(PF_ISRSTART_RX_TIMEOUT);
     hal_uart_clear_receive_timeout(); // single shot, disable this interrupt
 
-	// discard the undecoded buffer content
-	bus_timeout();
+    // discard the undecoded buffer content
+    bus_timeout();
 
-	uart.rx_active = 0; // signal to the foreground
+    uart.rx_active = 0; // signal to the foreground
     hal_uart_rx_edge_enable(); // watch for falling RX edge again
     PROFILE(PF_ISREND_RX_TIMEOUT);
 }
@@ -240,8 +240,8 @@ UART_RX_TIMEOUT2_ISR
     PORTD ^= (1<<PD6);
     if(uart.tx_wait){
         hal_uart_rx_edge_disable(); // disable while sending, avoids excessive interrupts
-	    hal_uart_rs485_enable(); // enable the RS485 driver
-	//hal_delay_us(0.5 * 1000000.0/BAUDRATE); // wait for 0.5 bits time, driver settling
+        hal_uart_rs485_enable(); // enable the RS485 driver
+    //hal_delay_us(0.5 * 1000000.0/BAUDRATE); // wait for 0.5 bits time, driver settling
         hal_uart_start_tx_irq(); // enable tx interrupt, let the ISR send the first byte
         uart.tx_wait = 0;
     }
@@ -258,20 +258,20 @@ void uart_send(const uint8_t* buf, uint8_t count)
 {
    
     uart.tx_buf = buf;
-	uart.tx_size = count;
-	uart.tx_send = 0;
-	uart.tx_echo = 0;
-	uart.tx_result = UART_NULL; // will be changed by ISR
+    uart.tx_size = count;
+    uart.tx_send = 0;
+    uart.tx_echo = 0;
+    uart.tx_result = UART_NULL; // will be changed by ISR
     uart.tx_done = 0;
     if(uart.rx_notidle == 0){
          hal_uart_rx_edge_disable(); // disable while sending, avoids excessive interrupts
-	    hal_uart_rs485_enable(); // enable the RS485 driver
-	//hal_delay_us(0.5 * 1000000.0/BAUDRATE); // wait for 0.5 bits time, driver settling
+        hal_uart_rs485_enable(); // enable the RS485 driver
+    //hal_delay_us(0.5 * 1000000.0/BAUDRATE); // wait for 0.5 bits time, driver settling
         hal_uart_start_tx_irq(); // enable tx interrupt, let the ISR send the first byte
     }else{
         uart.tx_wait = 1;
     }
-	
+    
 //        return uart.tx_result == 1 ? 0 : uart.tx_result; // 0 on success, else error code
 }
 
@@ -286,7 +286,7 @@ void uart_tick(void)
         // Apparently tx_end() wasn't called by ISR or did an incomplete job!!??
         // However, the transmission loop ended, with no timeout.
         // symptom fix, should never stay on
-    	uart.tx_active = 0;
+        uart.tx_active = 0;
         hal_uart_rx_edge_enable(); // watch for falling RX again
     }
 }
@@ -297,7 +297,7 @@ void uart_tick(void)
 // ISR, FG, reentrant
 uint8_t uart_is_busy(void)
 {
-	return uart.rx_notidle;
+    return uart.rx_notidle;
 }
 
 uint8_t uart_txresult(void)

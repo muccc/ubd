@@ -33,7 +33,7 @@
 
 int main(void)
 {
-	uint8_t addr;
+    uint8_t addr;
     hal_sysinit();
 
     addr = hal_get_addr(); // device address from DIP switches
@@ -42,9 +42,9 @@ int main(void)
     hal_watchdog_enable();
     uart_init(addr); // timeout affects collision recovery, use address
     rand_seed(((uint16_t)addr << 8) | (uint16_t)addr);
-	bus_init();
-	timer_init(sender_tick, addr); // init with system-wide unique value
-	sender_init(addr);
-	sender_mainloop();
-	return 0; // we won't get here
+    bus_init();
+    timer_init(sender_tick, addr); // init with system-wide unique value
+    sender_init(addr);
+    sender_mainloop();
+    return 0; // we won't get here
 }
