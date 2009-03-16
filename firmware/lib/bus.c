@@ -64,7 +64,7 @@ uint32_t bus_last_time; // timestamp of last packet in ticks
 uint16_t bus_last_crc; // just compare the CRC, not saving the full packet
 uint8_t timeout;
 uint8_t retry;
-uint8_t state;
+uint8_t txstate;
 struct frame * txframe;
 
 /*************** private internal functions ***************/
@@ -103,6 +103,7 @@ void bus_init(void)
 //    printf("bus init\r\n");
 }
 
+
 void bus_tick(void)
 {
     uint8_t r;
@@ -110,7 +111,7 @@ void bus_tick(void)
         case 0:                     //nothing happened
         break;
         case 1:                     //packet was transmitted
-            state = 1;
+            txstate = TX_DONE;
             PORTC &= ~(1<<PC3);
             uart_txreset();
             break;
@@ -118,7 +119,7 @@ void bus_tick(void)
             uart_txreset();         //don't trigger again
             timeout+=rand()&0x3;    //increase backoff timer
             if(timeout >= 100){     //check for timout after ca. 1s.
-                state = 2;
+                txstate = TX_TIMEOUT;
                 break;
             }
             retry = timeout;
@@ -136,7 +137,7 @@ uint8_t bus_receive(void)
 
 uint8_t bus_done(void)
 {
-    return state;
+    return txstate;
 }
 
 // complete an outgoing packet and send it, don't retry nor block, returns >= 0 on success
@@ -152,7 +153,7 @@ void bus_send(struct frame * f, uint8_t addcrc)
     uart_randomize(rand());
     //while(uart_is_busy());
     timeout = 0;
-    state = 0;
+    txstate = TX_NULL;
     uart_send((uint8_t *)txframe,txframe->len+3);
     //while(!uart_txresult());
     //return uart_txresult();

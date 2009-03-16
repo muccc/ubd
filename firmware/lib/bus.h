@@ -38,5 +38,12 @@ uint8_t bus_done(void);
 // call this periodicaly
 void bus_tick(void);
 
+enum bus_tx_state{
+    TX_NULL,
+    TX_DONE,
+    TX_TIMEOUT
+};
+
+
 extern struct frame * volatile bus_frame;
 #endif // #ifndef _PHC_PROTOCOL_H

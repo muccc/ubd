@@ -67,7 +67,13 @@ static struct _global_uart_context
     uint8_t tx_wait;
 } uart;
 
-
+enum uart_error{
+    UART_NULL,
+    UART_OK,
+    UART_TIMEOUT,
+    UART_ERROR,
+    UART_VERIFY
+};
 /* private functions */
 
 // ISR, one FG exception
@@ -139,7 +145,7 @@ UART_RX_ISR
 		
 		if (uart.tx_active) // we're transmitting, waiting for echo
 		{
-			tx_end(2); // tx error
+			tx_end(UART_ERROR); // tx error
 		}
 		// else ignore error
 	}
@@ -158,11 +164,11 @@ UART_RX_ISR
 			
 			if (data != verify) // must match previously sent
 			{
-				tx_end(3); // tx verify error
+				tx_end(UART_VERIFY); // tx verify error
 			}
 			else if (uart.tx_echo == uart.tx_size)  // done?
 			{
-				tx_end(1); // proper end of transmission
+				tx_end(UART_OK); // proper end of transmission
 			}
 			ASSERT(uart.tx_echo <= uart.tx_size);
 			
@@ -204,7 +210,7 @@ UART_TX_DONE_ISR // all is sent
     hal_uart_rs485_disable();
     if (uart.tx_active)
     {
-    	tx_end(4); // tx timeout error
+    	tx_end(UART_TIMEOUT); // tx timeout error
     }
 
     PROFILE(PF_ISREND_TX_DONE);
@@ -255,9 +261,8 @@ void uart_send(const uint8_t* buf, uint8_t count)
 	uart.tx_size = count;
 	uart.tx_send = 0;
 	uart.tx_echo = 0;
-	uart.tx_result = 0; // will be changed by ISR
+	uart.tx_result = UART_NULL; // will be changed by ISR
     uart.tx_done = 0;
-    uart.tx_result = 0;
     if(uart.rx_notidle == 0){
          hal_uart_rx_edge_disable(); // disable while sending, avoids excessive interrupts
 	    hal_uart_rs485_enable(); // enable the RS485 driver
@@ -302,5 +307,5 @@ uint8_t uart_txresult(void)
 
 void uart_txreset(void)
 {
-    uart.tx_result = 0;
+    uart.tx_result = UART_NULL;
 }
