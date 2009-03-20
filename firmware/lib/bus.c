@@ -108,15 +108,16 @@ void bus_tick(void)
 {
     uint8_t r;
     switch(uart_txresult()){
-        case 0:                     //nothing happened
+        case UART_NULL:                     //nothing happened
         break;
-        case 1:                     //packet was transmitted
+        case UART_OK:                     //packet was transmitted
             txstate = TX_DONE;
             PORTC &= ~(1<<PC3);
             uart_txreset();
             break;
         default:                    //an error occoured
             uart_txreset();         //don't trigger again
+            //PORTC &= ~(1<<PC3);
             timeout+=rand()&0x3;    //increase backoff timer
             if(timeout >= 100){     //check for timout after ca. 1s.
                 txstate = TX_TIMEOUT;
@@ -124,7 +125,7 @@ void bus_tick(void)
             }
             retry = timeout;
             break;
-    }
+    };
     if(retry && --retry == 0){
         uart_send((uint8_t *)txframe,txframe->len+3);
     }

@@ -35,6 +35,8 @@ int main(void)
 {
     uint8_t addr;
     hal_sysinit();
+    volatile uint32_t i;
+    //for(i = 0; i <400; i++);
 
     addr = hal_get_addr(); // device address from DIP switches
     addr |= 0x40; // add the device class

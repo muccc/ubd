@@ -37,4 +37,13 @@ void uart_tick(void);
 uint8_t uart_txresult(void);
 
 void uart_txreset(void);
+
+enum uart_error{
+    UART_NULL,
+    UART_OK,
+    UART_TIMEOUT,
+    UART_ERROR,
+    UART_VERIFY
+};
+
 #endif // #ifndef _UART_H
