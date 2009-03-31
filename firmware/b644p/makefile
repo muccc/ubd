@@ -33,6 +33,7 @@ SRC = \
 ../bridge/usart.c \
 ../bridge/main.c \
 ../bridge/bridge.c \
+../lib/packet.c \
 ../lib/Platform_AVR/hal_atmel.c \
 ../lib/msg.c \
 ../lib/bus.c \
