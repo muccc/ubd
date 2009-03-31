@@ -18,7 +18,7 @@ class SerialInterface:
 
     def writeMessage(self,message):
         enc = "\\0" + message.replace('\\','\\\\') + "\\1";
-        self.log.debug('writing %s' % enc)
+        self.log.debug('writing %s' % list(enc))
         self.ser.write(enc)
 
     def readMessage(self):
@@ -63,4 +63,8 @@ s = SerialInterface("/dev/ttyUSB0",115200);
 m = chr(0x22)+chr(0x23)+chr(2)+chr(1)+chr(1)+'a'
 s.writeMessage(m)
 while 1:
-    s.readMessage()
+    data = s.readMessage()
+    if data[0] == 'I' and data[3] == '\x02':
+        m = data[2]+data[1]+chr(1)+data[4]+chr(0)
+        s.writeMessage(m)
+
