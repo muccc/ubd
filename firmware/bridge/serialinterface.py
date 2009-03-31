@@ -59,6 +59,8 @@ class SerialInterface:
                     return data
             elif escaped == False:
                 data += str(d)
-s = SerialInterface("/dev/ttyUSB1",115200);
+s = SerialInterface("/dev/ttyUSB0",115200);
+m = chr(0x22)+chr(0x23)+chr(2)+chr(1)+chr(1)+'a'
+s.writeMessage(m)
 while 1:
     s.readMessage()
