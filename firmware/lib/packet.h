@@ -24,6 +24,7 @@ struct ubpacket{
 #define UB_PACKET_BROADCAST     4
 #define UB_PACKET_MULTICAST     8
 
+#define PACKET_TIMEOUT          200     //we wait max 200ms for an ack
 
 void packet_init(void);
 void packet_send(void);
@@ -33,7 +34,9 @@ uint8_t packet_recv(struct ubpacket*);
 uint8_t packet_recvstate(void);
 
 void packet_tick(void);
-
+inline struct ubpacket * packet_getSendBuffer(void);
+void packet_send(void);
+uint8_t packet_done(void);
 #define UB_PACKET_IDLE         0
 #define UB_PACKET_BUSY          1
 #define UB_PACKET_TIMEOUT       2
