@@ -30,6 +30,7 @@ SRC = \
 ../sender/main.c \
 ../sender/sender.c \
 ../lib/Platform_AVR/hal_atmel.c \
+../lib/packet.c \
 ../lib/msg.c \
 ../lib/bus.c \
 ../lib/timer.c \
