@@ -21,8 +21,15 @@ void sender_mainloop(void)
 {
     struct frame * f;
     struct frame s;
-    s.len = 12;
-    strcpy((char*)s.data,"FNORD23FUBAR");
+    s.len = 7;
+    s.data[0] = 0x11;
+    s.data[1] = 0x23;
+    s.data[2] = 2;
+    s.data[3] = 1;
+    s.data[4] = 2;
+    s.data[5] = 8;
+    s.data[6] = 9;
+    //strcpy((char*)s.data,"FNORD23FUBAR");
     while (1){
         cli();
         f = bus_frame;
