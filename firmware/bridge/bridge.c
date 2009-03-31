@@ -28,7 +28,7 @@ void bridge_mainloop(void)
             //DEBUG("new frame len=%u data=%s",f->len, f->data);
             serial_putStart();
             serial_putcenc('I');
-            serial_putenc((char*)f,f->len);
+            serial_putenc((char*)f->data,f->len);
             serial_putcenc(f->crc & 0xFF);
             serial_putcenc((f->crc >> 8)  & 0xFF);
             serial_putStop();

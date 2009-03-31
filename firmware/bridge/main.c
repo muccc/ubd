@@ -50,7 +50,7 @@ int main(void)
 
     uart1_init( UART_BAUD_SELECT(UART_BAUDRATE,F_CPU));
     stdout = &mystdout;
-    printf("booting\r\n");
+    printf("\\0Dbooting\\1");
     
     addr = hal_get_addr(); // device address from DIP switches
     addr |= 0x40; // add the device class
