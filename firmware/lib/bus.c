@@ -34,7 +34,7 @@
 #include "frame.h"
 #include "stdio.h"
 
-#define RETRY_INTERVAL (HZ/2) // interval within which we view twice the same packet as a retry
+//#define RETRY_INTERVAL (HZ/2) // interval within which we view twice the same packet as a retry
 
 /*************** module state ***************/
 
@@ -60,9 +60,9 @@ static enum
 } bus_rcv_state; // state machine for incoming bytes
 
 // previous packet info
-uint32_t bus_last_time; // timestamp of last packet in ticks 
-uint16_t bus_last_crc; // just compare the CRC, not saving the full packet
-uint8_t timeout;
+//uint32_t bus_last_time; // timestamp of last packet in ticks 
+//uint16_t bus_last_crc; // just compare the CRC, not saving the full packet
+uint16_t timeout;
 uint8_t retry;
 uint8_t txstate;
 struct frame * txframe;
@@ -103,14 +103,14 @@ void bus_init(void)
 //    printf("bus init\r\n");
 }
 
-
+//ticks the bus and checks for retrys.
 void bus_tick(void)
 {
-    uint8_t r;
+    //uint8_t r;
     switch(uart_txresult()){
-        case UART_NULL:                     //nothing happened
+        case UART_NULL:             //nothing happened
         break;
-        case UART_OK:                     //packet was transmitted
+        case UART_OK:               //packet was transmitted
             txstate = TX_DONE;
             PORTC &= ~(1<<PC3);
             uart_txreset();
@@ -118,46 +118,44 @@ void bus_tick(void)
         default:                    //an error occoured
             uart_txreset();         //don't trigger again
             //PORTC &= ~(1<<PC3);
-            timeout+=rand()&0x3;    //increase backoff timer
-            if(timeout >= 100){     //check for timout after ca. 1s.
+            timeout+=rand()&0xF;        //increase backoff timer
+            if(timeout >= 1000){         //check for timeout after ca. 1s.
                 txstate = TX_TIMEOUT;
                 break;
             }
-            retry = timeout;
+            retry = timeout;        //schedule a retry
             break;
     };
-    if(retry && --retry == 0){
+    if(retry && --retry == 0){              //retry counter check
         uart_send((uint8_t *)txframe,txframe->len+3);
     }
 }
 
+//check if an uprocessed frame is available
 uint8_t bus_receive(void)
 {
    return bus_frame->isnew; 
 }
 
+//check if a packet was transmitted or if a timeout occoured(bus broken?)
 uint8_t bus_done(void)
 {
     return txstate;
 }
 
-// complete an outgoing packet and send it, don't retry nor block, returns >= 0 on success
+// setup an outgoing packet. Starts the transmitting isr and resets the tx statmachine
 void bus_send(struct frame * f, uint8_t addcrc)
 {
     if(addcrc)
         f->crc = crc16_frame(f); // size up to CRC
     f->data[f->len] = f->crc & 0xFF;
-    f->data[f->len+1] = (f->crc >> 8)&0xFF;            //XXX: FIESER HACK!
+    f->data[f->len+1] = (f->crc >> 8)&0xFF;            //XXX: FIESER HACK! sollte in uart_send passieren
     txframe = f;
-    //printf("calculated %x %x\r\n",f->data[f->len],f->data[f->len+1]);
     PORTC |= (1<<PC3);
     uart_randomize(rand());
-    //while(uart_is_busy());
     timeout = 0;
     txstate = TX_NULL;
     uart_send((uint8_t *)txframe,txframe->len+3);
-    //while(!uart_txresult());
-    //return uart_txresult();
 }
 
 
@@ -201,15 +199,15 @@ void bus_rcv_byte(uint8_t byte)
     
     case rcv_crc_msb:
         {
-            uint8_t valid, same;
+            uint8_t valid;//, same;
             bus_in->crc |= (uint16_t)byte << 8;
             //printf("crc calc: %x %x\r\n",bus_crc_calc&0xFF, bus_crc_calc >> 8);
             valid = (bus_crc_calc == bus_in->crc); 
-            same = ((bus_in->crc == bus_last_crc) && (timer_ticks - bus_last_time) <= RETRY_INTERVAL); // same as last, recently
+            //same = ((bus_in->crc == bus_last_crc) && (timer_ticks - bus_last_time) <= RETRY_INTERVAL); // same as last, recently
             if (valid) // if valid
             {
-                bus_last_crc = bus_in->crc; // remember compare values
-                bus_last_time = timer_ticks;
+                //bus_last_crc = bus_in->crc; // remember compare values
+                //bus_last_time = timer_ticks;
                 bus_frame = &bus_buf[bus_current];
                 bus_frame->isnew = 1;
                 //printf("valid bus_frame=%u\r\n",bus_frame);
@@ -231,6 +229,6 @@ void bus_rcv_byte(uint8_t byte)
 // receive timeout (interrupt context)
 void bus_timeout(void)
 {
-    packet_init();
+    packet_init();      //we have to abort the current packet
 }
 

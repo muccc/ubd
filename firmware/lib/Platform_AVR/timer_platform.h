@@ -31,7 +31,7 @@
 #include <avr/interrupt.h> // for interrupt handlers
 #include "hal.h"
 
-#define HZ 100UL // ticks per second
+#define HZ 1000UL // ticks per second
 
 #define TIMER_TICK_ISR    SIGNAL(SIG_OVERFLOW0)
 

@@ -38,6 +38,8 @@ uint8_t bus_done(void);
 // call this periodicaly
 void bus_tick(void);
 
+uint8_t bus_receive(void);
+
 enum bus_tx_state{
     TX_NULL,
     TX_DONE,
