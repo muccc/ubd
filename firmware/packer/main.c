@@ -44,8 +44,8 @@ int main(void)
     hal_watchdog_enable();
     uart_init(addr); // timeout affects collision recovery, use address
     rand_seed(((uint16_t)addr << 8) | (uint16_t)addr);
-    bus_init();
-    packet_init();
+    //bus_init();
+    //packet_init();
     timer_init(sender_tick, addr); // init with system-wide unique value
     sender_init(addr);
     sender_mainloop();

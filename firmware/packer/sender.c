@@ -17,26 +17,38 @@ void sender_init(uint8_t addr)
     packet_init();
     tick = 0;
     time = 0;
+    DDRB |= (1<<PB0);
 }
 
 void sender_mainloop(void)
 {
+    uint8_t first = PIND & (1<<PD7);
     struct ubpacket * p;
+    uint8_t data = 0;
     while (1){
         if(tick){
             tick = 0;
             time++;
             packet_tick();
-            if(time == 1000){
+            //if(time == 1000){
+            //if( packet_done() ){
+            if(packet_gotPacket() || first){
+                //PORTB |= (1<<PB0);
+                first = 0;
+                packet_processed();
                 p = packet_getSendBuffer();
-                p->dest = 0x42;
+                if( PIND & (1<<PD7) )
+                    p->dest = 'B';
+                else
+                    p->dest = 'A';
                 p->flags = UB_PACKET_UNICAST;
                 p->len = 1;
-                p->data[0] = 'A';
+                p->data[0] = data++;
                 packet_send();
+                //PORTB &= ~(1<<PB0);
             }
-            if(packet_done() && time > 1000)
-                time = 0;
+            //if(packet_done() && time > 1000)
+            //    time = 0;
         }
         wdt_reset();
     }

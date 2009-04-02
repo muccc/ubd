@@ -8,12 +8,14 @@
 #include "bus.h"
 #include "frame.h"
 
-struct frame *inframe = NULL;
 struct frame outframe;
+struct ubpacket inpacket;
+
 address_t   packet_address = 0x23;
 seq_t       packet_ack_seq;
+
 uint8_t packet_acked = 1;
-struct ubpacket inpacket;
+uint8_t packet_valid = 0;
 uint8_t packet_incomming;
 uint8_t packet_timeout;
 
@@ -21,6 +23,13 @@ void packet_init(void)
 {
     bus_init();
     DDRC |= (1<<PC2);
+    PORTD |= (1<<PD7);
+
+    if( PIND & (1<<PD7) ){
+        packet_address = 'A';
+    }else{
+        packet_address = 'B';
+    }
 }
 
 inline uint8_t packet_isUnicast(struct ubpacket * in)
@@ -38,11 +47,11 @@ inline struct ubpacket * packet_getSendBuffer(void)
     return (struct ubpacket *) outframe.data;
 }
 
-void packet_transmit(void)
+void packet_transmit(struct frame * f)
 {
-    struct ubpacket *out = (struct ubpacket *)outframe.data;
-    outframe.len = out->len+UB_PACKET_HEADER;
-    bus_send(&outframe,1);
+    struct ubpacket *out = (struct ubpacket *)(f->data);
+    f->len = out->len+UB_PACKET_HEADER;
+    bus_send(f,1);
 }
 
 void packet_send(void)
@@ -52,7 +61,7 @@ void packet_send(void)
     out->seq = packet_ack_seq;
     out->src = packet_address;
     packet_acked = 0;
-    packet_transmit();
+    packet_transmit(&outframe);
 }
 
 uint8_t packet_done(void)
@@ -62,13 +71,14 @@ uint8_t packet_done(void)
 
 void packet_ack(struct ubpacket * p)
 {
-    struct ubpacket *out = packet_getSendBuffer();
+    struct frame f;
+    struct ubpacket *out = f.data;
     out->flags = UB_PACKET_ACK;
     out->seq = p->seq;
     out->len = 0;
     out->dest = p->src;
     out->src = p->dest;
-    packet_transmit();
+    packet_transmit(&f);
 }
 
 uint8_t packet_isLocal(address_t adr)
@@ -92,16 +102,24 @@ void packet_process(struct ubpacket * in)
                                     //in the buffer
         return;                     //Just wait for the other end to retry
 
-    if( packet_isUnicast(in) ){
+    if(!packet_acked)        //guarantee the userland that the buffer
+    {                        //is empty then a new packet arrives
+        if(inpacket.seq == in->seq)     //this ack was lost
+            packet_ack(in);             //send it again
+    }else if( packet_isUnicast(in) ){
         packet_ack(in);
-        if(inpacket.seq != in->seq){               //avoid receiving duplicates
+        if(inpacket.seq != in->seq || !packet_valid){    //avoid receiving duplicates
+            PORTB |= (1<<PB0);
                                     //TODO: add some real seq counting here
-            memcpy(&inpacket,in,sizeof(in));
+            memcpy(&inpacket,in,sizeof(inpacket));
             packet_incomming = 1;                   //mark packet as new
+            packet_valid = 1;
+            PORTB &= ~(1<<PB0);
         }
     }else if( packet_isBroadcast(in) ){
         memcpy(&inpacket,in,sizeof(in));
         packet_incomming = 1;                   //mark packet as new
+        packet_valid = 1;
     }
 }
 
@@ -123,10 +141,11 @@ void packet_in(struct ubpacket * in)
 
 void packet_tick(void)
 {
+    struct frame *inframe; //= NULL;
     PORTC |= (1<<PC2);
     struct ubpacket * in;
     bus_tick();
-    if(bus_receive() && inframe == NULL){
+    if(bus_receive() ){ //&& inframe == NULL){
         //Keep track of the frame
         inframe = bus_frame;                 //no cli needed
         //cast the data part into a packet
@@ -137,7 +156,7 @@ void packet_tick(void)
             packet_in(in);
         }
         inframe->isnew = 0;
-        inframe = NULL;
+        //inframe = NULL;
     }
     if(!packet_acked && packet_timeout && --packet_timeout==0){
         packet_send();
