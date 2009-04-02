@@ -23,7 +23,7 @@ MCU = atmega8
 
 F_CPU = 7372000
 # Target file name (without extension).
-TARGET = acker
+TARGET = packer
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = \
