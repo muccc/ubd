@@ -41,6 +41,7 @@
 // received packet info
 struct frame * volatile  bus_frame;
 volatile struct frame  * bus_in;
+static struct frame out;
 
 static struct frame bus_buf[2];
 static uint8_t bus_current = 0;
@@ -83,7 +84,7 @@ static uint16_t crc16_frame(const struct frame * f)
 }
 
 // (re)init, start new packet (possibly interrupt context)
-static void packet_init(void)
+static void bus_packet_init(void)
 {
     bus_rcv_state = rcv_len; // reset state: 1st byte for receiver
     bus_crc_calc = 0xFFFF;
@@ -94,13 +95,15 @@ static void packet_init(void)
 
 void bus_init(void)
 {
-    packet_init(); // reset receiver state machine
+    bus_packet_init(); // reset receiver state machine
     bus_buf[0].isnew = 0;
     bus_buf[1].isnew = 0;
     bus_frame = &bus_buf[1];
     bus_in = /*(struct frame *)*/&bus_buf[0];
     bus_current = 0;
 //    printf("bus init\r\n");
+    DDRB |= (1<<PB1);
+    PORTB |= (1<<PB1);
 }
 
 //ticks the bus and checks for retrys.
@@ -116,6 +119,7 @@ void bus_tick(void)
             uart_txreset();
             break;
         default:                    //an error occoured
+            PORTB ^= (1<<PB1);
             uart_txreset();         //don't trigger again
             //PORTC &= ~(1<<PC3);
             timeout+=rand()&0xF;        //increase backoff timer
@@ -150,7 +154,9 @@ void bus_send(struct frame * f, uint8_t addcrc)
         f->crc = crc16_frame(f); // size up to CRC
     f->data[f->len] = f->crc & 0xFF;
     f->data[f->len+1] = (f->crc >> 8)&0xFF;            //XXX: FIESER HACK! sollte in uart_send passieren
-    txframe = f;
+    while(uart_is_busy());
+    memcpy(&out,f,sizeof(struct frame));
+    txframe = &out;
     PORTC |= (1<<PC3);
     uart_randomize(rand());
     timeout = 0;
@@ -171,7 +177,7 @@ void bus_rcv_byte(uint8_t byte)
     case rcv_len:
         rand_randomize(timer_performance_counter());
         if(bus_in->isnew){
-            packet_init();
+            bus_packet_init();
             return;
         }
         bus_in->len = byte; // without mask bit
@@ -216,7 +222,7 @@ void bus_rcv_byte(uint8_t byte)
             }else{
                 //printf("frame invalid\r\n",bus_frame);
             }
-            packet_init(); // reset state machine
+            bus_packet_init(); // reset state machine
         }
         break;
 
@@ -229,6 +235,6 @@ void bus_rcv_byte(uint8_t byte)
 // receive timeout (interrupt context)
 void bus_timeout(void)
 {
-    packet_init();      //we have to abort the current packet
+    bus_packet_init();      //we have to abort the current packet
 }
 
