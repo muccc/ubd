@@ -65,6 +65,8 @@ static struct _global_uart_context
     volatile uint8_t tx_done;
 
     volatile uint8_t tx_wait;
+
+    volatile uint8_t tx_running;
 } uart;
 
 /* private functions */
@@ -92,6 +94,7 @@ void uart_init(uint8_t timeout)
     hal_uart_init_hardware();
     uart.tx_wait = 0;
     uart.tx_done = 1;
+    uart.tx_running = 0;
 }
 
 void uart_randomize(uint8_t rand)
@@ -253,6 +256,8 @@ void uart_send(const uint8_t* buf, uint8_t count)
     uart.tx_echo = 0;
     uart.tx_result = UART_NULL; // will be changed by ISR
     uart.tx_done = 0;
+    uart.tx_running = 1;
+
     if(uart.rx_notidle == 0){
         hal_uart_rx_edge_disable(); // disable while sending, avoids excessive interrupts
         hal_uart_rs485_enable(); // enable the RS485 driver
@@ -269,6 +274,7 @@ void uart_tick(void)
         return;
     if (uart.tx_result){
         uart.tx_done=1;
+        uart.tx_running = 0;
         // Nasty workaround for an open bug:
         // It happens that the edge interrupt is not re-enabled or uart.tx_active is not cleared.
         // Apparently tx_end() wasn't called by ISR or did an incomplete job!!??
@@ -285,7 +291,7 @@ void uart_tick(void)
 // ISR, FG, reentrant
 uint8_t uart_is_busy(void)
 {
-    return uart.rx_notidle;
+    return uart.rx_notidle || uart.tx_running;
 }
 
 uint8_t uart_txresult(void)
