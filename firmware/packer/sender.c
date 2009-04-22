@@ -14,7 +14,7 @@ volatile uint8_t tick;
 volatile uint16_t time;
 void sender_init(uint8_t addr)
 {
-    packet_init();
+    packet_init(0);
     tick = 0;
     time = 0;
     DDRB |= (1<<PB0);
@@ -23,6 +23,7 @@ void sender_init(uint8_t addr)
 void sender_mainloop(void)
 {
     uint8_t first = PIND & (1<<PD7);
+    first = 1;
     struct ubpacket * p;
     uint8_t data = 0;
     while (1){
@@ -41,7 +42,8 @@ void sender_mainloop(void)
                     p->dest = 'B';
                 else
                     p->dest = 'A';
-                p->flags = UB_PACKET_UNICAST;
+                p->dest = 1;
+                p->flags = 0;
                 p->len = 1;
                 p->data[0] = data++;
                 packet_send();
