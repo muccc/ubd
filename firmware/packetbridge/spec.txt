@@ -1,0 +1,40 @@
+Ausgangsmodul reverse Specification 
+-----------------------------------
+
+Zeitfunktionen:
+- solange eine Zeitfunktion läuft wird anscheinend kein anderer Schaltbefehl ausgeführt
+- Zeiten triggern nicht nach
+- wird während des Zeitlaufs verriegelt, so wird die spätere Schaltaktion trotzdem ausgeführt
+- wenn Rückmeldung aktiviert, ersetzt diese die Meldung des Zeitablaufs
+- Meldung des Zeitablaufs erfolgt nur, wenn sich der Schaltzustand ändert
+- "verriegeln für laufende Zeit" ohne aktuell laufende Zeit ist wie "fest verriegeln"
+
+
+Implementierung:
+- Events (Zeitabläufe, Rückmeldungen) landen in einer speziellen Queue, werden erst nack Ack gelöscht
+- Event-Einträge werden per Message signalisiert, wenn idle auch erneut, von Tick-ISR
+
+Mainloop messages:
+- state/ping reply senden: erwartet, nichtblockierend senden, bei Erfolg toggle
+  bei Mißerfolg wird die Steuerung retry senden
+- event: unsolicited, nur senden wenn uart idle, bei Erfolg auf ack warten, Timer aufziehen
+  bei Mißerfolg gibt's eine neue Message von Tick-ISR (mit backoff-timer?)
+- timer boot: nichtblockierend senden, neuen Timer aufziehen
+  bei Mißerfolg nächster Versuch mit neuem Timer
+- timer retransmit: State löschen, neues Event zulassen 
+
+Decoder:
+- Broadcast: ausführen, keine Antwort
+- Ack: wenn nicht idle: idle setzen, Timer löschen, Eventqueue verkürzen, toggle
+- Ping: Msg für Ping-reply
+- Config: kopieren, wenn Bootphase: idle setzen, Timer löschen
+- Reset: Warmstart
+- Channel+Function: 
+  wenn Wiederholung: nur state senden, unsere Antwort ging wohl verloren
+
+Neu:
+- alles asynchron, kein blockierendes Senden
+- kein expliziter Retransmit nötig, ergibt sich aus obigem
+- kein genereller Timer bei phc_send
+
+
