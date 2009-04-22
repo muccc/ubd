@@ -25,6 +25,7 @@
 #define __FILENUM__ 5 // every file needs to have a unique (8bit) ID
 
 #include <stdint.h>
+#include <string.h>
 #include <util/crc16.h>
 #include "hal.h"
 #include "busuart.h"
@@ -33,6 +34,7 @@
 #include "random.h"
 #include "frame.h"
 #include "stdio.h"
+#include "serial_handler.h"
 
 //#define RETRY_INTERVAL (HZ/2) // interval within which we view twice the same packet as a retry
 
@@ -154,7 +156,9 @@ void bus_send(struct frame * f, uint8_t addcrc)
         f->crc = crc16_frame(f); // size up to CRC
     f->data[f->len] = f->crc & 0xFF;
     f->data[f->len+1] = (f->crc >> 8)&0xFF;            //XXX: FIESER HACK! sollte in uart_send passieren
+//    DEBUG("b");
     while(uart_is_busy());
+//    DEBUG("B");
     memcpy(&out,f,sizeof(struct frame));
     txframe = &out;
     PORTC |= (1<<PC3);
