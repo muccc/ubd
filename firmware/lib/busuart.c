@@ -30,6 +30,7 @@
 #include "bus.h"
 #include "busuart.h"
 #include "timer.h"
+#include "serial_handler.h"
 
 // pick the right "mini driver" to resolve hardware dependencies
 #include "uart_platform.h"
@@ -79,6 +80,11 @@ void tx_end(uint8_t errcode)
     uart.tx_result = errcode;
     uart.tx_active = 0;
     hal_uart_rx_edge_enable(); // watch for falling RX again
+//    if(errcode == 0)
+//        DEBUG("NULL");
+//    DEBUG("TE");
+    uart_tick();            //XXX hack for a race condition
+                            //uart_tick has to be called before txreset!
 }
 
 
@@ -274,6 +280,7 @@ void uart_tick(void)
         return;
     if (uart.tx_result){
         uart.tx_done=1;
+//        DEBUG("TK");
         uart.tx_running = 0;
         // Nasty workaround for an open bug:
         // It happens that the edge interrupt is not re-enabled or uart.tx_active is not cleared.
@@ -291,6 +298,11 @@ void uart_tick(void)
 // ISR, FG, reentrant
 uint8_t uart_is_busy(void)
 {
+    uart_tick();
+/*    if(uart.rx_notidle)
+        DEBUG("R");
+    if(uart.tx_running)
+        DEBUG("T");*/
     return uart.rx_notidle || uart.tx_running;
 }
 
@@ -301,5 +313,6 @@ uint8_t uart_txresult(void)
 
 void uart_txreset(void)
 {
+//    DEBUG("RST");
     uart.tx_result = UART_NULL;
 }
