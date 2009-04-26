@@ -25,4 +25,9 @@ void bridge_mainloop(void); // the main loop
 
 void bridge_tick(void); // timer tick ISR
 
+void bridge_output(void);   //check for new packets on the bus and forward them
+
+void bridge_input(void);    //get input from the serial line and prcess it
+
+void bridge_status(void);   //report events on the serial line
 #endif // #ifndef _OUTPUT_H
