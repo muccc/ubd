@@ -36,8 +36,8 @@ SRC = \
 ../lib/timer.c \
 ../lib/busuart.c \
 ../lib/random.c \
-../lib/errlog.c
-
+../lib/errlog.c \
+../lib/busmgt.c
 # Place -D or -U options here for C sources
 CDEFS = -DCFG_SENDER
 #-DCFG_ADC

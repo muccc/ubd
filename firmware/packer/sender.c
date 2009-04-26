@@ -9,12 +9,15 @@
 #include "sender.h"
 #include "frame.h"
 #include "packet.h"
+#include "busmgt.h"
 
 volatile uint8_t tick;
 volatile uint16_t time;
 void sender_init(uint8_t addr)
 {
-    packet_init(0);
+    packet_init(0,0);
+    busmgt_init();
+
     tick = 0;
     time = 0;
     DDRB |= (1<<PB0);
@@ -23,7 +26,7 @@ void sender_init(uint8_t addr)
 void sender_mainloop(void)
 {
     uint8_t first = PIND & (1<<PD7);
-    first = 1;
+    first = 0;
     struct ubpacket * p;
     uint8_t data = 0;
     while (1){
@@ -31,6 +34,7 @@ void sender_mainloop(void)
             tick = 0;
             time++;
             packet_tick();
+            busmgt_tick();
             //if(time == 1000){
             //if( packet_done() ){
             if(packet_gotPacket() || first){
