@@ -32,7 +32,7 @@ class SerialInterface:
             if len(c) == 0:             #A timout occured
                 self.log.warning('TIMEOUT')
                 return False
-        #    print "c=", c
+            #print "c=", list(c)
         #    continue
             if escaped:
                 if c == '0':
@@ -60,11 +60,12 @@ class SerialInterface:
             elif escaped == False:
                 data += str(d)
 s = SerialInterface("/dev/ttyUSB0",115200);
-m = chr(0x22)+chr(0x23)+chr(2)+chr(1)+chr(1)+'a'
-s.writeMessage(m)
+#m = "P"+ chr(0x22)+chr(0x23)+chr(0)+chr(1)+chr(1)+'a'
+#s.writeMessage(m)
 while 1:
     data = s.readMessage()
-    if data[0] == 'I' and data[3] == '\x02':
-        m = data[2]+data[1]+chr(1)+data[4]+chr(0)
-        s.writeMessage(m)
+    if data[0] == 'P' and data[2] == '\x01':
+    #    time.sleep(0.1)
+        m = "P"+data[2]+data[1]+chr(0)+data[4]+chr(1)+data[6]
+#        s.writeMessage(m)
 
