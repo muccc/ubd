@@ -200,8 +200,9 @@ void packet_process(struct ubpacket * in)
         packet_incomming = 1;                   //mark packet as new
     }else if(!packet_acked){        //guarantee the userland that the buffer
                               //is empty when a new packet arrives
-        if( !packet_checkseq(in,0) )    //this ack was lost
-            packet_ack(in);             //send it again
+        if(packet_isUnicast(in))
+            if( !packet_checkseq(in,0) )    //this ack was lost
+                packet_ack(in);             //send it again
         //this packet is ignored.
         //the sender will try again.
     }else if( packet_isUnicast(in) ){
@@ -216,7 +217,7 @@ void packet_process(struct ubpacket * in)
         }
     }else if( packet_isBroadcast(in) ){
         //DEBUG("broadcast");
-        memcpy(&inpacket,in,sizeof(in));
+        memcpy(&inpacket,in,sizeof(inpacket));
         packet_incomming = 1;                   //mark packet as new
     }
 }
