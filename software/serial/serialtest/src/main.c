@@ -1,30 +1,31 @@
 #include <config.h>
 #include <stdio.h>
 #include <gnet.h>
-
+#include <glib.h>
+#include <fcntl.h>
+#include <termios.h>
 
 int main (int argc, char *argv[])
 {
-    gnet_init();
-    gnet_ipv6_set_policy(GIPV6_POLICY_IPV6_ONLY);
-    
-    GInetAddr* iface = gnet_inetaddr_new(argv[2],2323);
-    if( iface == NULL ){
-        printf("not a valid ipv6 address\n");
-        return;
+    printf ("This is " PACKAGE_STRING ".\n");
+    int fd = open("/dev/ttyUSB0", O_RDWR|O_NOCTTY);//|O_NONBLOCK);
+    struct termios tio;
+    tcgetattr (fd, &tio);
+    tio.c_cflag = CREAD | CLOCAL | B115200 | CS8;
+    tio.c_iflag = IGNPAR | IGNBRK;
+    tio.c_oflag = 0;
+    tio.c_lflag = 0;
+    tio.c_cc[VTIME] = 0;
+    tio.c_cc[VMIN]  = 1;
+    tcsetattr (fd, TCSANOW, &tio);
+    tcflush (fd, TCIFLUSH);
+    tcflush (fd, TCOFLUSH); 
+    while(1){
+        char buf[10];
+        int n = read(fd,buf,1);
+        printf("got len=%d char=%x\n",n,buf[0]);
     }
-    GUdpSocket*  s = gnet_udp_socket_new_full(iface,0);
-    g_assert(s!=NULL);
-    if( s == NULL ){
-        printf("could not create socket\n");
-        return;
-    }
-//  usleep(3*1000*1000);
-    GInetAddr* a = gnet_inetaddr_new(argv[1],2323);
-    gnet_udp_socket_send(s,"blubb",5,a);
-    puts ("Hello World!");
-    puts ("This is " PACKAGE_STRING ".");
-//    usleep(10*1000*1000);
+    //io = g_io_channel_unix_new(fd);
     return 0;
 }
 

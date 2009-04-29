@@ -1,3 +1,3 @@
-bin_PROGRAMS = v6test
-v6test_SOURCES = main.c
+bin_PROGRAMS = serialtest
+serialtest_SOURCES = main.c
 
