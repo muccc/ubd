@@ -8,11 +8,14 @@
 #include "bus.h"
 #include "frame.h"
 #include "serial_handler.h"
+#include "busmgt.h"
 
 struct frame outframe;
 struct ubpacket inpacket;
 
 address_t   packet_address = 0x23;
+address_t   packet_master;
+
 seq_t       packet_ack_seq;
 typedef uint16_t    time_t;
 
@@ -28,14 +31,29 @@ void packet_init(uint8_t adr, uint8_t sniff)
     DDRC |= (1<<PC2);
     PORTD |= (1<<PD7);
     packet_address = adr;
-    if(adr == 0){
+/*    if(adr == 0){
         if( PIND & (1<<PD7) ){
             packet_address = 'A';
         }else{
             packet_address = 'B';
         }
-    }
+    }*/
     packet_sniff = sniff;
+}
+
+void packet_setAdr(address_t adr)
+{
+    packet_address = adr;
+}
+
+void packet_setMaster(address_t master)
+{
+    packet_master = master;
+}
+
+address_t packet_getMaster(void)
+{
+    return packet_master;
 }
 
 void packet_setMode(uint8_t mode)
@@ -72,7 +90,7 @@ inline uint8_t packet_isUnicast(struct ubpacket * in)
 
 uint8_t packet_isLocal(struct ubpacket * in)
 {
-    return packet_isBroadcast(in) || packet_isUnicast(in);          //TODO: check own mulicast
+    return packet_isBroadcast(in) || in->dest == packet_address; //|| packet_isUnicast(in);          //TODO: check own mulicast
 }
 
 inline struct ubpacket * packet_getSendBuffer(void)
@@ -219,6 +237,14 @@ void packet_process(struct ubpacket * in)
         //DEBUG("broadcast");
         memcpy(&inpacket,in,sizeof(inpacket));
         packet_incomming = 1;                   //mark packet as new
+    }
+
+    if(packet_incomming){
+#ifndef CFG_BRIDGE
+        if(busmgt_process(&inpacket)){
+            packet_incomming = 0;
+        }
+#endif
     }
 }
 

@@ -30,6 +30,7 @@
 #include "bus.h"
 #include "random.h"
 #include "sender.h"
+#include "settings.h"
 
 int main(void)
 {
@@ -47,6 +48,7 @@ int main(void)
     //bus_init();
     //packet_init();
     timer_init(sender_tick, addr); // init with system-wide unique value
+    settings_read();
     sender_init(addr);
     sender_mainloop();
     return 0; // we won't get here

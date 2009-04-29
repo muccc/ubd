@@ -39,7 +39,7 @@ void sender_mainloop(void)
             //if( packet_done() ){
             if(packet_gotPacket() || first){
                 //PORTB |= (1<<PB0);
-                first = 0;
+ /*               first = 0;
                 packet_processed();
                 p = packet_getSendBuffer();
                 if( PIND & (1<<PD7) )
@@ -50,7 +50,7 @@ void sender_mainloop(void)
                 p->flags = 0;
                 p->len = 1;
                 p->data[0] = data++;
-                packet_send();
+                packet_send();*/
                 //PORTB &= ~(1<<PB0);
             }
             //if(packet_done() && time > 1000)

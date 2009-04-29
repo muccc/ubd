@@ -31,6 +31,11 @@ struct ubpacket{
 #define PACKET_TIMEOUT          200     //we wait max 200ms for an ack
 
 void packet_init(uint8_t adr, uint8_t sniff);
+void packet_setAdr(address_t adr);
+
+void packet_setMaster(address_t master);
+address_t packet_getMaster(void);
+
 void packet_send(void);
 void packet_setMode(uint8_t mode);
 //uint8_t packet_sendstate(void);
