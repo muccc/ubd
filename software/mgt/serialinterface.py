@@ -67,6 +67,7 @@ if __name__ == '__main__':
         data = s.readMessage()
         if data[0] == 'P' and data[2] == '\x01':
             #time.sleep(0.1)
-            m = "P"+data[2]+data[1]+chr(0)+data[4]+chr(1)+data[6]
+            #m = "P"+data[2]+data[1]+chr(0)+data[4]+chr(1)+data[6]
             #s.writeMessage(m)
+            pass
 
