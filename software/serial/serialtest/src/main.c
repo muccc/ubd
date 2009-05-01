@@ -141,24 +141,6 @@ int main (int argc, char *argv[])
     g_main_loop_run(mainloop);
 
     printf("past mainloop\n");
-/*    while(1){
-        usleep(1000);
-        continue;
-        unsigned char gbuf[10];
-        gsize gread;
-
-        int r = g_io_channel_read_chars(serial,gbuf,1,&gread,NULL);
-        if( gread > 0 ){
-            printf("result: %u read %u bytes data=0x%2X.\n",r,gread,gbuf[0]);
-        }else{
-            printf("result: %u\n",r);
-        }
-        continue;
-        char buf[10];
-        int n = read(fd,buf,1);
-        printf("got len=%d char=%x\n",n,buf[0]);
-    }
-    //io = g_io_channel_unix_new(fd);*/
     return 0;
 }
 
