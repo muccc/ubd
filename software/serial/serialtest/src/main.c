@@ -10,7 +10,7 @@
 #include "ubpacket.h"
 #include "serial.h"
 #include "debug.h"
-
+#include "net6.h"
 
 struct queues{
     GAsyncQueue * packet_in;
@@ -50,9 +50,10 @@ void main_newmessage(struct message * msg)
 
 int main (int argc, char *argv[])
 {
-
     if (!g_thread_supported ()) g_thread_init (NULL);
     printf ("This is " PACKAGE_STRING ".\n");
+
+    net_init("::1");
 
     if( argc < 2 ){
         printf("Please specify a serial port to use.\n");
@@ -70,7 +71,7 @@ int main (int argc, char *argv[])
     GThread * readerthread = g_thread_create(reader,&q,FALSE,NULL);
     
     //g_io_channel_write_chars(serial, "\\0P\x01\xFF\x00\x00\x02Mr\\1",12,NULL,NULL);
-    
+
     GMainLoop * mainloop = g_main_loop_new(NULL,TRUE);
     g_main_loop_run(mainloop);
 
