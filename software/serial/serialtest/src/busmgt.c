@@ -20,7 +20,10 @@ struct node{
     address_t   adr;
     gint        state;
     gint        tpoll;
+    gint        poll;
     gchar       name[MAX_NAME];
+    gint        timeout;
+    gint        ttimeout;
 };
 
 #define MAX_NODE    256
@@ -143,9 +146,21 @@ void busmgt_inpacket(struct ubpacket* p)
             response.data[0] = 'M';
             response.data[1] = 'O';
             packet_outpacket(&response);
+            n->state = NODE_IDENTIFY;
         break;
         case 'A':
-            
+            n = busmgt_getNodeByAdr(p->src);
+            if( n == NULL ){
+                printf("Address %u unkown. Sending reset.\n", p->src);
+                response.dest = p->src;
+                response.len = 2;
+                response.data[0] = 'M';
+                response.data[1] = 'r';
+                packet_outpacket(&response);
+            }else{
+                n->timeout = 0;
+                n->state = NODE_NORMAL;
+            }
         break;
     };
 
