@@ -138,8 +138,15 @@ void busmgt_inpacket(struct ubpacket* p)
             printf("mgt: got identify from %s\n", name);
             n = busmgt_getNodeByName(name);
 
-            if( n == NULL )
+            if( n == NULL ){
+                printf("Address %u unkown. Sending reset.\n", p->src);
+                response.dest = p->src;
+                response.len = 2;
+                response.data[0] = 'M';
+                response.data[1] = 'r';
+                packet_outpacket(&response);
                 return;
+            }
             
             response.dest = p->src;
             response.len = 2;
@@ -165,7 +172,6 @@ void busmgt_inpacket(struct ubpacket* p)
     };
 
     g_free(p); 
-    //packet_outpacket(p);
 }
 
 void busmgt_init(void)
@@ -175,5 +181,4 @@ void busmgt_init(void)
         nodes[i].state=NODE_UNKNOWN;
     }
     packet_addCallback(BUSMGT_ID, busmgt_inpacket);
-    //g_io_channel_write_chars(serial, "\\0P\x01\xFF\x00\x00\x02Mr\\1",12,NULL,NULL);
 }
