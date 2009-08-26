@@ -10,6 +10,7 @@ extern struct settings_record_t global_settings;
 
 //extern uint8_t idbuf[60];
 
+inline uint16_t settings_getidhash(void);
 void settings_save(void);
 void settings_read(void);
 void settings_readid(uint8_t * buf);

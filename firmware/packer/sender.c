@@ -13,7 +13,7 @@
 
 volatile uint8_t tick;
 volatile uint16_t time;
-void sender_init(uint8_t addr)
+void sender_init()
 {
     packet_init(0,0);
     busmgt_init();

@@ -10,11 +10,12 @@ struct settings_record_t global_settings;
 
 char * name = (char *)(E2END - 50);
 uint8_t idbuf[60];
+uint16_t settings_idhash;
 
 void settings_readid(uint8_t * buf)
 {
     //eeprom_read_block(buf,name,50);
-    strcpy(buf,idbuf);//"newid.local");
+    strcpy((char*)buf,(char*)idbuf);//"newid.local");
 }
 
 uint8_t settings_compareid(uint8_t * buf)
@@ -35,6 +36,11 @@ void settings_setid(uint8_t * buf)
         buf[len] = 0;
     }*/
     eeprom_write_block(buf,name,len+1);  
+}
+
+inline uint16_t settings_getidhash(void)
+{
+    return settings_idhash;
 }
 
 void settings_save(void)
@@ -59,6 +65,18 @@ void settings_read(void)
     if(idbuf[0] == 255){
         strcpy((char*)idbuf,"newid.local");
         eeprom_write_block(idbuf,name,50);
+    }
+
+    uint8_t i = (strlen((char*)idbuf) & 0xFE) / 2;
+    if(i == 0){
+        settings_idhash = idbuf[0];
+    }else{
+        settings_idhash = 0;
+        while(i){
+            i--;
+            settings_idhash+=idbuf[i]<<8;
+            settings_idhash+=idbuf[i+1];
+        }
     }
 }
 

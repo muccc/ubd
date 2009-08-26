@@ -34,22 +34,18 @@
 
 int main(void)
 {
-    uint8_t addr;
+    uint16_t addr;
     hal_sysinit();
-    //volatile uint32_t i;
-    //for(i = 0; i <400; i++);
+    settings_read();
+    addr = settings_getidhash();
+    uart_init(addr>>8); // timeout affects collision recovery, use address
 
-    addr = hal_get_addr(); // device address from DIP switches
-    addr |= 0x40; // add the device class
-    
-    hal_watchdog_enable();
-    uart_init(addr); // timeout affects collision recovery, use address
-    rand_seed(((uint16_t)addr << 8) | (uint16_t)addr);
+    rand_seed(addr);
     //bus_init();
     //packet_init();
-    timer_init(sender_tick, addr); // init with system-wide unique value
-    settings_read();
-    sender_init(addr);
+    timer_init(sender_tick, addr>>8); // init with system-wide unique value
+    sender_init();
+    hal_watchdog_enable();
     sender_mainloop();
     return 0; // we won't get here
 }

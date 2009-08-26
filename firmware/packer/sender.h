@@ -19,7 +19,7 @@
 #ifndef _SENDER_H
 #define _SENDER_H
 
-void sender_init(uint8_t addr); // assign a bus address
+void sender_init(void); // assign a bus address
 
 void sender_mainloop(void); // the main loop
 
