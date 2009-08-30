@@ -3,7 +3,7 @@
 #include "usart.h"
 #include "serial_handler.h"
 
-char buffer[SERIAL_BUFFERLEN];
+uint8_t buffer[SERIAL_BUFFERLEN];
 uint8_t serial_buffer[SERIAL_BUFFERLEN];
 
 inline void serial_putcenc(uint8_t c)
@@ -68,7 +68,7 @@ uint16_t serial_readline(void)
     return l;
 }
 
-unsigned int readline( void )
+int16_t readline( void )
 {
     static int fill = 0;
     static uint8_t escaped = 0;
@@ -94,11 +94,9 @@ unsigned int readline( void )
             return fill;
         }
     }
-    //if(fill != -1){
-        buffer[fill++] = data;
-        if(fill >= SERIAL_BUFFERLEN)
-            fill = SERIAL_BUFFERLEN -1;
-    //}
+    buffer[fill++] = data;
+    if(fill >= SERIAL_BUFFERLEN)
+        fill = SERIAL_BUFFERLEN -1;
     return 0;
 }
 
