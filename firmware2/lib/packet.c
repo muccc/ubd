@@ -13,7 +13,7 @@
 struct frame outframe;
 struct ubpacket inpacket;
 
-address_t   packet_address = 0x23;
+address_t   packet_address;
 address_t   packet_master;
 
 seq_t       packet_ack_seq;
@@ -31,13 +31,6 @@ void packet_init(uint8_t adr, uint8_t sniff)
     DDRC |= (1<<PC2);
     PORTD |= (1<<PD7);
     packet_address = adr;
-/*    if(adr == 0){
-        if( PIND & (1<<PD7) ){
-            packet_address = 'A';
-        }else{
-            packet_address = 'B';
-        }
-    }*/
     packet_sniff = sniff;
 }
 
@@ -130,19 +123,6 @@ uint8_t packet_done(void)
     return 0;
 }
 
-void packet_ack(struct ubpacket * p)
-{
-    struct frame f;
-    struct ubpacket *out = (struct ubpacket *) f.data;
-    out->flags = UB_PACKET_ACK;
-    out->seq = p->seq;
-    out->len = 0;
-    out->dest = p->src;
-    out->src = p->dest;
-    packet_transmit(&f);
-}
-
-
 inline uint8_t packet_gotPacket(void)
 {
     return packet_incomming;
@@ -152,61 +132,6 @@ inline void packet_processed(void)
 {
     packet_incomming = 0;
 }
-
-#define MAX_HOSTS   5
-struct {
-    address_t src;
-    seq_t     seq;
-    time_t    time;
-}seqs[MAX_HOSTS];
-
-//checks if seq was seen before. A round-robin table is used to
-//keep track of the sequence numbers.
-//returns 1 if the packet is new
-uint8_t packet_checkseq(struct ubpacket * p, uint8_t update)
-{
-    static uint8_t seqrr = 0;
-    uint8_t i;
-    uint8_t ret;
-    uint8_t new;
-
-    address_t src = p->src;
-    seq_t seq = p->seq;
-
-    for(i=0;i<MAX_HOSTS;i++){
-        if(seqs[i].src == src){                 //host known
-            new = seqs[i].seq!=seq?1:0;       //check for old seq
-            ret = new || seqs[i].time == 0;
-            if(ret && update) 
-                seqs[i].time = 1000;
-            if(new && update){
-                seqs[i].seq = seq;
-            }
-                                    //TODO: add some real seq counting here
-            
-            return ret;
-        }
-    }                                           //host unknown
-    if(!update)
-        return 1;
-    seqs[seqrr].src = src;                      //add host to table
-    seqs[seqrr].time = 1000;
-    seqs[seqrr++].seq = seq;
-    if(seqrr == MAX_HOSTS)                      //round robin style
-        seqrr = 0;
-    return 1;
-}
-
-void packet_seqtick(void)
-{ 
-    uint8_t i;
-    for(i=0;i<MAX_HOSTS;i++){
-        if(seqs[i].time){
-            seqs[i].time--;
-        }
-    }
-}
-
 
 void packet_process(struct ubpacket * in)
 {
