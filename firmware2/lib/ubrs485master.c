@@ -4,6 +4,7 @@
 #include "ubrs485uart.h"
 #include "settings.h"
 #include "ubtimer.h"
+#include "ub.h"
 
 #define UB_HOSTADR          1
 #define UB_MASTERADR        2
@@ -249,22 +250,18 @@ inline void rs485master_rx(void)
     }
 }
 
-inline void rs485master_edgeDisable(void)
-{
-
-}
-
-inline void rs485master_edgeEnable(void)
-{
-
-}
-
 inline void rs485master_edge(void)
 {
-    if( rs485m_busState == RS485M_BUS_IDLE && 
-            rs485uart_lineActive() && rs485uart_isReceiving()){
-        rs485m_busState = RS485M_BUS_RECV_START;
-        rs485master_edgeDisable();
+    if( rs485m_busState == RS485M_BUS_IDLE ){
+        if( rs485uart_lineActive() && rs485uart_isReceiving() ){
+            rs485m_busState = RS485M_BUS_RECV_START;
+            rs485uart_edgeDisable();
+        }else{
+            //this was na a valid start
+        }
+    }else{
+        //we can't start receiving
+        rs485uart_edgeDisable();
     }
 }
 
@@ -283,7 +280,7 @@ inline void rs485master_setTimeout(void)
     //wait for 4 bytes before timeout
     ubtimer_start(4 * UB_TICKSPERBYTE);      //start+8+stop
     rs485m_busState = RS485M_BUS_SEND_TIMER;
-    rs485master_edgeEnable();
+    rs485uart_edgeEnable();
 }
 
 inline void rs485master_tx(void)

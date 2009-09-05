@@ -112,6 +112,8 @@ inline void rs485uart_enableReceive(void);
 inline void rs485uart_enableTransmit(void);
 inline void rs485uart_disable(void);
 inline uint8_t rs485uart_isReceiving(void);
+inline void rs485uart_edgeDisable(void);
+inline void rs485uart_edgeEnable(void);
 inline uint8_t rs485uart_lineActive(void);
 #endif // UART_H 
 

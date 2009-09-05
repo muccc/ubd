@@ -45,6 +45,8 @@ LICENSE:
 #include "ubconfig.h"
 #include "ubrs485master.h"
 #include "ubrs485client.h"
+#include "ub.h"
+
 /*
  *  constants and macros
  */
@@ -266,21 +268,7 @@ ISR(USART0_TX_vect, ISR_NOBLOCK)
 
 
 
-ISR(TIMER2_COMPA_vect, ISR_NOBLOCK)
-{
-#ifdef UB_ENABLEMASTER
-    if( ubconfig.rs485master ){
-        rs485master_timer();
-    }
-#endif
 
-#ifdef UB_ENABLECLIENT
-    if( ubconfig.rs485client ){
-        rs485client_timer();
-    }
-#endif
-   
-}
 /*
  *  module global variables
  */
@@ -427,3 +415,14 @@ ISR(RS485_ISR_EDGE, ISR_NOBLOCK)
     }
 #endif
 }
+
+inline void rs485uart_edgeDisable(void)
+{
+
+}
+
+inline void rs485uart_edgeEnable(void)
+{
+    
+}
+
