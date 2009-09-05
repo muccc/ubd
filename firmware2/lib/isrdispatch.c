@@ -1,9 +1,9 @@
 #include <avr/interrupt.h>
 #include "ubconfig.h"
 #include "ubrs485master.h"
-#include "ububclient.h"
+#include "ubrs485client.h"
 
-ISR(UB_RX, ISR_NOBLOCK)
+ISR(RS485_ISR_RX, ISR_NOBLOCK)
 {
 #ifdef UB_MASTER
     if( ubconfig.rs485master ){
@@ -12,13 +12,13 @@ ISR(UB_RX, ISR_NOBLOCK)
 #endif
 
 #ifdef UB_CLIENT
-    if( ubconfig.ubclient ){
-        ubclient_rx();
+    if( ubconfig.rs485client ){
+        rs485client_rx();
     }
 #endif
 }
 
-ISR(UB_TX, ISR_NOBLOCK)
+ISR(RS485_ISR_TX, ISR_NOBLOCK)
 {
 #ifdef UB_MASTER
     if( ubconfig.rs485master ){
@@ -27,13 +27,28 @@ ISR(UB_TX, ISR_NOBLOCK)
 #endif
 
 #ifdef UB_CLIENT
-    if( ubconfig.ubclient ){
-        ubclient_tx();
+    if( ubconfig.rs485client ){
+        rs485client_tx();
     }
 #endif
 }
 
-ISR(UB_EDGE, ISR_NOBLOCK)
+ISR(RS485_ISR_TXEND, ISR_NOBLOCK)
+{
+#ifdef UB_MASTER
+    if( ubconfig.rs485master ){
+        rs485master_txend();
+    }
+#endif
+
+#ifdef UB_CLIENT
+    if( ubconfig.rs485client ){
+        rs485client_txend();
+    }
+#endif
+}
+
+ISR(RS485_ISR_EDGE, ISR_NOBLOCK)
 {
 #ifdef UB_MASTER
     if( ubconfig.rs485master ){
@@ -42,8 +57,8 @@ ISR(UB_EDGE, ISR_NOBLOCK)
 #endif
 
 #ifdef UB_CLIENT
-    if( ubconfig.ubclient ){
-        ubclient_edge();
+    if( ubconfig.rs485client ){
+        rs485client_edge();
     }
 #endif
 }
@@ -52,13 +67,13 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK)
 {
 #ifdef UB_MASTER
     if( ubconfig.rs485master ){
-        ubmaster_timer();
+        rs485master_timer();
     }
 #endif
 
 #ifdef UB_CLIENT
-    if( ubconfig.ubclient ){
-        ubclient_timer();
+    if( ubconfig.rs485client ){
+        rs485client_timer();
     }
 #endif
    
