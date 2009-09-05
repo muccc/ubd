@@ -42,7 +42,9 @@ LICENSE:
 #include <avr/pgmspace.h>
 #include "usart.h"
 #include "stdio.h"
-
+#include "ubconfig.h"
+#include "ubrs485master.h"
+#include "ubrs485client.h"
 /*
  *  constants and macros
  */
@@ -217,12 +219,71 @@ LICENSE:
  #error "no UART definition for MCU available"
 #endif
 
+ISR(UART0_RECEIVE_INTERRUPT, ISR_NOBLOCK)
+{
+#ifdef UB_ENABLEMASTER
+    if( ubconfig.rs485master ){
+        rs485master_rx();
+    }
+#endif
+
+#ifdef UB_ENABLECLIENT
+    if( ubconfig.rs485client ){
+        rs485client_rx();
+    }
+#endif
+}
+
+ISR(UART0_TRANSMIT_INTERRUPT, ISR_NOBLOCK)
+{
+#ifdef UB_ENABLEMASTER
+    if( ubconfig.rs485master ){
+        rs485master_tx();
+    }
+#endif
+
+#ifdef UB_ENABLECLIENT
+    if( ubconfig.rs485client ){
+        rs485client_tx();
+    }
+#endif
+}
+
+ISR(USART0_TX_vect, ISR_NOBLOCK)
+{
+#ifdef UB_ENABLEMASTER
+    if( ubconfig.rs485master ){
+        rs485master_txend();
+    }
+#endif
+
+#ifdef UB_ENABLECLIENT
+    if( ubconfig.rs485client ){
+        rs485client_txend();
+    }
+#endif
+}
+
+
+
+ISR(TIMER2_COMPA_vect, ISR_NOBLOCK)
+{
+#ifdef UB_ENABLEMASTER
+    if( ubconfig.rs485master ){
+        rs485master_timer();
+    }
+#endif
+
+#ifdef UB_ENABLECLIENT
+    if( ubconfig.rs485client ){
+        rs485client_timer();
+    }
+#endif
+   
+}
 /*
  *  module global variables
  */
-static volatile unsigned char UART_LastRxError;
-
-static volatile unsigned char UART1_LastRxError;
 
 /*************************************************************************
 Function: uart_init()
@@ -230,10 +291,8 @@ Purpose:  initialize UART and set baudrate
 Input:    baudrate using macro UART_BAUD_SELECT()
 Returns:  none
 **************************************************************************/
-void uart_init(unsigned int baudrate)
+void rs485uart_init(unsigned int baudrate)
 {
-    UART_TxHead = 0;
-    UART_TxTail = 0;
     
 #if defined( AT90_UART )
     /* set baud rate */
@@ -273,7 +332,7 @@ void uart_init(unsigned int baudrate)
     UBRR0L = (unsigned char) baudrate;
 
     /* Enable USART receiver and transmitter and receive complete interrupt */
-    UART0_CONTROL = _BV(RXCIE0)|(1<<RXEN0)|(1<<TXEN0);
+    UART0_CONTROL = _BV(RXCIE0)|_BV(TXCIE0)|_BV(UDRIE0)|(1<<RXEN0)|(1<<TXEN0);
     
     /* Set frame format: asynchronous, 8data, no parity, 1stop bit */
     #ifdef URSEL0
@@ -299,42 +358,72 @@ void uart_init(unsigned int baudrate)
 
 }/* uart_init */
 
-
-/*************************************************************************
-Function: uart1_init()
-Purpose:  initialize UART1 and set baudrate
-Input:    baudrate using macro UART_BAUD_SELECT()
-Returns:  none
-**************************************************************************/
-void uart1_init(unsigned int baudrate)
-{
-
-    /* Set baud rate */
-    if ( baudrate & 0x8000 ) 
-    {
-        UART1_STATUS = (1<<U2X1);  //Enable 2x speed 
-      baudrate &= ~0x8000;
-    }
-    UBRR1H = (unsigned char)(baudrate>>8);
-    UBRR1L = (unsigned char) baudrate;
-
-    /* Enable USART receiver and transmitter and receive complete interrupt */
-    UART1_CONTROL = _BV(RXCIE1)|(1<<RXEN1)|(1<<TXEN1);
-    
-    /* Set frame format: asynchronous, 8data, no parity, 1stop bit */   
-    #ifdef URSEL1
-    UCSR1C = (1<<URSEL1)|(3<<UCSZ10);
-    #else
-    UCSR1C = (3<<UCSZ10);
-    #endif 
-}/* uart_init */
-
-inline void uart0_putc(char c)
+inline void rs485uart_putc(char c)
 {
     UDR0 = c;
 }
 
-inline void uart1_putc(char c)
+inline uint16_t rs485uart_getc(void)
 {
-    UDR1 = c;
+    uint8_t lastRxError;
+    uint8_t data = UART0_DATA;
+    uint8_t usr = UART0_STATUS;
+
+#if defined( AT90_UART )
+    lastRxError = (usr & (_BV(FE)|_BV(DOR)) );
+#elif defined( ATMEGA_USART )
+    lastRxError = (usr & (_BV(FE)|_BV(DOR)) );
+#elif defined( ATMEGA_USART0 )
+    lastRxError = (usr & (_BV(FE0)|_BV(DOR0)) );
+#elif defined ( ATMEGA_UART )
+    lastRxError = (usr & (_BV(FE)|_BV(DOR)) );
+#endif
+    
+    return (lastRxError << 8) + data;
+}
+
+
+uint8_t rs485uart_mode;
+#define RS485UART_MODE_OFF          0
+#define RS485UART_MODE_TRANSMIT     1
+#define RS485UART_MODE_RECEIVE      2
+
+inline void rs485uart_enableReceive(void)
+{
+    rs485uart_mode = RS485UART_MODE_RECEIVE;
+}
+
+inline void rs485uart_enableTransmit(void)
+{
+    rs485uart_mode = RS485UART_MODE_TRANSMIT;
+}
+
+inline void rs485uart_disable(void)
+{
+    rs485uart_mode = RS485UART_MODE_OFF;
+}
+
+inline uint8_t rs485uart_isReceiving(void)
+{
+    return rs485uart_mode == RS485UART_MODE_RECEIVE;
+}
+
+inline uint8_t rs485uart_lineActive(void)
+{
+    return 1;
+}
+
+ISR(RS485_ISR_EDGE, ISR_NOBLOCK)
+{
+#ifdef UB_ENABLEMASTER
+    if( ubconfig.rs485master ){
+        rs485master_edge();
+    }
+#endif
+
+#ifdef UB_ENABLECLIENT
+    if( ubconfig.rs485client ){
+        rs485client_edge();
+    }
+#endif
 }
