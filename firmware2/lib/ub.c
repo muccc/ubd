@@ -1,15 +1,17 @@
-#include "config.h"
+//#include "config.h"
 #include "ubconfig.h"
-#include "ubuart.h"
+#include "ubrs485uart.h"
 #include "ubstat.h"
+#include "ubmaster.h"
+
+struct ub_config ubconfig;
 
 void ub_init(uint8_t ubmode)
 {
-    UART_INIT( UART_BAUD_SELECT(UB_BITRATE,F_CPU));
     if( ubmode == UB_MASTER ){
         ubmaster_init();
     }else if ( ubmode == UB_CLIENT ){
-        ubclient_init();
+//        ubclient_init();
     }
     ubstat_init();
 }
