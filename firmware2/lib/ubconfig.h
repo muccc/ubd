@@ -5,6 +5,14 @@
 #define RS485_BITRATE       115200
 #define RS485_ISR_EDGE      PCINT3_vect
 
+#define RS485_DE_PIN        PC4
+#define RS485_DE_PORT       PORTC
+#define RS485_DE_DDR        DDRC
+
+#define RS485_nRE_PIN       PC5
+#define RS485_nRE_PORT      PORTC
+#define RS485_nRE_DDR       DDRC
+
 #define UB_ESCAPE     '\\'
 #define UB_START        '0'
 #define UB_STOP         '1'

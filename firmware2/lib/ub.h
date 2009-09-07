@@ -11,9 +11,13 @@
 struct ub_config {
     uint8_t rs485master;
     uint8_t rs485client;
+    uint8_t master;
+    uint8_t client;
 };
 
 extern struct ub_config ubconfig;
 void ub_init(uint8_t ubmode);
+void ub_process(void);
+void ub_tick(void);
 
 #endif

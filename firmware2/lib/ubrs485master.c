@@ -10,7 +10,7 @@
 #define UB_MASTERADR        2
 
 #define UB_TICKSPERBYTE             10
-#define UB_INITIALDISCOVERINTERVAL  100
+#define UB_INITIALDISCOVERINTERVAL  500
 
 #define UB_QUERYINTERVALMIN      64      //in ms
 #define UB_QUERYINTERVALMAX      1000    //in ms
@@ -24,6 +24,7 @@
 
 #define RS485M_STATE_INIT               1
 #define RS485M_STATE_INITIALDISCOVER    2
+#define RS485M_STATE_STOP               5
 #define RS485M_NORMAL                   3
 #define RS485M_DISCOVER                 4
 
@@ -40,6 +41,7 @@
 #define RS485M_BUS_SEND_DONE         5
 #define RS485M_BUS_SEND_TIMER        6
 #define RS485M_BUS_RECV_START        7
+#define RS485M_BUS_SEND_TIMER_WAIT   8
 
 struct rs485m_slot {
     uint8_t     adr;
@@ -102,8 +104,9 @@ void rs485master_init(void)
     //ubtimer_start(UB_TICKSPERBYTE);      //start+8+stop
     for(i=0; i<UB_MAXQUERY; i++){
         rs485m_query[i].adr = i;
-        rs485m_query[i].interval = UB_QUERYINTERVALMAXCOUNT; 
-        rs485m_query[i].counter  = UB_QUERYINTERVALMAXCOUNT;
+        //rs485m_query[i].interval = UB_QUERYINTERVALMAXCOUNT; 
+        rs485m_query[i].interval = UB_QUERYINTERVALMAXCOUNT/1; 
+        rs485m_query[i].counter  = UB_QUERYINTERVALMAXCOUNT/1;
     }
 
     for(i=0; i<RS485M_SLOTCOUNT; i++){
@@ -166,7 +169,9 @@ void rs485master_querynodes(void)
         query--;                //stops the check by underrun
     }
 
+    //testing:
     //check the other nodes, one per timer
+
     if( querymax ){
         uint8_t flags = ubstat_getFlags(querymax);
         if( flags & (UB_KNOWN | UB_RS485 | UB_QUERYMAX) ){
@@ -175,16 +180,16 @@ void rs485master_querynodes(void)
             }
         }
         querymax++;
+        if( querymax == UB_NODEMAX )
+            querymax = 0;
     }
-
 }
 
 //1ms
-void rs485master_tick(void)
+inline void rs485master_tick(void)
 {
     rs485m_ticks++;
     rs485master_querynodes();
-
 }
 
 uint8_t rs485master_idle(void)
@@ -194,7 +199,7 @@ uint8_t rs485master_idle(void)
     return UB_ERROR;
 }
 
-void rs485master_process(void)
+inline void rs485master_process(void)
 {
     switch( rs485m_state ){
         case RS485M_STATE_INIT:
@@ -204,7 +209,6 @@ void rs485master_process(void)
             if( rs485m_ticks == UB_INITIALDISCOVERINTERVAL){
                 rs485m_ticks = 0;
                 rs485master_discover();
-                //just send the discover escape sequence
             }
         break;
     }
@@ -217,6 +221,7 @@ void rs485master_runslot(void)
 {
     //implement priorities by aranging these items
     if( rs485m_slots[RS485M_DISCOVERSLOT].full ){
+        //just send the discover escape sequence
         rs485master_start(UB_DISCOVER,NULL,0,0);
         rs485m_slots[RS485M_DISCOVERSLOT].full = 0;
     }else if( rs485m_slots[RS485M_QUERYSLOT].full ){
@@ -233,12 +238,12 @@ void rs485master_runslot(void)
 void rs485master_start(uint8_t start, uint8_t * data, uint8_t len, uint8_t stop)
 {
     rs485uart_enableTransmit();
-    rs485uart_putc(UB_ESCAPE);
+    rs485m_busState = RS485M_BUS_SEND_START;
     rs485m_start = start;
     rs485m_stop = stop;
     rs485m_data = data;
     rs485m_len = len;
-    rs485m_busState = RS485M_BUS_SEND_START;
+    rs485uart_putc(UB_ESCAPE);
 }
 
 inline void rs485master_rx(void)
@@ -257,7 +262,7 @@ inline void rs485master_edge(void)
             rs485m_busState = RS485M_BUS_RECV_START;
             rs485uart_edgeDisable();
         }else{
-            //this was na a valid start
+            //this was not a valid start
         }
     }else{
         //we can't start receiving
@@ -271,14 +276,16 @@ inline void rs485master_timer(void)
     if( rs485m_busState ==  RS485M_BUS_SEND_TIMER){
         //proceed to the next slot
         rs485m_busState = RS485M_BUS_IDLE;
-        ubtimer_stop();
     }
+    ubtimer_stop();
+    PORTA ^= 0x02;
 }
 
 inline void rs485master_setTimeout(void)
 {
     //wait for 4 bytes before timeout
-    ubtimer_start(4 * UB_TICKSPERBYTE);      //start+8+stop
+    ubtimer_start(2 * UB_TICKSPERBYTE);      //start+8+stop
+    PORTA |= 0x02;
     rs485m_busState = RS485M_BUS_SEND_TIMER;
     rs485uart_edgeEnable();
 }
@@ -291,7 +298,7 @@ inline void rs485master_tx(void)
 
     switch(rs485m_busState){
         case RS485M_BUS_SEND_START:
-            rs485uart_putc(UB_ESCAPE);
+            rs485uart_putc(rs485m_start);
             pos = 0;
             
             if( rs485m_len != 0)
@@ -299,7 +306,7 @@ inline void rs485master_tx(void)
             else if( rs485m_stop != 0 )
                 rs485m_busState = RS485M_BUS_SEND_STOP;
             else
-                rs485master_setTimeout();
+                rs485m_busState = RS485M_BUS_SEND_TIMER_WAIT;
         break;
         case RS485M_BUS_SEND_DATA:
             data = rs485m_data[pos];
@@ -311,7 +318,10 @@ inline void rs485master_tx(void)
                 rs485uart_putc(data);
                 if( ++pos == rs485m_len ){
                     rs485m_slots[RS485M_PACKETSLOT].full = 0;
-                    rs485m_busState = RS485M_BUS_SEND_STOP;
+                    if( rs485m_stop == 0 )
+                        rs485m_busState = RS485M_BUS_SEND_TIMER_WAIT;
+                    else
+                        rs485m_busState = RS485M_BUS_SEND_STOP;
                 }
             }
         break;
@@ -323,6 +333,7 @@ inline void rs485master_tx(void)
              rs485uart_putc(rs485m_stop);
              rs485m_busState = RS485M_BUS_SEND_DONE;
         break;
+        case RS485M_BUS_IDLE:
         default:
         break;
     }
@@ -330,6 +341,8 @@ inline void rs485master_tx(void)
 
 inline void rs485master_txend(void)
 {
+    if( rs485m_busState == RS485M_BUS_SEND_TIMER_WAIT )
+        rs485master_setTimeout();
     if( rs485m_busState == RS485M_BUS_SEND_DONE )
         rs485m_busState = RS485M_BUS_IDLE;
     if( rs485m_busState == RS485M_BUS_IDLE

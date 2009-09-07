@@ -51,16 +51,9 @@ LICENSE:
  *  constants and macros
  */
 
-/* size of RX/TX buffers */
-#define UART_RX_BUFFER_MASK ( UART_RX_BUFFER_SIZE - 1)
-#define UART_TX_BUFFER_MASK ( UART_TX_BUFFER_SIZE - 1)
-
-#if ( UART_RX_BUFFER_SIZE & UART_RX_BUFFER_MASK )
-#error RX buffer size is not a power of 2
-#endif
-#if ( UART_TX_BUFFER_SIZE & UART_TX_BUFFER_MASK )
-#error TX buffer size is not a power of 2
-#endif
+#define RS485UART_MODE_OFF          0
+#define RS485UART_MODE_TRANSMIT     1
+#define RS485UART_MODE_RECEIVE      2
 
 #if defined(__AVR_AT90S2313__) \
  || defined(__AVR_AT90S4414__) || defined(__AVR_AT90S4434__) \
@@ -221,8 +214,9 @@ LICENSE:
  #error "no UART definition for MCU available"
 #endif
 
-ISR(UART0_RECEIVE_INTERRUPT, ISR_NOBLOCK)
+ISR(UART0_RECEIVE_INTERRUPT)//, ISR_NOBLOCK)
 {
+//    volatile uint8_t t  = UART0_DATA;
 #ifdef UB_ENABLEMASTER
     if( ubconfig.rs485master ){
         rs485master_rx();
@@ -236,10 +230,18 @@ ISR(UART0_RECEIVE_INTERRUPT, ISR_NOBLOCK)
 #endif
 }
 
-ISR(UART0_TRANSMIT_INTERRUPT, ISR_NOBLOCK)
+ISR(UART0_TRANSMIT_INTERRUPT)//, ISR_NOBLOCK)
 {
+    static uint8_t c = 0;
+    c++;
+    //if( c == 2){
+        c = 1;
+    //}
+    //UART0_CONTROL &= ~_BV(UART0_UDRIE);
+    //return;
 #ifdef UB_ENABLEMASTER
     if( ubconfig.rs485master ){
+        //PORTA |= 0x02;
         rs485master_tx();
     }
 #endif
@@ -249,10 +251,14 @@ ISR(UART0_TRANSMIT_INTERRUPT, ISR_NOBLOCK)
         rs485client_tx();
     }
 #endif
+    if( UART0_STATUS & (1<<UDRE0) )
+        //No more data to send
+        UART0_CONTROL &= ~_BV(UART0_UDRIE);
 }
 
-ISR(USART0_TX_vect, ISR_NOBLOCK)
+ISR(USART0_TX_vect)//, ISR_NOBLOCK)
 {
+    //return;
 #ifdef UB_ENABLEMASTER
     if( ubconfig.rs485master ){
         rs485master_txend();
@@ -266,12 +272,12 @@ ISR(USART0_TX_vect, ISR_NOBLOCK)
 #endif
 }
 
-
-
-
 /*
  *  module global variables
  */
+
+uint8_t rs485uart_mode;
+
 
 /*************************************************************************
 Function: uart_init()
@@ -320,7 +326,10 @@ void rs485uart_init(unsigned int baudrate)
     UBRR0L = (unsigned char) baudrate;
 
     /* Enable USART receiver and transmitter and receive complete interrupt */
-    UART0_CONTROL = _BV(RXCIE0)|_BV(TXCIE0)|_BV(UDRIE0)|(1<<RXEN0)|(1<<TXEN0);
+    UART0_CONTROL = (1<<RXEN0)|(1<<TXEN0);
+    UART0_CONTROL = _BV(RXCIE0)|(1<<RXEN0)|(1<<TXEN0);
+    UART0_CONTROL = _BV(RXCIE0)|_BV(TXCIE0)|(1<<RXEN0)|(1<<TXEN0);
+    //UART0_CONTROL = _BV(RXCIE0)|_BV(TXCIE0)|_BV(UDRIE0)|(1<<RXEN0)|(1<<TXEN0);
     
     /* Set frame format: asynchronous, 8data, no parity, 1stop bit */
     #ifdef URSEL0
@@ -344,11 +353,18 @@ void rs485uart_init(unsigned int baudrate)
 
 #endif
 
+    RS485_DE_DDR  |= (1<<RS485_DE_PIN);
+    RS485_DE_PORT  &= ~(1<<RS485_DE_PIN);
+    RS485_nRE_DDR |= (1<<RS485_nRE_PIN);
+    RS485_nRE_PORT |= (1<<RS485_nRE_PIN);
+
 }/* uart_init */
 
 inline void rs485uart_putc(char c)
 {
     UDR0 = c;
+    //enable data interrupt
+    UART0_CONTROL |= _BV(UART0_UDRIE);
 }
 
 inline uint16_t rs485uart_getc(void)
@@ -371,24 +387,29 @@ inline uint16_t rs485uart_getc(void)
 }
 
 
-uint8_t rs485uart_mode;
-#define RS485UART_MODE_OFF          0
-#define RS485UART_MODE_TRANSMIT     1
-#define RS485UART_MODE_RECEIVE      2
 
 inline void rs485uart_enableReceive(void)
 {
     rs485uart_mode = RS485UART_MODE_RECEIVE;
+    RS485_DE_PORT  &= ~(1<<RS485_DE_PIN);
+    RS485_nRE_PORT &= ~(1<<RS485_nRE_PIN);
+    PORTA &= ~0x04;
 }
 
 inline void rs485uart_enableTransmit(void)
 {
     rs485uart_mode = RS485UART_MODE_TRANSMIT;
+    RS485_DE_PORT  |= (1<<RS485_DE_PIN);
+    RS485_nRE_PORT |= (1<<RS485_nRE_PIN);
+    PORTA |= 0x04;
 }
 
 inline void rs485uart_disable(void)
 {
     rs485uart_mode = RS485UART_MODE_OFF;
+    RS485_DE_PORT  &= ~(1<<RS485_DE_PIN);
+    RS485_nRE_PORT |= (1<<RS485_nRE_PIN);
+    PORTA &= ~0x04;
 }
 
 inline uint8_t rs485uart_isReceiving(void)

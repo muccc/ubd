@@ -10,7 +10,7 @@
 #define UBTIMER_PRESCALER       32
 #define UBTIMER_TICKSPERBIT     (F_CPU/RS485_BITRATE/UBTIMER_PRESCALER)
 
-ISR(TIMER2_COMPA_vect, ISR_NOBLOCK)
+ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
 {
 #ifdef UB_ENABLEMASTER
     if( ubconfig.rs485master ){
@@ -37,8 +37,10 @@ void ubtimer_start(uint8_t t)
 {
     TCNT2 = 0;
     OCR2A = UBTIMER_TICKSPERBIT * t;
+    //OCR2A = 16;
     TCCR2B = (1<<CS21) | (1<<CS20);         // /32
 }
+
 
 void ubtimer_stop(void)
 { 

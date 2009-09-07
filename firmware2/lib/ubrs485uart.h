@@ -70,20 +70,6 @@ LICENSE:
 #define UART_BAUD_SELECT_DOUBLE_SPEED(baudRate,xtalCpu) (((xtalCpu)/((baudRate)*8l)-1)|0x8000)
 
 
-/** Size of the circular receive buffer, must be power of 2 */
-#ifndef UART_RX_BUFFER_SIZE
-#define UART_RX_BUFFER_SIZE 32
-#endif
-/** Size of the circular transmit buffer, must be power of 2 */
-#ifndef UART_TX_BUFFER_SIZE
-#define UART_TX_BUFFER_SIZE 64
-#endif
-
-/* test if the size of the circular buffers fits into SRAM */
-#if ( (UART_RX_BUFFER_SIZE+UART_TX_BUFFER_SIZE) >= (RAMEND-0x60 ) )
-#error "size of UART_RX_BUFFER_SIZE + UART_TX_BUFFER_SIZE larger than size of SRAM"
-#endif
-
 /* 
 ** high byte error return code of uart_getc()
 */
