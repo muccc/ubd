@@ -317,11 +317,13 @@ inline void rs485master_tx(void)
                 escaped = 0;
                 rs485uart_putc(data);
                 if( ++pos == rs485m_len ){
-                    rs485m_slots[RS485M_PACKETSLOT].full = 0;
-                    if( rs485m_stop == 0 )
+                    if( rs485m_stop == 0 ){
                         rs485m_busState = RS485M_BUS_SEND_TIMER_WAIT;
-                    else
+                    }else{
+                        //only reached if a packet with data was transmitted 
+                        rs485m_slots[RS485M_PACKETSLOT].full = 0;
                         rs485m_busState = RS485M_BUS_SEND_STOP;
+                    }
                 }
             }
         break;
