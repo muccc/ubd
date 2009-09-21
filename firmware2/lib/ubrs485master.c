@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "ubconfig.h"
 #include "ubrs485master.h"
 #include "ubstat.h"
@@ -5,6 +7,8 @@
 #include "settings.h"
 #include "ubtimer.h"
 #include "ub.h"
+#include "ubrs485message.h"
+#include "udebug.h"
 
 #define UB_HOSTADR          1
 #define UB_MASTERADR        2
@@ -40,7 +44,7 @@
 #define RS485M_BUS_SEND_STOP2        4
 #define RS485M_BUS_SEND_DONE         5
 #define RS485M_BUS_SEND_TIMER        6
-#define RS485M_BUS_RECV_START        7
+#define RS485M_BUS_RECV              7
 #define RS485M_BUS_SEND_TIMER_WAIT   8
 
 struct rs485m_slot {
@@ -60,22 +64,24 @@ struct rs485m_queryinterval {     // contains the intervals to query special nod
 struct rs485m_slot rs485m_slots[RS485M_SLOTCOUNT];
 struct rs485m_queryinterval rs485m_query[UB_QUERYMAX];
 
-volatile uint8_t    rs485m_counter = 0;
-uint8_t             rs485m_state = RS485M_STATE_INIT;
-uint16_t            rs485m_ticks = 0;
+uint8_t    rs485m_state = RS485M_STATE_INIT;
+uint16_t   rs485m_ticks = 0;
 
 
-uint8_t rs485m_start;
-uint8_t rs485m_len;
-uint8_t *rs485m_data;
-uint8_t rs485m_stop;
+//used in the interrupts
+volatile uint8_t rs485m_start;
+volatile uint8_t rs485m_len;
+volatile uint8_t *rs485m_data;
+volatile uint8_t rs485m_stop;
 
-uint8_t rs485m_busState;
-uint8_t rs485m_busmode;
+volatile uint8_t rs485m_busState;
+volatile uint8_t rs485m_busmode;
 
-uint8_t rs485m_querybuf[10];
+volatile uint8_t rs485m_incomming;
+//buffer for the slave id during a query
+uint8_t rs485m_querybuf[1];
 
-uint8_t rs485master_setQueryInterval(uint8_t adr, uint16_t interval)
+UBSTATUS rs485master_setQueryInterval(uint8_t adr, uint16_t interval)
 { 
     uint8_t i;
     //Check for correct intervalls
@@ -115,12 +121,40 @@ void rs485master_init(void)
 
     rs485m_busState = RS485M_BUS_IDLE;
     rs485m_busmode = UB_RECEIVE;
+
+    rs485m_incomming = UB_NONE;
     rs485uart_enableReceive();
-    //UBUART_RECEIVE
+    
+    PORTA ^= 0x02;
+}
+
+//check for incomming messages
+/*void rs485master_processIncomming(void)
+{
+    switch(rs458m_incomming){
+        case UB_START:          //a new packet was received
+            
+        break;
+    }
+}*/
+
+uint8_t rs485master_getPacket(uint8_t * buffer)
+{
+    uint8_t len;
+    if( rs485m_incomming == UB_START ){
+        len = rs485msg_getLen();
+        memcpy(buffer, rs485msg_getMsg(), len);
+        rs485m_incomming = UB_NONE;
+        return len;
+    }else if( rs485m_incomming != UB_NONE ){
+        //ignore these packages
+        rs485m_incomming = UB_NONE;
+    }
+    return 0;
 }
 
 //try to send a query to a node
-uint8_t rs485master_query(uint8_t adr)
+UBSTATUS rs485master_query(uint8_t adr)
 {
     if( rs485m_slots[RS485M_QUERYSLOT].full )
         return UB_ERROR;
@@ -129,7 +163,7 @@ uint8_t rs485master_query(uint8_t adr)
     return UB_OK;
 }
 
-uint8_t rs485master_discover(void)
+UBSTATUS rs485master_discover(void)
 {
     if( rs485m_slots[RS485M_DISCOVERSLOT].full )
         return UB_ERROR;
@@ -185,6 +219,23 @@ void rs485master_querynodes(void)
     }
 }
 
+//send a frame with data.
+UBSTATUS rs485master_send(uint8_t * data, uint8_t len)
+{
+    //the frame has to contain data
+    if( len == 0 )
+        return UB_ERROR;
+
+    //use the free packet slot
+    if( rs485m_slots[RS485M_PACKETSLOT].full )
+        return UB_ERROR;
+
+    rs485m_slots[RS485M_PACKETSLOT].data = data;
+    rs485m_slots[RS485M_PACKETSLOT].len = len;
+    rs485m_slots[RS485M_PACKETSLOT].full = 1;
+    return UB_OK;
+}
+
 //1ms
 inline void rs485master_tick(void)
 {
@@ -192,7 +243,7 @@ inline void rs485master_tick(void)
     rs485master_querynodes();
 }
 
-uint8_t rs485master_idle(void)
+UBSTATUS rs485master_idle(void)
 {
     if( rs485m_busState == RS485M_BUS_IDLE )
         return UB_OK;
@@ -206,13 +257,13 @@ inline void rs485master_process(void)
             rs485m_state = RS485M_STATE_INITIALDISCOVER;
         break;
         case RS485M_STATE_INITIALDISCOVER:
-            if( rs485m_ticks == UB_INITIALDISCOVERINTERVAL){
+            if( rs485m_ticks == UB_INITIALDISCOVERINTERVAL ){
                 rs485m_ticks = 0;
                 rs485master_discover();
             }
         break;
     }
-    if( rs485master_idle() == UB_OK){
+    if( rs485master_idle() == UB_OK ){
         rs485master_runslot();
     }
 }
@@ -222,16 +273,20 @@ void rs485master_runslot(void)
     //implement priorities by aranging these items
     if( rs485m_slots[RS485M_DISCOVERSLOT].full ){
         //just send the discover escape sequence
+        //and start the receive windwo
         rs485master_start(UB_DISCOVER,NULL,0,0);
         rs485m_slots[RS485M_DISCOVERSLOT].full = 0;
     }else if( rs485m_slots[RS485M_QUERYSLOT].full ){
+        //send the query escape followed by the slave id
+
+        //buffer the slave id, the slot might get overwritten
         rs485m_querybuf[0] = rs485m_slots[RS485M_QUERYSLOT].adr;
         rs485master_start(UB_QUERY,rs485m_querybuf,1,0);
         rs485m_slots[RS485M_QUERYSLOT].full = 0;
     }else if( rs485m_slots[RS485M_PACKETSLOT].full ){
         rs485master_start(UB_START,rs485m_slots[RS485M_PACKETSLOT].data,
                 rs485m_slots[RS485M_PACKETSLOT].len,UB_STOP);
-        //this slot will be freed when UB_STOP is transmitted
+        //this slot will be freed when UB_STOP has been transmitted
     }
 }
 
@@ -246,21 +301,42 @@ void rs485master_start(uint8_t start, uint8_t * data, uint8_t len, uint8_t stop)
     rs485uart_putc(UB_ESCAPE);
 }
 
+//rx interrupt
 inline void rs485master_rx(void)
 {
+    udebug_rx();
     uint16_t i = rs485uart_getc();
     if( !(i & UART_NO_DATA) ){
-        //uint8_t data = i & 0xFF;
+        //restart timeout
+        ubtimer_start(2 * UB_TICKSPERBYTE);
+        //if( i == 0xAA )
+            //PORTA ^= 0x02;
+        uint8_t c = i&0xFF;
+        /*if( c == 0xAA ){
+             ubtimer_stop();
+            PORTA &=~ 0x02;
+            rs485m_busState = RS485M_BUS_IDLE;          
+        }*/
 
+        i = rs485msg_put(c);
+        if( i != UB_NONE ){
+            rs485m_incomming = i;
+            ubtimer_stop();
+            PORTA &=~ 0x02;
+            rs485m_busState = RS485M_BUS_IDLE;
+        }
     }
 }
 
 inline void rs485master_edge(void)
 {
-    if( rs485m_busState == RS485M_BUS_IDLE ){
+    if( rs485m_busState == RS485M_BUS_SEND_TIMER ){
         if( rs485uart_lineActive() && rs485uart_isReceiving() ){
-            rs485m_busState = RS485M_BUS_RECV_START;
+            PORTA ^= (1<<PA2);
+            rs485m_busState = RS485M_BUS_RECV;
             rs485uart_edgeDisable();
+            //return to RS485M_BUS_IDLE if nothing gets received(noise)
+            ubtimer_start(2 * UB_TICKSPERBYTE);
         }else{
             //this was not a valid start
         }
@@ -273,20 +349,21 @@ inline void rs485master_edge(void)
 inline void rs485master_timer(void)
 {
     //is this timeout still waiting for a response?
-    if( rs485m_busState ==  RS485M_BUS_SEND_TIMER){
+    if( rs485m_busState ==  RS485M_BUS_SEND_TIMER || rs485m_busState == RS485M_BUS_RECV ){
         //proceed to the next slot
         rs485m_busState = RS485M_BUS_IDLE;
+        PORTA &=~ 0x02;
     }
+    rs485uart_edgeDisable();
     ubtimer_stop();
-    PORTA ^= 0x02;
 }
 
 inline void rs485master_setTimeout(void)
 {
     //wait for 4 bytes before timeout
     ubtimer_start(2 * UB_TICKSPERBYTE);      //start+8+stop
-    PORTA |= 0x02;
     rs485m_busState = RS485M_BUS_SEND_TIMER;
+    PORTA |= 0x02;
     rs485uart_edgeEnable();
 }
 
@@ -311,6 +388,7 @@ inline void rs485master_tx(void)
         case RS485M_BUS_SEND_DATA:
             data = rs485m_data[pos];
             if( data == UB_ESCAPE && !escaped){
+                //insert an escape into the datastream
                 rs485uart_putc(UB_ESCAPE);
                 escaped = 1;
             }else{
@@ -318,9 +396,11 @@ inline void rs485master_tx(void)
                 rs485uart_putc(data);
                 if( ++pos == rs485m_len ){
                     if( rs485m_stop == 0 ){
+                        //no stop specified.
+                        //give the slave time to answer
                         rs485m_busState = RS485M_BUS_SEND_TIMER_WAIT;
                     }else{
-                        //only reached if a packet with data was transmitted 
+                        //only reached if a packet with data was transmitted
                         rs485m_slots[RS485M_PACKETSLOT].full = 0;
                         rs485m_busState = RS485M_BUS_SEND_STOP;
                     }

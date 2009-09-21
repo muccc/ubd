@@ -44,9 +44,9 @@ LICENSE:
 #include "stdio.h"
 #include "ubconfig.h"
 #include "ubrs485master.h"
-#include "ubrs485client.h"
+#include "ubrs485slave.h"
 #include "ub.h"
-
+#include "udebug.h"
 /*
  *  constants and macros
  */
@@ -223,9 +223,9 @@ ISR(UART0_RECEIVE_INTERRUPT)//, ISR_NOBLOCK)
     }
 #endif
 
-#ifdef UB_ENABLECLIENT
-    if( ubconfig.rs485client ){
-        rs485client_rx();
+#ifdef UB_ENABLESLAVE
+    if( ubconfig.rs485slave ){
+        rs485slave_rx();
     }
 #endif
 }
@@ -246,9 +246,9 @@ ISR(UART0_TRANSMIT_INTERRUPT)//, ISR_NOBLOCK)
     }
 #endif
 
-#ifdef UB_ENABLECLIENT
-    if( ubconfig.rs485client ){
-        rs485client_tx();
+#ifdef UB_ENABLESLAVE
+    if( ubconfig.rs485slave ){
+        rs485slave_tx();
     }
 #endif
     if( UART0_STATUS & (1<<UDRE0) )
@@ -265,9 +265,9 @@ ISR(USART0_TX_vect)//, ISR_NOBLOCK)
     }
 #endif
 
-#ifdef UB_ENABLECLIENT
-    if( ubconfig.rs485client ){
-        rs485client_txend();
+#ifdef UB_ENABLESLAVE
+    if( ubconfig.rs485slave ){
+        rs485slave_txend();
     }
 #endif
 }
@@ -393,7 +393,7 @@ inline void rs485uart_enableReceive(void)
     rs485uart_mode = RS485UART_MODE_RECEIVE;
     RS485_DE_PORT  &= ~(1<<RS485_DE_PIN);
     RS485_nRE_PORT &= ~(1<<RS485_nRE_PIN);
-    PORTA &= ~0x04;
+    udebug_txoff();
 }
 
 inline void rs485uart_enableTransmit(void)
@@ -401,7 +401,7 @@ inline void rs485uart_enableTransmit(void)
     rs485uart_mode = RS485UART_MODE_TRANSMIT;
     RS485_DE_PORT  |= (1<<RS485_DE_PIN);
     RS485_nRE_PORT |= (1<<RS485_nRE_PIN);
-    PORTA |= 0x04;
+    udebug_txon();
 }
 
 inline void rs485uart_disable(void)
@@ -424,26 +424,30 @@ inline uint8_t rs485uart_lineActive(void)
 
 ISR(RS485_ISR_EDGE, ISR_NOBLOCK)
 {
+    udebug_edge();
 #ifdef UB_ENABLEMASTER
     if( ubconfig.rs485master ){
         rs485master_edge();
     }
 #endif
 
-#ifdef UB_ENABLECLIENT
-    if( ubconfig.rs485client ){
-        rs485client_edge();
+#ifdef UB_ENABLESLAVE
+    if( ubconfig.rs485slave ){
+        rs485slave_edge();
     }
 #endif
 }
 
 inline void rs485uart_edgeDisable(void)
 {
-
+    PCMSK3 &= ~(1<<PCINT28);
+    PORTA &= ~(1<<PA0);
 }
 
 inline void rs485uart_edgeEnable(void)
 {
-    
+    PCICR |= (1<<PCIE3);
+    PCMSK3 |= (1<<PCINT28);
+    PORTA |= (1<<PA0);
 }
 

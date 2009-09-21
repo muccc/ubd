@@ -21,7 +21,7 @@ inline void serial_putStop(void);
 void serial_sendFrames(char * s);
 void serial_sendFramec(uint8_t s);
 void serial_putenc(uint8_t * d, uint16_t n);
-unsigned int readline( void );
+uint16_t readline( void );
 uint16_t serial_readline(void);
 
 #endif

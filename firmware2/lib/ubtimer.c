@@ -5,7 +5,7 @@
 #include "ubconfig.h"
 #include "ubtimer.h"
 #include "ubrs485master.h"
-#include "ubrs485client.h"
+#include "ubrs485slave.h"
 
 #define UBTIMER_PRESCALER       32
 #define UBTIMER_TICKSPERBIT     (F_CPU/RS485_BITRATE/UBTIMER_PRESCALER)
@@ -18,9 +18,9 @@ ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
     }
 #endif
 
-#ifdef UB_ENABLECLIENT
-    if( ubconfig.rs485client ){
-        rs485client_timer();
+#ifdef UB_ENABLESLAVE
+    if( ubconfig.rs485slave ){
+        rs485slave_timer();
     }
 #endif
 }

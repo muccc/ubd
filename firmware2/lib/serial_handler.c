@@ -68,7 +68,7 @@ uint16_t serial_readline(void)
     return l;
 }
 
-int16_t readline( void )
+uint16_t readline( void )
 {
     static int fill = 0;
     static uint8_t escaped = 0;

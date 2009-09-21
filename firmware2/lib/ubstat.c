@@ -16,7 +16,7 @@ inline uint8_t ubstat_getFlags(uint8_t adr)
     return ubstat[adr];
 }
 
-uint8_t ubstat_addNode(uint8_t adr, uint8_t flags)
+void ubstat_addNode(uint8_t adr, uint8_t flags)
 {
     ubstat[adr] = flags;
 }
