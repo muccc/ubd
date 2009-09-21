@@ -15,7 +15,7 @@ uint8_t rs485msg_put(uint8_t data)
     static uint8_t escaped = 0;
     static uint8_t msgtype = UB_NONE;
 
-    if( data == '\\' && escaped == 0 ){
+    if( data == UB_ESCAPE && escaped == 0 ){
         //a control code will follow
         escaped = 1;
         return UB_NONE;
@@ -33,18 +33,17 @@ uint8_t rs485msg_put(uint8_t data)
             else
                 return UB_NONE;
         }
-    }else{
-        rs485msg_message[rs485msg_len++] = data;
+    }
+    rs485msg_message[rs485msg_len++] = data;
 
-        //prevent a buffer overflow
-        if( rs485msg_len == UB_PACKETLEN )
-            rs485msg_len--;
+    //prevent a buffer overflow
+    if( rs485msg_len == UB_PACKETLEN )
+        rs485msg_len--;
 
-        //return only this single byte
-        if( msgtype == UB_QUERY ){
-            msgtype = UB_NONE; 
-            return rs485msg_type = UB_QUERY;
-        }
+    //return only this single byte
+    if( msgtype == UB_QUERY ){
+        msgtype = UB_NONE; 
+        return rs485msg_type = UB_QUERY;
     }
     return UB_NONE;
 }

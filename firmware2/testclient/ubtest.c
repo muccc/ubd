@@ -29,15 +29,16 @@ int main(void)
     ub_init(UB_SLAVE);
     ub_setAddress(0x10);
     sei();
-    uint8_t c[] = "hello";
+    char c[] = "hello master\\";
     while(1){
         ub_process();
         if( gotms ){
             gotms = 0;
-            if(i++==500){
+            if(i++==2500){
                 i = 0;
             }
             ub_tick();
         }
+                rs485client_send(c, strlen(c));
     }
 }

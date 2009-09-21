@@ -31,6 +31,9 @@ int main(void)
     ubstat_addNode(45,0xFF);
     ubstat_addNode(55,0xFF);
     ubstat_addNode(95,0xFF);
+    
+    if( rs485master_setQueryInterval(0x10, 100) == UB_ERROR )
+        while(1);
     sei();
     uint8_t c[10];
     c[0] = 'h';
