@@ -9,8 +9,8 @@
 extern uint8_t serial_buffer[SERIAL_BUFFERLEN];
 
 #define SERIAL_ESCAPE   '\\'
-#define SERIAL_START    '0'
-#define SERIAL_END    '1'
+#define SERIAL_START    '1'
+#define SERIAL_END    '2'
 
 #define DEBUG(...) {serial_putStart(); serial_putcenc('D'); printf(__VA_ARGS__);serial_putStop();}
 

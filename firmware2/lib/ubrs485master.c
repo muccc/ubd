@@ -23,9 +23,6 @@
 
 #define UB_MAXQUERY                 30
 
-#define UB_RECEIVE              0
-#define UB_SEND                 1
-
 #define RS485M_STATE_INIT               1
 #define RS485M_STATE_INITIALDISCOVER    2
 #define RS485M_STATE_STOP               5
@@ -73,9 +70,9 @@ volatile uint8_t rs485m_start;
 volatile uint8_t rs485m_len;
 volatile uint8_t *rs485m_data;
 volatile uint8_t rs485m_stop;
+volatile uint8_t rs485m_timer;
 
 volatile uint8_t rs485m_busState;
-volatile uint8_t rs485m_busmode;
 
 volatile uint8_t rs485m_incomming;
 //buffer for the slave id during a query
@@ -120,7 +117,6 @@ void rs485master_init(void)
     }
 
     rs485m_busState = RS485M_BUS_IDLE;
-    rs485m_busmode = UB_RECEIVE;
 
     rs485m_incomming = UB_NONE;
     rs485uart_enableReceive();
@@ -138,19 +134,18 @@ void rs485master_init(void)
     }
 }*/
 
-uint8_t rs485master_getPacket(uint8_t * buffer)
+uint8_t rs485master_getMessage(uint8_t * buffer)
 {
-    uint8_t len;
+    uint8_t len = 0;
     if( rs485m_incomming == UB_START ){
         len = rs485msg_getLen();
         memcpy(buffer, rs485msg_getMsg(), len);
         rs485m_incomming = UB_NONE;
-        return len;
     }else if( rs485m_incomming != UB_NONE ){
         //ignore these packages
         rs485m_incomming = UB_NONE;
     }
-    return 0;
+    return len;
 }
 
 //try to send a query to a node
@@ -276,6 +271,7 @@ void rs485master_runslot(void)
         //and start the receive windwo
         rs485master_start(UB_DISCOVER,NULL,0,0);
         rs485m_slots[RS485M_DISCOVERSLOT].full = 0;
+        rs485m_timer = 4 * UB_TICKSPERBYTE;
     }else if( rs485m_slots[RS485M_QUERYSLOT].full ){
         //send the query escape followed by the slave id
 
@@ -283,6 +279,7 @@ void rs485master_runslot(void)
         rs485m_querybuf[0] = rs485m_slots[RS485M_QUERYSLOT].adr;
         rs485master_start(UB_QUERY,rs485m_querybuf,1,0);
         rs485m_slots[RS485M_QUERYSLOT].full = 0;
+        rs485m_timer = 2 * UB_TICKSPERBYTE;
     }else if( rs485m_slots[RS485M_PACKETSLOT].full ){
         rs485master_start(UB_START,rs485m_slots[RS485M_PACKETSLOT].data,
                 rs485m_slots[RS485M_PACKETSLOT].len,UB_STOP);
@@ -361,7 +358,7 @@ inline void rs485master_timer(void)
 inline void rs485master_setTimeout(void)
 {
     //wait for 4 bytes before timeout
-    ubtimer_start(2 * UB_TICKSPERBYTE);      //start+8+stop
+    ubtimer_start(rs485m_timer);
     rs485m_busState = RS485M_BUS_SEND_TIMER;
     PORTA |= 0x02;
     rs485uart_edgeEnable();

@@ -46,9 +46,11 @@ int main(void)
     while(1){
         ub_process();
         uint8_t packet[30];
-        uint8_t len = rs485master_getPacket(packet);
+        uint8_t len = rs485master_getMessage(packet);
         if( len ){
+            serial_putStart();
             serial_putenc(packet,len);
+            serial_putStop();
         }
         if( gotms ){
             gotms = 0;

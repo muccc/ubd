@@ -97,7 +97,8 @@ SRC = $(TARGET).c \
 	../lib/ubrs485message.c \
 	../lib/usart.c \
 	../lib/serial_handler.c \
-	../lib/udebug.c
+	../lib/udebug.c \
+	../lib/random.c
 #	isrdispatch.c \
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 

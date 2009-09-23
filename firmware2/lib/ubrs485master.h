@@ -19,7 +19,7 @@ inline void rs485master_tick(void);
 inline void rs485master_process(void);
 
 //check for a packet in the buffer
-uint8_t rs485master_getPacket(uint8_t * buffer);
+uint8_t rs485master_getMessage(uint8_t * buffer);
 
 //send a packet
 //return UB_OK when a slot is free

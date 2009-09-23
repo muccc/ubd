@@ -13,4 +13,8 @@ inline void rs485slave_tick(void);
 inline void rs485slave_process(void);
 UBSTATUS rs485client_send(uint8_t * data, uint8_t len);
 void rs485slave_start(uint8_t start, uint8_t * data, uint8_t len, uint8_t stop);
+inline uint8_t rs485s_getMessage(uint8_t * buf);
+inline void rs485slave_setConfigured(uint8_t configured);
+inline uint8_t rs485slave_getConfigured(void);
+inline void rs485slave_transmit(void);
 #endif

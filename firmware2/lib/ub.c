@@ -6,6 +6,7 @@
 #include "ubslave.h"
 #include "ub.h"
 #include "udebug.h"
+#include "random.h"
 
 struct ub_config ubconfig;
 uint8_t ub_address = 0;
@@ -13,6 +14,7 @@ uint8_t ub_address = 0;
 void ub_init(uint8_t ubmode)
 {
     udebug_init();
+    random_init("11",2);
 #ifdef UB_ENABLEMASTER
     if( ubmode == UB_MASTER ){
         ubconfig.rs485master = 1;

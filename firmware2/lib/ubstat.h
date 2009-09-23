@@ -11,4 +11,7 @@
 void ubstat_init(void);
 inline uint8_t ubstat_getFlags(uint8_t adr);
 void ubstat_addNode(uint8_t adr, uint8_t flags);
+inline uint8_t * ubstat_getID(void);
+inline uint8_t ubstat_getIDLen(void);
+
 #endif

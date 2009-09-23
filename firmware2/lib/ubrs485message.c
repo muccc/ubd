@@ -28,10 +28,13 @@ uint8_t rs485msg_put(uint8_t data)
         }else if( data == UB_DISCOVER ){
             return rs485msg_type = data;
         }else if( data == UB_STOP ){
-            if( msgtype == UB_START )
+            if( msgtype == UB_START ){
+                msgtype = UB_NONE;
                 return rs485msg_type = UB_START;
-            else
+            }else{
+                msgtype = UB_NONE;
                 return UB_NONE;
+            }
         }
     }
     rs485msg_message[rs485msg_len++] = data;
