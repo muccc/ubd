@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
+#include <string.h>
 #include "ubstat.h"
 #include "ubrs485slave.h"
 #include "usart.h"
@@ -31,7 +32,7 @@ int main(void)
     sei();
     char c[] = "newslaveID";
     while(1){
-        rs485client_send(c, strlen(c));
+        rs485client_send((uint8_t *)c, strlen(c));
         ub_process();
         if( gotms ){
             gotms = 0;

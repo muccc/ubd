@@ -14,7 +14,7 @@ uint8_t ub_address = 0;
 void ub_init(uint8_t ubmode)
 {
     udebug_init();
-    random_init("11",2);
+    random_init((uint8_t*)"11",2);
 #ifdef UB_ENABLEMASTER
     if( ubmode == UB_MASTER ){
         ubconfig.rs485master = 1;

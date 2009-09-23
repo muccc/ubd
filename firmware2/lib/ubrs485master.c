@@ -14,7 +14,7 @@
 #define UB_MASTERADR        2
 
 #define UB_TICKSPERBYTE             10
-#define UB_INITIALDISCOVERINTERVAL  500
+#define UB_INITIALDISCOVERINTERVAL  100
 
 #define UB_QUERYINTERVALMIN      64      //in ms
 #define UB_QUERYINTERVALMAX      1000    //in ms
