@@ -1,4 +1,5 @@
 #include <string.h>
+#include <avr/interrupt.h>
 
 #include "ubconfig.h"
 #include "ubrs485master.h"
@@ -9,6 +10,8 @@
 #include "ub.h"
 #include "ubrs485message.h"
 #include "udebug.h"
+#include "ubpacket.h"
+#include "ubcrc.h"
 
 #define UB_HOSTADR          1
 #define UB_MASTERADR        2
@@ -73,11 +76,13 @@ volatile uint8_t rs485m_stop;
 volatile uint8_t rs485m_timer;
 
 volatile uint8_t rs485m_busState;
+volatile uint8_t rs485m_granted = 0;
 
 volatile uint8_t rs485m_incomming;
+volatile uint8_t rs485m_packetdata[UB_PACKETLEN+2];    //+ 2 byte crc
 //buffer for the slave id during a query
 uint8_t rs485m_querybuf[1];
-
+volatile uint8_t rs485m_stalled = 0;
 UBSTATUS rs485master_setQueryInterval(uint8_t adr, uint16_t interval)
 { 
     uint8_t i;
@@ -122,6 +127,7 @@ void rs485master_init(void)
     rs485uart_enableReceive();
     
     PORTA ^= 0x02;
+    DDRD |= (1<<PD6);
 }
 
 //check for incomming messages
@@ -134,16 +140,38 @@ void rs485master_init(void)
     }
 }*/
 
-uint8_t rs485master_getMessage(uint8_t * buffer)
+int16_t rs485master_getPacket(struct ubpacket_t * packet)
 {
-    uint8_t len = 0;
-    if( rs485m_incomming == UB_START ){
+    int16_t len = 0;
+    cli();
+    //we don't want the value to change while testing it
+    uint8_t incomming = rs485m_incomming;
+    sei();
+
+    if( incomming == UB_START ){
+
         len = rs485msg_getLen();
-        memcpy(buffer, rs485msg_getMsg(), len);
+        uint8_t * msg = rs485msg_getMsg();
+
+        uint16_t crc = ubcrc16_data(msg, len - 2);
+        if( (crc>>8) == msg[len-2] && (crc&0xFF) == msg[len-1] ){
+            memcpy(packet, msg , len);
+            len-=2;
+        }else{
+            len = -1;
+        }
         rs485m_incomming = UB_NONE;
-    }else if( rs485m_incomming != UB_NONE ){
+
+        uint8_t adr = packet->header.dest;
+        if( !ubadr_isMulticast(adr) &&
+            !ubadr_isBroadcast(adr) &&
+            !(packet->header.flags & UB_PACKET_ACK)){
+            rs485m_stalled = 1;
+        }
+    }else if( incomming != UB_NONE ){
         //ignore these packages
         rs485m_incomming = UB_NONE;
+        PORTD &= ~(1<<PD6);
     }
     return len;
 }
@@ -202,8 +230,8 @@ void rs485master_querynodes(void)
     //check the other nodes, one per timer
 
     if( querymax ){
-        uint8_t flags = ubstat_getFlags(querymax);
-        if( flags & (UB_KNOWN | UB_RS485 | UB_QUERYMAX) ){
+        struct ubstat_t * flags = ubstat_getFlags(querymax);
+        if( flags->known && flags->rs485 && flags->querymax ){
             if(rs485master_query(querymax) == UB_ERROR){
                 querymax--;     //check again later
             }
@@ -215,18 +243,27 @@ void rs485master_querynodes(void)
 }
 
 //send a frame with data.
-UBSTATUS rs485master_send(uint8_t * data, uint8_t len)
+UBSTATUS rs485master_sendPacket(struct ubpacket_t * packet)
 {
+    uint8_t len = packet->header.len + sizeof(packet->header);
+
     //the frame has to contain data
-    if( len == 0 )
-        return UB_ERROR;
+    //if( len == 0 )
+    //    return UB_ERROR;
 
     //use the free packet slot
     if( rs485m_slots[RS485M_PACKETSLOT].full )
         return UB_ERROR;
 
-    rs485m_slots[RS485M_PACKETSLOT].data = data;
-    rs485m_slots[RS485M_PACKETSLOT].len = len;
+    //TODO: check for overflow!
+    memcpy((char*)rs485m_packetdata, packet, len);
+
+    uint16_t crc = ubcrc16_data((uint8_t*)rs485m_packetdata, len);
+    rs485m_packetdata[len] = crc>>8;
+    rs485m_packetdata[len+1] = crc&0xFF;
+
+    rs485m_slots[RS485M_PACKETSLOT].data = (uint8_t*)rs485m_packetdata;
+    rs485m_slots[RS485M_PACKETSLOT].len = len+2;
     rs485m_slots[RS485M_PACKETSLOT].full = 1;
     return UB_OK;
 }
@@ -236,6 +273,14 @@ inline void rs485master_tick(void)
 {
     rs485m_ticks++;
     rs485master_querynodes();
+    if( rs485m_granted )
+        rs485m_granted--;
+}
+UBSTATUS rs485master_free(void)
+{
+    if( rs485m_slots[RS485M_PACKETSLOT].full )
+        return UB_ERROR;
+    return UB_OK;
 }
 
 UBSTATUS rs485master_idle(void)
@@ -258,32 +303,39 @@ inline void rs485master_process(void)
             }
         break;
     }
-    if( rs485master_idle() == UB_OK ){
+
+    //wait for the bus to be idle and that all packets are processed
+    //don't get a new packet when we still have to process one.
+    if( rs485master_idle() == UB_OK  && rs485m_incomming == UB_NONE ){
         rs485master_runslot();
     }
 }
 
 void rs485master_runslot(void)
 {
+    //check if a slave has the bus
+    if( rs485m_granted )
+        return;
     //implement priorities by aranging these items
-    if( rs485m_slots[RS485M_DISCOVERSLOT].full ){
+    if( rs485m_slots[RS485M_DISCOVERSLOT].full && !rs485m_stalled){
         //just send the discover escape sequence
         //and start the receive windwo
         rs485master_start(UB_DISCOVER,NULL,0,0);
         rs485m_slots[RS485M_DISCOVERSLOT].full = 0;
         rs485m_timer = 4 * UB_TICKSPERBYTE;
-    }else if( rs485m_slots[RS485M_QUERYSLOT].full ){
+    }else if( rs485m_slots[RS485M_QUERYSLOT].full && !rs485m_stalled){
         //send the query escape followed by the slave id
 
         //buffer the slave id, the slot might get overwritten
         rs485m_querybuf[0] = rs485m_slots[RS485M_QUERYSLOT].adr;
         rs485master_start(UB_QUERY,rs485m_querybuf,1,0);
         rs485m_slots[RS485M_QUERYSLOT].full = 0;
-        rs485m_timer = 2 * UB_TICKSPERBYTE;
+        rs485m_timer = 4 * UB_TICKSPERBYTE;
     }else if( rs485m_slots[RS485M_PACKETSLOT].full ){
         rs485master_start(UB_START,rs485m_slots[RS485M_PACKETSLOT].data,
                 rs485m_slots[RS485M_PACKETSLOT].len,UB_STOP);
         //this slot will be freed when UB_STOP has been transmitted
+        rs485m_stalled = 0;
     }
 }
 
@@ -301,7 +353,7 @@ void rs485master_start(uint8_t start, uint8_t * data, uint8_t len, uint8_t stop)
 //rx interrupt
 inline void rs485master_rx(void)
 {
-    udebug_rx();
+    //udebug_rx();
     uint16_t i = rs485uart_getc();
     if( !(i & UART_NO_DATA) ){
         //restart timeout
@@ -319,8 +371,9 @@ inline void rs485master_rx(void)
         if( i != UB_NONE ){
             rs485m_incomming = i;
             ubtimer_stop();
-            PORTA &=~ 0x02;
             rs485m_busState = RS485M_BUS_IDLE;
+            if( i == UB_START ){
+            }
         }
     }
 }
@@ -422,8 +475,10 @@ inline void rs485master_txend(void)
 {
     if( rs485m_busState == RS485M_BUS_SEND_TIMER_WAIT )
         rs485master_setTimeout();
-    if( rs485m_busState == RS485M_BUS_SEND_DONE )
+    if( rs485m_busState == RS485M_BUS_SEND_DONE ){
         rs485m_busState = RS485M_BUS_IDLE;
+        rs485m_granted = 10;
+    }
     if( rs485m_busState == RS485M_BUS_IDLE
             || rs485m_busState == RS485M_BUS_SEND_TIMER){
         rs485uart_enableReceive();

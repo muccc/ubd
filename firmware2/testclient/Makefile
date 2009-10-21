@@ -91,14 +91,19 @@ SRC = $(TARGET).c \
 	../lib/ub.c \
 	../lib/ubslave.c \
 	../lib/ubrs485slave.c \
-	../lib/ubstat.c \
 	../lib/ubtimer.c \
 	../lib/ubrs485uart.c \
 	../lib/ubrs485message.c \
-	../lib/usart.c \
-	../lib/serial_handler.c \
 	../lib/udebug.c \
-	../lib/random.c
+	../lib/random.c \
+	../lib/ubaddress.c \
+	../lib/ubcrc.c \
+	../lib/ubaddress.c \
+	../lib/ubpacket.c \
+	../lib/busmgt.c
+#	../lib/usart.c \
+#	../lib/serial_handler.c \
+#	../lib/ubstat.c \
 #	isrdispatch.c \
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
@@ -176,7 +181,7 @@ CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
-
+CFLAGS += -ffunction-sections
 
 #---------------- Compiler Options C++ ----------------
 #  -g*:          generate debugging information
@@ -276,7 +281,7 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
-
+LDFLAGS += -ffunction-sections -Wl,--gc-sections
 
 
 #---------------- Programming Options (avrdude) ----------------

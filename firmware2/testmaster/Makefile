@@ -90,15 +90,21 @@ OBJDIR = .
 SRC = $(TARGET).c \
 	../lib/ub.c \
 	../lib/ubmaster.c \
+	../lib/ubaddress.c \
 	../lib/ubrs485master.c \
 	../lib/ubstat.c \
 	../lib/ubtimer.c \
 	../lib/ubrs485uart.c \
 	../lib/ubrs485message.c \
+	../lib/ubcrc.c \
 	../lib/usart.c \
 	../lib/serial_handler.c \
 	../lib/udebug.c \
-	../lib/random.c
+	../lib/random.c \
+	../lib/ubpacket.c
+#	../lib/busmgt.c \
+#	../lib/ubslave.c \
+#	../lib/ubrs485slave.c \
 #	isrdispatch.c \
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 

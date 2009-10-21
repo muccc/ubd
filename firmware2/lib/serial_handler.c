@@ -4,7 +4,7 @@
 #include "serial_handler.h"
 
 uint8_t buffer[SERIAL_BUFFERLEN];
-uint8_t serial_buffer[SERIAL_BUFFERLEN];
+//uint8_t serial_buffer[SERIAL_BUFFERLEN];
 
 inline void serial_putcenc(uint8_t c)
 {
@@ -58,12 +58,14 @@ void serial_sendFramec(uint8_t s)
     serial_putStop();
 }
 
-uint16_t serial_readline(void)
+uint16_t serial_readline(uint8_t * buf)
 {
     uint16_t l;
+
+    PORTC ^= 0x08;
     l = readline();
     if(l){
-        memcpy(serial_buffer,buffer,l);
+        memcpy(buf,buffer,l);
     }
     return l;
 }
@@ -74,11 +76,14 @@ uint16_t readline( void )
     static uint8_t escaped = 0;
     int  i = uart1_getc();
     uint8_t data;
-
+    
     if ( i & UART_NO_DATA ){
         return 0;
     }
     data = i&0xFF;
+    uart1_putc(data);
+    //PORTA ^= 0x01;
+    PORTC ^= 0x01;
     if(data == SERIAL_ESCAPE){
         if(!escaped){
             escaped = 1;

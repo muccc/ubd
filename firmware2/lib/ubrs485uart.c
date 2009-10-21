@@ -365,6 +365,7 @@ inline void rs485uart_putc(char c)
     UDR0 = c;
     //enable data interrupt
     UART0_CONTROL |= _BV(UART0_UDRIE);
+    //uart1_putc(c);
 }
 
 inline uint16_t rs485uart_getc(void)
@@ -409,7 +410,7 @@ inline void rs485uart_disable(void)
     rs485uart_mode = RS485UART_MODE_OFF;
     RS485_DE_PORT  &= ~(1<<RS485_DE_PIN);
     RS485_nRE_PORT |= (1<<RS485_nRE_PIN);
-    PORTA &= ~0x04;
+    //PORTA &= ~0x04;
 }
 
 inline uint8_t rs485uart_isReceiving(void)
@@ -441,7 +442,7 @@ ISR(RS485_ISR_EDGE, ISR_NOBLOCK)
 inline void rs485uart_edgeDisable(void)
 {
     PCMSK3 &= ~(1<<PCINT24);
-    PORTA &= ~(1<<PA0);
+    //PORTA &= ~(1<<PA0);
     //there might be a flag allready set
     PCIFR |= (1<<PCIF3);
 }
@@ -450,6 +451,6 @@ inline void rs485uart_edgeEnable(void)
 {
     PCICR |= (1<<PCIE3);
     PCMSK3 |= (1<<PCINT24);
-    PORTA |= (1<<PA0);
+    //PORTA |= (1<<PA0);
 }
 

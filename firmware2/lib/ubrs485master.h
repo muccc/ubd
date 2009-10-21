@@ -1,6 +1,7 @@
 #ifndef _UBRS485MASTER_H_
 #define _UBRS485MASTER_H_
 #include "ub.h"
+#include "ubpacket.h"
 
 //interrupts from the timer or the uart
 inline void rs485master_rx(void);
@@ -19,13 +20,17 @@ inline void rs485master_tick(void);
 inline void rs485master_process(void);
 
 //check for a packet in the buffer
-uint8_t rs485master_getMessage(uint8_t * buffer);
+int16_t rs485master_getPacket(struct ubpacket_t * packet);
 
 //send a packet
 //return UB_OK when a slot is free
-UBSTATUS rs485master_send(uint8_t * data, uint8_t len);
+UBSTATUS rs485master_sendPacket(struct ubpacket_t * packet);
 
+//is the interface free to send something?
+UBSTATUS rs485master_free(void);
 
+//querry a module in a given interval in ms
+UBSTATUS rs485master_setQueryInterval(uint8_t adr, uint16_t interval);
 //internal functions
 
 //start sending a frame.

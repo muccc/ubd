@@ -1,34 +1,23 @@
 #include "ubconfig.h"
 #include "ubstat.h"
 
-uint8_t ubstat[UB_NODEMAX];
-uint8_t ubstate_id[] = "newslave";
-uint8_t ubstate_idlen = sizeof(ubstate_id);
+struct ubstat_t ubstat[UB_NODEMAX];
+
 
 void ubstat_init(void)
 {
     uint8_t i;
     for(i=0; i<UB_NODEMAX; i++){
-        ubstat[i] = 0;              //reset all nodes
+        ubstat[i].known = 0;              //reset all nodes
     }
 }
 
-inline uint8_t * ubstat_getID(void)
+inline struct ubstat_t * ubstat_getFlags(uint8_t adr)
 {
-    return ubstate_id;
+    return &ubstat[adr];
 }
 
-inline uint8_t ubstat_getIDLen(void)
-{
-    return ubstate_idlen;
-}
-
-inline uint8_t ubstat_getFlags(uint8_t adr)
-{
-    return ubstat[adr];
-}
-
-void ubstat_addNode(uint8_t adr, uint8_t flags)
+void ubstat_addNode(uint8_t adr, struct ubstat_t flags)
 {
     ubstat[adr] = flags;
 }

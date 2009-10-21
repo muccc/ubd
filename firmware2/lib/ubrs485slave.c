@@ -9,6 +9,9 @@
 #include "ub.h"
 #include "random.h"
 #include "ubstat.h"
+#include "ubaddress.h"
+#include "ubpacket.h"
+#include "ubcrc.h"
 
 enum RS485S_BUSMODE{
     RS485S_BUS_IDLE,
@@ -42,6 +45,8 @@ volatile uint8_t * rs485s_data;
 volatile uint8_t rs485s_len;
 volatile uint8_t rs485s_rand;
 volatile uint8_t rs485s_configured;
+volatile uint8_t rs485s_aquired;
+volatile uint8_t rs485s_packetdata[UB_PACKETLEN+2];    //+ 2 byte crc
 
 void rs485slave_init(void)
 {
@@ -51,6 +56,7 @@ void rs485slave_init(void)
     rs485s_busState = RS485S_BUS_IDLE;
     rs485s_rand = 0;
     rs485s_configured = 0;
+    rs485s_aquired = 0;
 }
 
 inline void rs485slave_setConfigured(uint8_t configured)
@@ -65,7 +71,9 @@ inline uint8_t rs485slave_getConfigured(void)
 
 inline void rs485slave_tick(void)
 {
-    
+    if( rs485s_aquired ){
+        rs485s_aquired--;
+    }
 }
 
 inline void rs485slave_process(void)
@@ -76,27 +84,31 @@ inline void rs485slave_process(void)
 
 inline void rs485s_gotQuery(void)
 {
-    PORTA ^= 0x02;
+    //PORTA ^= 0x02;
     if( rs485s_configured )
         rs485slave_transmit();
 }
 
 //get received message
 //return value: received bytes
-inline uint8_t rs485s_getMessage(uint8_t * buffer)
+inline uint8_t rs485slave_getPacket(struct ubpacket_t * packet)
 {
     uint8_t len = 0;
     if( rs485s_busState == RS485S_BUS_RECV_DONE ){
         uint8_t msgtype = rs485msg_getType();
-        //if( i == UB_QUERY && rs485msg_getMsg()[0] == 0x10){
-        if( msgtype == UB_START  && 
-                rs485msg_getLen() == 6 && 
-                rs485msg_getMsg()[5]%10 == 3 ){
-            PORTA ^= 0x01;
-        }
         if( msgtype == UB_START ){
             len = rs485msg_getLen();
-            memcpy(buffer, rs485msg_getMsg(), len);
+            uint8_t * msg = rs485msg_getMsg();
+
+            //PORTA ^= 0x02;
+            //check the crc of the new message and copy it to the packet buffer
+            uint16_t crc = ubcrc16_data(msg, len - 2);
+            if( (crc>>8) == msg[len-2] && (crc&0xFF) == msg[len-1] ){
+                memcpy(packet, msg , len);
+                len-=2;
+            }else{
+                len = 0;
+            }
         }
         rs485s_busState = RS485S_BUS_IDLE;
     }
@@ -105,7 +117,7 @@ inline uint8_t rs485s_getMessage(uint8_t * buffer)
 
 inline void rs485s_gotDiscover(void)
 {
-    PORTA ^= 0x04;
+    //PORTA ^= 0x04;
     if( rs485s_configured )
         return;
 
@@ -115,46 +127,77 @@ inline void rs485s_gotDiscover(void)
 
     rs485s_busState = RS485S_BUS_TIMER;
     ubtimer_start(rs485s_rand);
-    //mark random value as used
+    //mark random value as invalid
     rs485s_rand = 0;
+    //check that no other node transmitts
     rs485uart_edgeEnable();
 }
 
 inline void rs485s_gotMessage(void)
 {
     rs485s_busState = RS485S_BUS_RECV_DONE;
+    //we have the bus for the next 10ms
+    //TODO: this is the wrong place for this
+    //we havr to check for our adr
+    uint8_t adr = ((struct ubheader_t *)rs485msg_getMsg())->dest;
+    if( ubadr_isLocal(adr) ){
+        rs485s_aquired = 8;
+        //transmit a packet in the queue. this stops the receiver
+        rs485slave_transmit();
+    } 
 }
 
 inline void rs485slave_rx(void)
 {
     udebug_rx();
     uint16_t i = rs485uart_getc();
+
+    //someone else is using the bus
+    rs485s_aquired = 0;
+    
     if( !(i & UART_NO_DATA) ){
         uint8_t c = i&0xFF;
-         i = rs485msg_put(c);
-         if( i == UB_START ){
+        //uart1_putc(c);
+        i = rs485msg_put(c);
+        if( i == UB_START ){
             rs485s_gotMessage();
-         }else if( i == UB_QUERY && rs485msg_getMsg()[0] == ub_getAddress() ){
+        }else if( i == UB_QUERY &&
+                rs485msg_getMsg()[0] == ubadr_getAddress() ){
+            //this assumes, that the destination is the first byte
+            //not really nice
+            //if( ((ubpacket_t *)rs485msg_getMsg())->dest ==
+            //                      ub_getAddress())
             rs485s_gotQuery();
-         }else if( i == UB_DISCOVER ){ 
+        }else if( i == UB_DISCOVER ){ 
             rs485s_gotDiscover();
-         }
+        }    
     }
 }
 
-UBSTATUS rs485client_send(uint8_t * data, uint8_t len)
+UBSTATUS rs485slave_sendPacket(struct ubpacket_t * packet)
 {
-    if( len == 0 )
-        return UB_ERROR;
+    uint8_t len = packet->header.len + sizeof(packet->header);
 
     //use the free packet slot
     if( rs485s_slots[RS485S_PACKETSLOT].full )
         return UB_ERROR;
 
-    rs485s_slots[RS485S_PACKETSLOT].data = data;
-    rs485s_slots[RS485S_PACKETSLOT].len = len;
+    //TODO: check for overflow!
+    memcpy((char*)rs485s_packetdata, packet, len);
+
+    uint16_t crc = ubcrc16_data((uint8_t*)rs485s_packetdata, len);
+    rs485s_packetdata[len] = crc>>8;
+    rs485s_packetdata[len+1] = crc&0xFF;
+
+    rs485s_slots[RS485S_PACKETSLOT].data = (uint8_t*)rs485s_packetdata;
+    rs485s_slots[RS485S_PACKETSLOT].len = len+2;    //two bytes crc
     rs485s_slots[RS485S_PACKETSLOT].full = 1;
 
+    PORTA |= 0x01;
+    //if we have a temporary lock on the bus
+    if( rs485s_aquired ){
+        rs485slave_transmit();
+    }
     return UB_OK;
 }
 
@@ -162,6 +205,8 @@ inline void rs485slave_edge(void)
 {
     if ( rs485s_busState != RS485S_BUS_TIMER )
         return;
+    //the bus is busy with another client
+    //don't send our discover
     ubtimer_stop();
     rs485uart_edgeDisable();
     rs485s_busState = RS485S_BUS_IDLE;
@@ -177,7 +222,6 @@ inline void rs485slave_timer(void)
     //this is only reached if the slave is not configured yet
     //only discovers are allowed at this time
     rs485slave_transmit();
-    //rs485slave_start(UB_START, ubstat_getID(), ubstat_getIDLen(), UB_STOP);
 }
 
 inline void rs485slave_transmit(void)
@@ -254,6 +298,8 @@ inline void rs485slave_txend(void)
     if( rs485s_busState == RS485S_BUS_SEND_DONE ){
         rs485s_busState = RS485S_BUS_IDLE;
         rs485uart_enableReceive();
+
+        PORTA &= ~0x01;
     }else{
         //something went wrong!
         //there was nothing to transmitt or the packet was not completed

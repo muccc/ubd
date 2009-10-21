@@ -1,9 +1,9 @@
 #include <string.h>
 #include <avr/io.h>
 
-#include "packet.h"
+#include "ubpacket.h"
 #include "busmgt.h"
-#include "settings.h"
+#include "ubaddress.h"
 
 enum mgtstate {
     DISCOVER,
@@ -12,14 +12,13 @@ enum mgtstate {
 };
 
 uint8_t busmgt_state;
-uint8_t busmgt_busmaster;
 
 void busmgt_init(void)
 {
     busmgt_state = DISCOVER;
 }
 
-uint8_t busmgt_process(struct ubpacket * p)
+uint8_t busmgt_process(struct ubpacket_t * p)
 {
     uint8_t * d = p->data;
     PORTB ^= (1<<PB0);
@@ -28,10 +27,12 @@ uint8_t busmgt_process(struct ubpacket * p)
 
     switch(d[1]){
         case 'S':
-            //d[p->len] = 0;                  //TODO: check bufferleb
-            if(settings_compareid(d+4)){
-                packet_setAdr(d[2]);
-                packet_setMaster(d[3]);
+            //d[p->len] = 0;                  //TODO: check bufferlen
+            //if( d[2] == '"' )
+            if(ubadr_compareID(d+3)){
+
+                ubadr_setAddress(d[2]);
+                ubconfig.configured = 1;
                 //switch(busmgt_state){
                 //    case DISCOVER:
                         busmgt_state = IDENTIFY;
@@ -46,8 +47,8 @@ uint8_t busmgt_process(struct ubpacket * p)
             //    break;
             //}
         break;
-        case 's':
-            settings_setid(d+2);
+        /*case 's':
+            settings_setID(d+2);
         break;
         case 'r':
             while(1);
@@ -61,52 +62,53 @@ uint8_t busmgt_process(struct ubpacket * p)
             settings_readid(p->data+2);
             p->len = strlen((char*)p->data);
             packet_send();
-       break;
+       break;*/
     }
     return 1;
 }
 
 void busmgt_tick(void)
 {
-    struct ubpacket * p;
+    struct ubpacket_t * p;
     static uint16_t time = 0;
     if(!time--){
         time = 1000;
     }
 
     if(time == 0){
-        p = packet_getSendBuffer();
+        p = ubpacket_getSendBuffer();
         switch(busmgt_state){
-            case DISCOVER:
-                p->dest = UB_ADDRESS_BROADCAST;
-                p->flags = 0;
+            /*case DISCOVER:
+
+                PORTA ^= 0x04;
+                p->header.src = ubadr_getAddress();
+                p->header.dest = UB_ADDRESS_BROADCAST;
+                p->header.flags = 0;
                 p->data[0] = 'M';
                 p->data[1] = MGT_DISCOVER;
-                settings_readid(p->data+2);
+                strcpy((char*)p->data+2,(char*)ubadr_getID());
                 //strcpy((char*)p->data+2,"node1");
-                p->len = strlen((char*)p->data);
-                packet_send();
-            break;
+                p->header.len = strlen((char*)p->data);
+                ubpacket_send();
+            break;*/
             case IDENTIFY:
-                p->dest = packet_getMaster();
-                p->flags = 0;
+                p->header.dest = UB_ADDRESS_MASTER;
+                p->header.src = ubadr_getAddress();
                 p->data[0] = 'M';
                 p->data[1] = MGT_IDENTIFY;
-                settings_readid(p->data+2);
-                //strcpy((char*)p->data+2,"node1");
-                p->len = strlen((char*)p->data);
-                packet_send();
+                strcpy((char*)p->data+2,(char*)ubadr_getID());
+                p->header.len = strlen((char*)p->data);
+                ubpacket_send();
             break;
             case CONNECTED:
-                p->dest = packet_getMaster();
-                p->flags = 0;
-                p->data[0] = 'M';
-                p->data[1] = MGT_ALIVE;
-                //settings_copyID(p->data+1);
-                //strcpy((char*)p->data+2,"node1");
-                //p->len = strlen((char*)p->data);
-                p->len = 2;
-                packet_send();
+                if( ubpacket_free() ){
+                    p->header.dest = UB_ADDRESS_MASTER;
+                    p->header.src = ubadr_getAddress();
+                    p->data[0] = 'M';
+                    p->data[1] = MGT_ALIVE;
+                    p->header.len = 2;
+                    ubpacket_send();
+                }
            break;
         }
     }

@@ -14,5 +14,6 @@ void random_init(uint8_t * seed, uint8_t len)
 inline uint8_t random_get(void)
 {
     return random() & 0xFF;
+    //return 0;
 }
 

@@ -32,6 +32,8 @@
 #define UB_MASTERADR    2
 
 #define UB_QUERYMAX     30
+#define UB_MAXMULTICAST 8
 
+#define UB_PACKET_TIMEOUT   50
 #endif
 

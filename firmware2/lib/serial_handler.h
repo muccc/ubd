@@ -6,7 +6,7 @@
 #include "usart.h"
 
 #define SERIAL_BUFFERLEN        50
-extern uint8_t serial_buffer[SERIAL_BUFFERLEN];
+//extern uint8_t serial_buffer[SERIAL_BUFFERLEN];
 
 #define SERIAL_ESCAPE   '\\'
 #define SERIAL_START    '1'
@@ -22,6 +22,5 @@ void serial_sendFrames(char * s);
 void serial_sendFramec(uint8_t s);
 void serial_putenc(uint8_t * d, uint16_t n);
 uint16_t readline( void );
-uint16_t serial_readline(void);
-
+uint16_t serial_readline(uint8_t * buf);
 #endif

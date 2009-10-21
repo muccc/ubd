@@ -1,4 +1,3 @@
-//#include "config.h"
 #include "ubconfig.h"
 #include "ubrs485uart.h"
 #include "ubstat.h"
@@ -7,6 +6,8 @@
 #include "ub.h"
 #include "udebug.h"
 #include "random.h"
+#include "ubaddress.h"
+#include "ubpacket.h"
 
 struct ub_config ubconfig;
 uint8_t ub_address = 0;
@@ -14,28 +15,35 @@ uint8_t ub_address = 0;
 void ub_init(uint8_t ubmode)
 {
     udebug_init();
-    random_init((uint8_t*)"11",2);
+    ubadr_init();
+    random_init(ubadr_getID(),ubadr_getIDLen());
 #ifdef UB_ENABLEMASTER
     if( ubmode == UB_MASTER ){
         ubconfig.rs485master = 1;
         ubconfig.master = 1;
+        //the bridge has a fixed address
+        ubadr_setAddress(UB_ADDRESS_BRIDGE);
         ubstat_init();
         ubmaster_init();
+        ubconfig.configured = 1;
     }
 #endif
 #ifdef UB_ENABLESLAVE
     if ( ubmode == UB_SLAVE ){
         ubconfig.rs485slave = 1;
         ubconfig.slave = 1;
-        ubstat_init();
+        //we don't know better
+        ubadr_setAddress(0);
+//        ubstat_init();
         ubslave_init();
+        ubpacket_init();
+        ubconfig.configured = 0;
     }
 #endif
 }
 
 void ub_process(void)
 {
-
 #ifdef UB_ENABLEMASTER
     if( ubconfig.master ){
         ubmaster_process();
@@ -46,6 +54,7 @@ void ub_process(void)
         ubslave_process();
     }
 #endif
+    ubpacket_process();
 }
 
 void ub_tick(void)
@@ -58,16 +67,40 @@ void ub_tick(void)
 #ifdef UB_ENABLESLAVE
     if( ubconfig.slave ){
         ubslave_tick();
+
+        busmgt_tick();
     }   
 #endif
+    ubpacket_tick();
 }
 
-inline uint8_t ub_getAddress(void)
+UBSTATUS ub_sendPacket(struct ubpacket_t * packet)
 {
-    return ub_address;
+#ifdef UB_ENABLEMASTER
+    if( ubconfig.master ){
+        return ubmaster_sendPacket(packet);
+    }
+#endif
+#ifdef UB_ENABLESLAVE
+    if( ubconfig.slave ){
+        return ubslave_sendPacket(packet);
+    }   
+#endif
+    return UB_ERROR;
 }
 
-void ub_setAddress(uint8_t address)
+
+uint8_t ub_getPacket(struct ubpacket_t * packet)
 {
-    ub_address = address;
+#ifdef UB_ENABLEMASTER
+    if( ubconfig.master ){
+        return ubmaster_getPacket(packet);
+    }
+#endif
+#ifdef UB_ENABLESLAVE
+    if( ubconfig.slave ){
+        return ubslave_getPacket(packet);
+    }   
+#endif
+    return 0;
 }

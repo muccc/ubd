@@ -13,7 +13,7 @@
 #define RS485_nRE_PORT      PORTC
 #define RS485_nRE_DDR       DDRC
 
-#define UB_PACKETLEN        30
+#define UB_PACKETLEN        50
 
 #define UB_ESCAPE     '\\'
 #define UB_NONE         '0'
@@ -32,6 +32,7 @@
 #define UB_MASTERADR    2
 
 #define UB_QUERYMAX     30
-
+#define UB_MAXMULTICAST 8
+#define UB_PACKET_TIMEOUT   2000
 #endif
 

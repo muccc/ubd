@@ -3,15 +3,17 @@
 
 #include "ubconfig.h"
 
-#define UB_KNOWN            0x01
-#define UB_RS485            0x02
-#define UB_RF               0x04
-#define UB_UB_QUERYMAX      0x08
+struct ubstat_t {
+    uint8_t known:1;
+    uint8_t rs485:1;
+    uint8_t rf:1;
+    uint8_t querymax:1;     //query only a minimal amount
+    uint8_t inseq:1;
+    uint8_t outseq:1;
+};
 
 void ubstat_init(void);
-inline uint8_t ubstat_getFlags(uint8_t adr);
-void ubstat_addNode(uint8_t adr, uint8_t flags);
-inline uint8_t * ubstat_getID(void);
-inline uint8_t ubstat_getIDLen(void);
+inline struct ubstat_t * ubstat_getFlags(uint8_t adr);
+void ubstat_addNode(uint8_t adr, struct ubstat_t flags);
 
 #endif
