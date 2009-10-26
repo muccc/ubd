@@ -53,9 +53,10 @@ void packet_addCallback(gchar key, void(*cb)(struct ubpacket*))
 
     g_hash_table_insert(packet_callbacks, g_strdup(buf), cb);
 
-    printf("Added callback for %c\n",key);
+    printf("Added callback for message type %c to 0x%x\n",key,(unsigned int)cb);
 }
 
+char busy = 0;
 void packet_inmessage(struct message* msg)
 {
     if( msg->data[0] == 'P' ){
@@ -64,21 +65,28 @@ void packet_inmessage(struct message* msg)
         //g_async_queue_push(packet_queues.packet_in,p);
         g_free(msg);
         packet_inpacket(p);
-    }else if( msg->data[0] == 'S' ){ 
+    }else if( msg->data[0] == 'S'){ 
         printf("got send done\n");
+        busy = 0;
         //g_async_queue_push(packet_queues.status_in,msg);
+    }else if( msg->data[0] == 'A'){
+        printf("got abort\n");
+        busy = 0;
     }
 }
 
 void packet_outpacket(struct ubpacket* p)
 {
     struct message outmsg;
+    if(busy)
+        return;
+    //    while(1);
     p->src = 1;
     p->flags = 0;
-    p->seq = 0;
-    outmsg.len = p->len+1+UB_PACKET_HEADER;
-    outmsg.data[0] = 'P';
-    printf("sending packet with dest=%u src=%u flags=%u\n",p->dest, p->src, p->flags);
-    memcpy(outmsg.data+1, p, p->len + UB_PACKET_HEADER);
+    outmsg.len = p->len+UB_PACKET_HEADER;
+    //outmsg.data[0] = 'P';
+    printf("sending packet with dest=%u src=%u flags=%u len=%u\n",p->dest, p->src, p->flags,p->len);
+    memcpy(outmsg.data, p, p->len + UB_PACKET_HEADER);
+    busy = 1;
     packet_outmessage(&outmsg);
 }

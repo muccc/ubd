@@ -32,7 +32,7 @@ struct node nodes[MAX_NODE];
 struct node* busmgt_getNodeByName(gchar* name)
 {
     gint i;
-    for(i=2; i<MAX_NODE; i++){
+    for(i=4; i<MAX_NODE; i++){
         if( nodes[i].state != NODE_UNKNOWN ){
             if( strncmp(name, nodes[i].name, MAX_NAME) == 0){
                 return &nodes[i];
@@ -46,7 +46,7 @@ struct node* busmgt_getNodeByName(gchar* name)
 struct node* busmgt_getNodeByAdr(address_t adr)
 {
     gint i;
-    for(i=2; i<MAX_NODE; i++){
+    for(i=4; i<MAX_NODE; i+=10){
         if( nodes[i].state != NODE_UNKNOWN ){
             if( nodes[i].adr == adr ){
                 return &nodes[i];
@@ -60,7 +60,7 @@ struct node* busmgt_getNodeByAdr(address_t adr)
 address_t busmgt_getFreeAddress(void)
 {
     gint i;
-    for(i=2; i<MAX_NODE; i++){
+    for(i=4; i<MAX_NODE; i+=10){
         if( nodes[i].state == NODE_UNKNOWN){
             return i;
         }
@@ -71,7 +71,7 @@ address_t busmgt_getFreeAddress(void)
 struct node* busmgt_getFreeNode(void)
 {
     gint i;
-    for(i=2; i<MAX_NODE; i++){
+    for(i=4; i<MAX_NODE; i+=10){
         if( nodes[i].state == NODE_UNKNOWN){
             nodes[i].adr = i;       //FIXME fieser hack
             return &nodes[i];
@@ -87,8 +87,8 @@ void busmgt_inpacket(struct ubpacket* p)
     struct node * n;
     struct ubpacket response;
 
-    printf("mgt: read packet from %u to %u flags: %x seq=%u len %u: ", 
-            p->src, p->dest, p->flags, p->seq, p->len);
+    printf("mgt: read packet from %u to %u flags: %x len %u: ", 
+            p->src, p->dest, p->flags, p->len);
     debug_hexdump(p->data, p->len);
     printf("\n");
 
@@ -123,8 +123,12 @@ void busmgt_inpacket(struct ubpacket* p)
             response.data[0] = 'M';
             response.data[1] = 'S';
             response.data[2] = n->adr;
-            response.data[3] = 1;
-            strncpy(response.data+4, name, UB_PACKET_DATA-4);
+            strncpy(response.data+3, name, UB_PACKET_DATA-3);
+            
+            if( response.len > UB_PACKET_DATA )
+                response.len = UB_PACKET_DATA;
+            response.data[response.len-1] = 0;
+
             packet_outpacket(&response);
             strcpy(n->name,name);
             n->state = NODE_DISCOVER;
@@ -141,9 +145,9 @@ void busmgt_inpacket(struct ubpacket* p)
             if( n == NULL ){
                 printf("Address %u unkown. Sending reset.\n", p->src);
                 response.dest = p->src;
-                response.len = 2;
-                response.data[0] = 'M';
-                response.data[1] = 'r';
+                response.len = 1;
+                //response.data[0] = 'M';
+                response.data[0] = 'r';
                 packet_outpacket(&response);
                 return;
             }
@@ -160,13 +164,19 @@ void busmgt_inpacket(struct ubpacket* p)
             if( n == NULL ){
                 printf("Address %u unkown. Sending reset.\n", p->src);
                 response.dest = p->src;
-                response.len = 2;
-                response.data[0] = 'M';
-                response.data[1] = 'r';
+                response.len = 1;
+                //response.data[0] = 'M';
+                response.data[0] = 'r';
                 packet_outpacket(&response);
             }else{
                 n->timeout = 0;
                 n->state = NODE_NORMAL;
+                response.dest = p->src;
+                response.len = 1;
+                //response.data[0] = 'M';
+                response.data[0] = 'V';
+                packet_outpacket(&response);
+
             }
         break;
     };
@@ -176,9 +186,16 @@ void busmgt_inpacket(struct ubpacket* p)
 
 void busmgt_init(void)
 {
+
+    struct ubpacket response;
     gint i;
     for(i=0;i<256;i++){
         nodes[i].state=NODE_UNKNOWN;
     }
     packet_addCallback(BUSMGT_ID, busmgt_inpacket);
+                response.dest = 0xFF;
+                response.len = 1;
+                response.data[0] = 'r';
+                packet_outpacket(&response);
+
 }

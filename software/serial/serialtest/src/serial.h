@@ -4,8 +4,8 @@
 
 #define SERIAL_BUFFERLEN    100
 #define SERIAL_ESCAPE   '\\'
-#define SERIAL_START    '0'
-#define SERIAL_END     '1'
+#define SERIAL_START    '1'
+#define SERIAL_END     '2'
 
 
 uint16_t serial_in(uint8_t data);

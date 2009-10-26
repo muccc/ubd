@@ -12,13 +12,15 @@
 uint8_t serial_buffer[255];
 void (*serial_callback)(struct message *);
 GIOChannel  * serial_io;
+int fd;
 
 inline serial_putc(uint8_t c)
 {
-//    printf("serial: out:");
-    g_io_channel_write_chars(serial_io, &c, 1, NULL, NULL);
-//    debug_hexdump(&c,1);
-//    printf("\n");
+    //printf("serial: out:");
+    //g_io_channel_write_chars(serial_io, &c, 1, NULL, NULL);
+    write(fd,&c,1);
+    //debug_hexdump(&c,1);
+    //printf("\n");
 }
 
 inline void serial_putcenc(uint8_t c)
@@ -73,14 +75,15 @@ void serial_sendFramec(uint8_t s)
     serial_putStop();
 }
 
+GTimeVal start;
 uint16_t serial_in(uint8_t data)
 {
     static int fill = 0;
     static uint8_t escaped = 0;
 
-//    printf("serial: in:");
-//    debug_hexdump(&data,1);
-//    printf("\n");
+    /*printf("serial: in:");
+    debug_hexdump(&data,1);
+    printf("\n");*/
 
     if(data == SERIAL_ESCAPE){
         if(!escaped){
@@ -91,6 +94,7 @@ uint16_t serial_in(uint8_t data)
     }else if(escaped){
         escaped = 0;
         if(data == SERIAL_START){
+            g_get_current_time(&start);
             fill = 0;
             return 0;
         }else if( data == SERIAL_END){
@@ -118,8 +122,14 @@ gboolean serial_read(GIOChannel * serial, GIOCondition condition, gpointer data)
         len = serial_in(c);
         if( len ){
             //send the msg to the callback
-//            printf("serial: new message\n");
+            //printf("serial: new message len=%u\n",len);
+            
+            printf("%d.%06d serial: new message: ->",start.tv_sec,start.tv_usec);debug_hexdump(serial_buffer, len);printf("<-\n");
             struct message * msg = g_new(struct message,1);
+            if( msg == NULL ){
+                printf("out of memory?\n");
+                return TRUE;
+            }
             msg->len = len;
             memcpy(msg->data,serial_buffer,msg->len);
             serial_callback(msg);
@@ -136,17 +146,23 @@ gboolean serial_read(GIOChannel * serial, GIOCondition condition, gpointer data)
 
 void serial_writemessage(struct message * outmsg)
 {
-    printf("serial: write message: ");debug_hexdump(outmsg->data, outmsg->len);
-    printf("\n");
+    printf("serial: write message: ->");debug_hexdump(outmsg->data, outmsg->len);
+    printf("<-\n");
     serial_putStart();
     serial_putenc((uint8_t*) outmsg->data, outmsg->len);
     serial_putStop();
+    tcdrain(fd);
+
+    tcflush(fd,TCOFLUSH);
     g_io_channel_flush(serial_io, NULL);
+
+    tcdrain(fd);
+    tcflush(fd,TCOFLUSH);
 }
 
 int serial_open (char * device, void (*cb)(struct message *))
 {
-    int fd = open(device, O_RDWR|O_NOCTTY);//|O_NONBLOCK);
+    fd = open(device, O_RDWR|O_NOCTTY|O_SYNC);//|O_NONBLOCK);
     if( fd == -1 ){
 //        printf("Failed to open serial device %s\n", argv[1]);
         return fd;
