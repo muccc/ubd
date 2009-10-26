@@ -41,6 +41,7 @@ inline void ubslave_tick(void)
         //TODO: get the information about the configured interface from
         //the busmgt
         rs485slave_setConfigured(1);
+        ubslave_interface = UB_RS485;
 
     }
     rs485slave_tick();

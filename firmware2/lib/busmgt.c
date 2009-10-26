@@ -94,6 +94,7 @@ void busmgt_tick(void)
             case IDENTIFY:
                 p->header.dest = UB_ADDRESS_MASTER;
                 p->header.src = ubadr_getAddress();
+                p->header.flags = 0;
                 p->data[0] = 'M';
                 p->data[1] = MGT_IDENTIFY;
                 strcpy((char*)p->data+2,(char*)ubadr_getID());
@@ -104,6 +105,7 @@ void busmgt_tick(void)
                 if( ubpacket_free() ){
                     p->header.dest = UB_ADDRESS_MASTER;
                     p->header.src = ubadr_getAddress();
+                    p->header.flags = 0;
                     p->data[0] = 'M';
                     p->data[1] = MGT_ALIVE;
                     p->header.len = 2;

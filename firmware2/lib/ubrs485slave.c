@@ -193,7 +193,7 @@ UBSTATUS rs485slave_sendPacket(struct ubpacket_t * packet)
     rs485s_slots[RS485S_PACKETSLOT].len = len+2;    //two bytes crc
     rs485s_slots[RS485S_PACKETSLOT].full = 1;
 
-    PORTA |= 0x01;
+    //PORTA |= 0x01;
     //if we have a temporary lock on the bus
     if( rs485s_aquired ){
         rs485slave_transmit();
@@ -269,7 +269,6 @@ inline void rs485slave_tx(void)
                 escaped = 0;
                 rs485uart_putc(data);
                 if( ++pos == rs485s_len ){
-                    rs485s_slots[RS485S_PACKETSLOT].full = 0;
                     rs485s_busState = RS485S_BUS_SEND_STOP;
                 }
             }
@@ -279,11 +278,12 @@ inline void rs485slave_tx(void)
             rs485s_busState = RS485S_BUS_SEND_STOP2;
         break;
         case RS485S_BUS_SEND_STOP2:
-             rs485uart_putc(rs485s_stop);
-             rs485s_busState = RS485S_BUS_SEND_DONE;
+            rs485uart_putc(rs485s_stop);
+            rs485s_busState = RS485S_BUS_SEND_DONE;
         break;
         case RS485S_BUS_SEND_DONE:
             //we have to wat for the tx_end call to disable the transmitter
+            //the UDRE bit will be cleared by rs485uart
         break;
         case RS485S_BUS_IDLE:
         default:
@@ -297,9 +297,10 @@ inline void rs485slave_txend(void)
 {
     if( rs485s_busState == RS485S_BUS_SEND_DONE ){
         rs485s_busState = RS485S_BUS_IDLE;
+        rs485s_slots[RS485S_PACKETSLOT].full = 0;
         rs485uart_enableReceive();
 
-        PORTA &= ~0x01;
+        //PORTA &= ~0x01;
     }else{
         //something went wrong!
         //there was nothing to transmitt or the packet was not completed

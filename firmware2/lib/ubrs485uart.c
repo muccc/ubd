@@ -232,16 +232,9 @@ ISR(UART0_RECEIVE_INTERRUPT)//, ISR_NOBLOCK)
 
 ISR(UART0_TRANSMIT_INTERRUPT)//, ISR_NOBLOCK)
 {
-    static uint8_t c = 0;
-    c++;
-    //if( c == 2){
-        c = 1;
-    //}
-    //UART0_CONTROL &= ~_BV(UART0_UDRIE);
-    //return;
+    UART0_CONTROL &= ~_BV(UART0_UDRIE);
 #ifdef UB_ENABLEMASTER
     if( ubconfig.rs485master ){
-        //PORTA |= 0x02;
         rs485master_tx();
     }
 #endif
@@ -251,9 +244,6 @@ ISR(UART0_TRANSMIT_INTERRUPT)//, ISR_NOBLOCK)
         rs485slave_tx();
     }
 #endif
-    if( UART0_STATUS & (1<<UDRE0) )
-        //No more data to send
-        UART0_CONTROL &= ~_BV(UART0_UDRIE);
 }
 
 ISR(USART0_TX_vect)//, ISR_NOBLOCK)

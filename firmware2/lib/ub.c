@@ -8,6 +8,7 @@
 #include "random.h"
 #include "ubaddress.h"
 #include "ubpacket.h"
+#include "busmgt.h"
 
 struct ub_config ubconfig;
 uint8_t ub_address = 0;

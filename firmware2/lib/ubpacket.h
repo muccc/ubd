@@ -20,8 +20,10 @@ struct ubpacket_t{
 
 #define UB_PACKET_HEADER        (sizeof(struct ubheader_t)
 
-#define UB_PACKET_ACK           1
-#define UB_PACKET_SEQ           2
+#define UB_PACKET_ACK           (1<<0)
+#define UB_PACKET_SEQ           (1<<1)
+#define UB_PACKET_DONE          (1<<2)
+#define UB_PACKET_NOACK         (1<<3)
 
 
 #define PACKET_TIMEOUT          200     //we wait max 200ms for an ack

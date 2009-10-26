@@ -12,6 +12,7 @@
 #include "udebug.h"
 #include "ubpacket.h"
 #include "ubcrc.h"
+#include "ubaddress.h"
 
 #define UB_HOSTADR          1
 #define UB_MASTERADR        2
@@ -306,9 +307,11 @@ inline void rs485master_process(void)
 
     //wait for the bus to be idle and that all packets are processed
     //don't get a new packet when we still have to process one.
+    cli();  //make the if atom
     if( rs485master_idle() == UB_OK  && rs485m_incomming == UB_NONE ){
         rs485master_runslot();
     }
+    sei();
 }
 
 void rs485master_runslot(void)
