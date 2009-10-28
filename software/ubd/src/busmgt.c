@@ -123,7 +123,7 @@ void busmgt_inpacket(struct ubpacket* p)
             response.data[0] = 'M';
             response.data[1] = 'S';
             response.data[2] = n->adr;
-            strncpy(response.data+3, name, UB_PACKET_DATA-3);
+            strncpy((char*)response.data+3, name, UB_PACKET_DATA-3);
             
             if( response.len > UB_PACKET_DATA )
                 response.len = UB_PACKET_DATA;

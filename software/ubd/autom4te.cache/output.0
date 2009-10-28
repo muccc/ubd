@@ -3200,6 +3200,8 @@ else
 fi
 
 
+CFLAGS="$CFLAGS -Wall -Wextra"
+
 
 
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then

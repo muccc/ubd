@@ -20,6 +20,7 @@ gpointer reader(gpointer data)
     //struct queues * q = data;
     printf("reader thread started\n");
     while(1){
+        data = NULL;
     /*    printf("waiting for packet...");
         struct ubpacket * p = g_async_queue_pop(packet_queues.packet_in); 
         printf("read packet from %u to %u flags: %x seq=%u len %u: ", 

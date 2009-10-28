@@ -8,13 +8,14 @@
 #include <string.h>
 #include "debug.h"
 #include "serial.h"
+#include <unistd.h>
 
 uint8_t serial_buffer[255];
 void (*serial_callback)(struct message *);
 GIOChannel  * serial_io;
 int fd;
 
-inline serial_putc(uint8_t c)
+inline void serial_putc(uint8_t c)
 {
     //printf("serial: out:");
     //g_io_channel_write_chars(serial_io, &c, 1, NULL, NULL);
@@ -107,15 +108,27 @@ uint16_t serial_in(uint8_t data)
     return 0;
 }
 
+void serial_readMessage(struct message * msg)
+{
+    msg->len = 0;
+    while( 1 ){
+        uint8_t c = read(fd,&c,1);
+        //len = serial_in(c);
+
+    }
+}
+
 gboolean serial_read(GIOChannel * serial, GIOCondition condition, gpointer data)
 {
     gsize n;
     uint8_t c;
-    struct queues * q = data;
+    //struct queues * q = data;
     uint16_t len;
+    condition = 0;
+    data = NULL;
     
     //try to read one byte
-    int r = g_io_channel_read_chars(serial,&c,1,&n,NULL);
+    int r = g_io_channel_read_chars(serial,(char*)&c,1,&n,NULL);
 
     if( n > 0 ){
         //feed it into the receiver
@@ -124,7 +137,7 @@ gboolean serial_read(GIOChannel * serial, GIOCondition condition, gpointer data)
             //send the msg to the callback
             //printf("serial: new message len=%u\n",len);
             
-            printf("%d.%06d serial: new message: ->",start.tv_sec,start.tv_usec);debug_hexdump(serial_buffer, len);printf("<-\n");
+            printf("%ld.%06ld serial: new message: ->",start.tv_sec,start.tv_usec);debug_hexdump(serial_buffer, len);printf("<-\n");
             struct message * msg = g_new(struct message,1);
             if( msg == NULL ){
                 printf("out of memory?\n");

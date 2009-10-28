@@ -13,12 +13,16 @@ gboolean udp_read(GIOChannel* serial, GIOCondition condition, gpointer data)
     uint8_t buf[100];
     gsize len;
     GInetAddr * src;
-    len = gnet_udp_socket_receive(udpsocket, buf, 100, &src);
+    serial = NULL;
+    condition = 0;
+    data = NULL;
+    len = gnet_udp_socket_receive(udpsocket, (char*)buf, 100, &src);
     if( len ){
         printf("udp: received:");debug_hexdump(buf,len);printf("\n");
     }else{
         printf("udp: received empty msg\n");
     }
+    return TRUE;
 }
 
 gint net_init(gchar* interface)

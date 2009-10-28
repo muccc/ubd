@@ -15,6 +15,8 @@ GHashTable* packet_callbacks;
 
 void blubb (gpointer key, gpointer value, gpointer data)
 {
+    value = NULL;
+    data = NULL;
     printf(key);
 }
 void packet_inpacket(struct ubpacket* p)
