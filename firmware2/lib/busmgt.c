@@ -22,10 +22,10 @@ uint8_t busmgt_process(struct ubpacket_t * p)
 {
     uint8_t * d = p->data;
     PORTB ^= (1<<PB0);
-    if(d[0] != 'M')
+    if(!(p->flags & UB_PACKET_MGT))
         return 0;
 
-    switch(d[1]){
+    switch(d[0]){
         case 'S':
             //d[p->len] = 0;                  //TODO: check bufferlen
             //if( d[2] == '"' )
@@ -94,10 +94,9 @@ void busmgt_tick(void)
             case IDENTIFY:
                 p->header.dest = UB_ADDRESS_MASTER;
                 p->header.src = ubadr_getAddress();
-                p->header.flags = 0;
-                p->data[0] = 'M';
-                p->data[1] = MGT_IDENTIFY;
-                strcpy((char*)p->data+2,(char*)ubadr_getID());
+                p->header.flags = UB_PACKET_MGT;
+                p->data[0] = MGT_IDENTIFY;
+                strcpy((char*)p->data+1,(char*)ubadr_getID());
                 p->header.len = strlen((char*)p->data);
                 ubpacket_send();
             break;
@@ -105,10 +104,9 @@ void busmgt_tick(void)
                 if( ubpacket_free() ){
                     p->header.dest = UB_ADDRESS_MASTER;
                     p->header.src = ubadr_getAddress();
-                    p->header.flags = 0;
-                    p->data[0] = 'M';
-                    p->data[1] = MGT_ALIVE;
-                    p->header.len = 2;
+                    p->header.flags = UB_PACKET_MGT;
+                    p->data[0] = MGT_ALIVE;
+                    p->header.len = 1;
                     ubpacket_send();
                 }
            break;

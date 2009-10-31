@@ -24,6 +24,7 @@ struct ubpacket_t{
 #define UB_PACKET_SEQ           (1<<1)
 #define UB_PACKET_DONE          (1<<2)
 #define UB_PACKET_NOACK         (1<<3)
+#define UB_PACKET_MGT           (1<<4)
 
 
 #define PACKET_TIMEOUT          200     //we wait max 200ms for an ack

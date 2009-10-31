@@ -30,11 +30,10 @@ inline void ubslave_tick(void)
             discover = 0;
             p.header.src = ubadr_getAddress();
             p.header.dest = UB_ADDRESS_BROADCAST;
-            p.header.flags = 0;
-            p.header.len = ubadr_getIDLen()+2;
-            p.data[0] = 'M';
-            p.data[1] = 'D';
-            memcpy(p.data+2,ubadr_getID(),ubadr_getIDLen());
+            p.header.flags = UB_PACKET_MGT;
+            p.header.len = ubadr_getIDLen()+1;
+            p.data[0] = 'D';
+            memcpy(p.data+1,ubadr_getID(),ubadr_getIDLen());
             ubslave_sendPacket(&p);
         }
     }else{
