@@ -81,7 +81,7 @@ uint16_t readline( void )
         return 0;
     }
     data = i&0xFF;
-    uart1_putc(data);
+    //uart1_putc(data);
     //PORTA ^= 0x01;
     PORTC ^= 0x01;
     if(data == SERIAL_ESCAPE){

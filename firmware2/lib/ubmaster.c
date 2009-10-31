@@ -55,7 +55,7 @@ inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
         if( (len = serial_readline((uint8_t *)packet)) ){
 
             PORTC ^= 0x04;
-            serial_sendFrames("Di");
+            //serial_sendFrames("Di");
             //PORTA ^= 0x01;
             //we got a packet from the host
             return len;
