@@ -290,6 +290,8 @@ if ( ubconfig.slave &&
         !(in->header.flags & UB_PACKET_NOACK)){
         //if we still have something to send let the master retry
         if( !ubpacket_free() ){
+            //the packet might have been lost
+            packet_fired = 0;
             return;
         }
         //a slave only gets packets from the master
