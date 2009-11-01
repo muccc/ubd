@@ -35,5 +35,6 @@
 #define UB_MAXMULTICAST 8
 
 #define UB_PACKET_TIMEOUT   50
+#define UB_PACKET_RETRIES   100
 #endif
 

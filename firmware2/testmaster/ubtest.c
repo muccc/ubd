@@ -50,7 +50,6 @@ int main(void)
         ub_process();
         struct ubpacket_t p;
         int16_t len =  0; //rs485master_getPacket(&p);
-        ubpacket_done();
         if( ubpacket_gotPacket() ){
             struct ubpacket_t * in = ubpacket_getIncomming();
             if( p.header.src == 0x11 )
