@@ -15,8 +15,11 @@ struct ubpacket{
     uint8_t data[UB_PACKET_DATA];
 };
 
-#define UB_PACKET_ACK           1
-#define UB_PACKET_SEQ           2
+#define UB_PACKET_ACK           (1<<0)
+#define UB_PACKET_SEQ           (1<<1)
+#define UB_PACKET_DONE          (1<<2)
+#define UB_PACKET_NOACK         (1<<3)
+#define UB_PACKET_MGT           (1<<4)
 
 #define UB_ADDRESS_MULTICAST     (1<<(sizeof(address_t)*8-1)) //first bit is one
 #define UB_ADDRESS_BROADCAST     ((1<<sizeof(address_t)*8)-1)  //all ones

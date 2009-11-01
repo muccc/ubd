@@ -46,7 +46,7 @@ struct node* busmgt_getNodeByName(gchar* name)
 struct node* busmgt_getNodeByAdr(address_t adr)
 {
     gint i;
-    for(i=4; i<MAX_NODE; i+=10){
+    for(i=4; i<MAX_NODE; i+=1){
         if( nodes[i].state != NODE_UNKNOWN ){
             if( nodes[i].adr == adr ){
                 return &nodes[i];
@@ -60,7 +60,7 @@ struct node* busmgt_getNodeByAdr(address_t adr)
 address_t busmgt_getFreeAddress(void)
 {
     gint i;
-    for(i=4; i<MAX_NODE; i+=10){
+    for(i=4; i<MAX_NODE; i+=1){
         if( nodes[i].state == NODE_UNKNOWN){
             return i;
         }
@@ -71,7 +71,7 @@ address_t busmgt_getFreeAddress(void)
 struct node* busmgt_getFreeNode(void)
 {
     gint i;
-    for(i=4; i<MAX_NODE; i+=10){
+    for(i=4; i<MAX_NODE; i+=1){
         if( nodes[i].state == NODE_UNKNOWN){
             nodes[i].adr = i;       //FIXME fieser hack
             return &nodes[i];
@@ -92,11 +92,12 @@ void busmgt_inpacket(struct ubpacket* p)
     debug_hexdump(p->data, p->len);
     printf("\n");
 
-    switch(p->data[1]){
+    response.flags = UB_PACKET_MGT;
+    switch(p->data[0]){
         case 'D':
             //memcopy(name, p->data+2);//     TODO some checks, p->len-1);
-            memcpy(name, p->data+2, p->len-2);
-            name[p->len-2] = 0;
+            memcpy(name, p->data+1, p->len-1);
+            name[p->len-1] = 0;
             n = busmgt_getNodeByName(name);
             
             printf("mgt: got discover from %s\n", name);
@@ -119,11 +120,10 @@ void busmgt_inpacket(struct ubpacket* p)
             }
 
             response.dest = UB_ADDRESS_BROADCAST;
-            response.len = strlen(name)+4;
-            response.data[0] = 'M';
-            response.data[1] = 'S';
-            response.data[2] = n->adr;
-            strncpy((char*)response.data+3, name, UB_PACKET_DATA-3);
+            response.len = strlen(name)+3;
+            response.data[0] = 'S';
+            response.data[1] = n->adr;
+            strncpy((char*)response.data+2, name, UB_PACKET_DATA-2);
             
             if( response.len > UB_PACKET_DATA )
                 response.len = UB_PACKET_DATA;
@@ -136,8 +136,8 @@ void busmgt_inpacket(struct ubpacket* p)
         break;
         case 'I':
 //            strncpy(name, p->data+2, p->len-1);
-            memcpy(name, p->data+2, p->len-2);
-            name[p->len-2] = 0;
+            memcpy(name, p->data+1, p->len-1);
+            name[p->len-1] = 0;
 
             printf("mgt: got identify from %s\n", name);
             n = busmgt_getNodeByName(name);
@@ -153,9 +153,8 @@ void busmgt_inpacket(struct ubpacket* p)
             }
             
             response.dest = p->src;
-            response.len = 2;
-            response.data[0] = 'M';
-            response.data[1] = 'O';
+            response.len = 1;
+            response.data[0] = 'O';
             packet_outpacket(&response);
             n->state = NODE_IDENTIFY;
         break;
@@ -173,7 +172,7 @@ void busmgt_inpacket(struct ubpacket* p)
                 n->state = NODE_NORMAL;
                 response.dest = p->src;
                 response.len = 1;
-                //response.data[0] = 'M';
+                response.flags ^= UB_PACKET_MGT;
                 response.data[0] = 'V';
                 packet_outpacket(&response);
 
@@ -196,6 +195,7 @@ void busmgt_init(void)
                 response.dest = 0xFF;
                 response.len = 1;
                 response.data[0] = 'r';
+                packet_outpacket(&response);
                 packet_outpacket(&response);
 
 }

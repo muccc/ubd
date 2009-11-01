@@ -9,19 +9,18 @@
 #include "debug.h"
 #include "serial.h"
 #include <unistd.h>
+#include <errno.h>
 
-uint8_t serial_buffer[255];
-void (*serial_callback)(struct message *);
-GIOChannel  * serial_io;
+uint8_t serial_buffer[SERIAL_BUFFERLEN];
 int fd;
+GTimeVal start;
+
+
+static uint16_t serial_in(uint8_t data);
 
 inline void serial_putc(uint8_t c)
 {
-    //printf("serial: out:");
-    //g_io_channel_write_chars(serial_io, &c, 1, NULL, NULL);
     write(fd,&c,1);
-    //debug_hexdump(&c,1);
-    //printf("\n");
 }
 
 inline void serial_putcenc(uint8_t c)
@@ -69,19 +68,18 @@ void serial_sendFrames(char * s)
     serial_putStop();
 }
 
-void serial_sendFramec(uint8_t s)
+void serial_sendFramec(uint8_t c)
 {
     serial_putStart();
-    serial_putcenc(s);
+    serial_putcenc(c);
     serial_putStop();
 }
 
-GTimeVal start;
-uint16_t serial_in(uint8_t data)
+static uint16_t serial_in(uint8_t data)
 {
-    static int fill = 0;
+    static int fill = -1;
     static uint8_t escaped = 0;
-
+    int tmp;
     /*printf("serial: in:");
     debug_hexdump(&data,1);
     printf("\n");*/
@@ -99,107 +97,71 @@ uint16_t serial_in(uint8_t data)
             fill = 0;
             return 0;
         }else if( data == SERIAL_END){
-            return fill;
+            g_assert(fill != -1);
+            tmp = fill;
+            fill = -1;
+            return tmp;
         }
     }
-    serial_buffer[fill++] = data;
-    if(fill >= SERIAL_BUFFERLEN)
-        fill = SERIAL_BUFFERLEN - 1;
+    if( fill > -1 )
+        serial_buffer[fill++] = data;
+    else if(fill >= SERIAL_BUFFERLEN){
+        fill = -1;
+    }
     return 0;
 }
 
 void serial_readMessage(struct message * msg)
 {
-    msg->len = 0;
+    uint8_t len;
     while( 1 ){
-        uint8_t c = read(fd,&c,1);
-        //len = serial_in(c);
-
-    }
-}
-
-gboolean serial_read(GIOChannel * serial, GIOCondition condition, gpointer data)
-{
-    gsize n;
-    uint8_t c;
-    //struct queues * q = data;
-    uint16_t len;
-    condition = 0;
-    data = NULL;
-    
-    //try to read one byte
-    int r = g_io_channel_read_chars(serial,(char*)&c,1,&n,NULL);
-
-    if( n > 0 ){
-        //feed it into the receiver
-        len = serial_in(c);
-        if( len ){
-            //send the msg to the callback
-            //printf("serial: new message len=%u\n",len);
-            
-            printf("%ld.%06ld serial: new message: ->",start.tv_sec,start.tv_usec);debug_hexdump(serial_buffer, len);printf("<-\n");
-            struct message * msg = g_new(struct message,1);
-            if( msg == NULL ){
-                printf("out of memory?\n");
-                return TRUE;
+        uint8_t c;
+        int rc = read(fd,&c,1);
+        if( rc > 0){
+            len = serial_in(c);
+            if( len ){
+                printf("%ld.%06ld serial: new message: ->",start.tv_sec,start.tv_usec);debug_hexdump(serial_buffer, len);printf("<-\n");
+                msg->len = len;
+                memcpy(msg->data,serial_buffer,msg->len);
+                return;
             }
-            msg->len = len;
-            memcpy(msg->data,serial_buffer,msg->len);
-            serial_callback(msg);
+        }else if( rc == 0){
+            printf("timeout on serial line\n");
+        }else if( rc < 0){
+            printf("error while reading from serial line: rc=%d errno=%d\n",rc,errno);
         }
-    }else{
-        //there was an error
-        printf("result: %u\n",r);
     }
-    
-    //keep this source
-    return TRUE;
 }
 
-
-void serial_writemessage(struct message * outmsg)
+void serial_writeMessage(struct message * outmsg)
 {
     printf("serial: write message: ->");debug_hexdump(outmsg->data, outmsg->len);
     printf("<-\n");
     serial_putStart();
     serial_putenc((uint8_t*) outmsg->data, outmsg->len);
     serial_putStop();
-    tcdrain(fd);
-
-    tcflush(fd,TCOFLUSH);
-    g_io_channel_flush(serial_io, NULL);
-
-    tcdrain(fd);
-    tcflush(fd,TCOFLUSH);
+    //tcdrain(fd);
+    //tcflush(fd,TCOFLUSH);
 }
 
-int serial_open (char * device, void (*cb)(struct message *))
+int serial_open (char * device)
 {
-    fd = open(device, O_RDWR|O_NOCTTY|O_SYNC);//|O_NONBLOCK);
+    fd = open(device, O_RDWR|O_NOCTTY);// |O_SYNC);//|O_NONBLOCK);
     if( fd == -1 ){
 //        printf("Failed to open serial device %s\n", argv[1]);
         return fd;
     }
-
     struct termios tio;
-    tcgetattr (fd, &tio);
+    bzero(&tio, sizeof(tio));
     tio.c_cflag = CREAD | CLOCAL | B115200 | CS8;
     tio.c_iflag = IGNPAR | IGNBRK;
     tio.c_oflag = 0;
     tio.c_lflag = 0;
-    tio.c_cc[VTIME] = 0;
-    tio.c_cc[VMIN]  = 0;
+    tio.c_cc[VTIME] = 100;
+    tio.c_cc[VMIN]  = 1;
     tcsetattr (fd, TCSANOW, &tio);
     tcflush (fd, TCIFLUSH);
     tcflush (fd, TCOFLUSH);
-
-    serial_callback = cb;
-
-    serial_io = g_io_channel_unix_new(fd);
-    g_io_channel_set_encoding(serial_io,NULL,NULL);
-
-    g_io_add_watch(serial_io,G_IO_IN,serial_read,NULL);
-    
     return fd;
 }
 

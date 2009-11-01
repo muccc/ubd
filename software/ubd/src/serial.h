@@ -8,8 +8,7 @@
 #define SERIAL_END     '2'
 
 
-uint16_t serial_in(uint8_t data);
-gboolean serial_read(GIOChannel * serial, GIOCondition condition, gpointer data);
-int serial_open(char * device, void (*cb)(struct message *));
-void serial_writemessage(struct message *);
+void serial_readMessage(struct message *);
+int serial_open(char * device);
+void serial_writeMessage(struct message *);
 #endif

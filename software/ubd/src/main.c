@@ -42,19 +42,25 @@ int main (int argc, char *argv[])
     if (!g_thread_supported ()) g_thread_init (NULL);
     printf ("This is " PACKAGE_STRING ".\n");
 
-    net_init("::1");
-
     if( argc < 2 ){
+        printf("Please specify an interface  to use.\n");
+        return 0;
+    }
+
+    net_init(argv[1]);
+
+    if( argc < 3 ){
         printf("Please specify a serial port to use.\n");
         return 0;
     }
-    
-    packet_init(serial_writemessage);
 
-    if( serial_open(argv[1], packet_inmessage) == -1 ){
+    if( serial_open(argv[2]) == -1 ){
         printf("Failed to open serial device %s\nAborting.\n", argv[1]);
         return 0;
     }
+   
+    packet_init();
+
     
     busmgt_init();
 
