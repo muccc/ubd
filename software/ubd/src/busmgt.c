@@ -68,6 +68,20 @@ address_t busmgt_getFreeAddress(void)
     return 0;
 }
 
+void busmgt_checkTimeout(void)
+{
+    gint i;
+    for(i=4; i<MAX_NODE; i+=1){
+        if( nodes[i].state == NODE_IDENTIFY ||
+            nodes[i].state == NODE_NORMAL ){
+            if( nodes[i].timeout-- == 0 ){
+                printf("removing %s\n",nodes[i].name);
+                net_removeAddressForID(nodes[i].name);
+                nodes[i].state = NODE_UNKNOWN;
+            }
+        }
+    }
+}
 struct node* busmgt_getFreeNode(void)
 {
     gint i;
@@ -78,6 +92,20 @@ struct node* busmgt_getFreeNode(void)
         }
     }
     return NULL;
+}
+
+gint bus_sendToID(gchar *id, gchar *buf, gint len, gboolean reply)
+{ 
+    struct ubpacket packet;
+    struct node* n = busmgt_getNodeByName(id);
+    g_assert(n != NULL);
+
+    packet.dest = n->adr;
+    packet.len = len;
+    if( !reply )
+        packet.flags = UB_PACKET_NOACK;
+    memcpy(packet.data, buf, len);
+    packet_outpacket(&packet);
 }
 
 void busmgt_inpacket(struct ubpacket* p)
@@ -157,6 +185,8 @@ void busmgt_inpacket(struct ubpacket* p)
             response.data[0] = 'O';
             packet_outpacket(&response);
             n->state = NODE_IDENTIFY;
+            n->timeout = 30;
+            net_addAddressForID(name);
         break;
         case 'A':
             n = busmgt_getNodeByAdr(p->src);
@@ -168,7 +198,7 @@ void busmgt_inpacket(struct ubpacket* p)
                 response.data[0] = 'r';
                 packet_outpacket(&response);
             }else{
-                n->timeout = 0;
+                n->timeout = 30;
                 n->state = NODE_NORMAL;
                 response.dest = p->src;
                 response.len = 1;
@@ -182,20 +212,26 @@ void busmgt_inpacket(struct ubpacket* p)
 
     g_free(p); 
 }
+gboolean busmgt_tick(gpointer data)
+{
+    data = NULL;
+
+    busmgt_checkTimeout();
+    return TRUE;
+}
 
 void busmgt_init(void)
 {
 
-    struct ubpacket response;
     gint i;
     for(i=0;i<256;i++){
         nodes[i].state=NODE_UNKNOWN;
     }
-    packet_addCallback(BUSMGT_ID, busmgt_inpacket);
-                response.dest = 0xFF;
-                response.len = 1;
-                response.data[0] = 'r';
-                packet_outpacket(&response);
-                packet_outpacket(&response);
-
+    //packet_addCallback(BUSMGT_ID, busmgt_inpacket);
+    g_timeout_add_seconds(1,busmgt_tick,NULL);
+    struct ubpacket reset;
+    reset.dest = UB_ADDRESS_BROADCAST;
+    reset.len = 1;
+    reset.data[0] = 'r';
+    packet_outpacket(&reset);
 }

@@ -33,12 +33,15 @@ gpointer packet_readerThread(gpointer data)
                     packet_inpacket(p);
                 break;
                 case PACKET_DONE:
-                    printf("packet done\n");
+                    printf("%c: packet done\n", in.data[0]);
                     g_async_queue_push(packet_status,(gpointer)PACKET_DONE);
                 break;
                 case PACKET_ABORT:
                     printf("packet aborted\n");
                     g_async_queue_push(packet_status,(gpointer)PACKET_ABORT);
+                break;
+                case 'D':
+                    printf("debug\n");
                 break;
             }
         }
@@ -124,7 +127,7 @@ void packet_outpacket(struct ubpacket* p)
 {
     struct message * outmsg = g_new(struct message,1);
     p->src = 1;
-    p->flags &= UB_PACKET_MGT;
+    p->flags &= UB_PACKET_MGT | UB_PACKET_NOACK;
 
     printf("sending packet with dest=%u src=%u flags=%u len=%u\n",
                 p->dest, p->src, p->flags,p->len);
