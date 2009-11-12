@@ -23,7 +23,9 @@ struct node{
     gchar       id[MAX_ID];
 
     gint        busadr;
+    gboolean    busup;
     GInetAddress *netadr;
+    gboolean    netup;
 
     gint        state;
 

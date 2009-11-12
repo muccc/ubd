@@ -125,6 +125,8 @@ void net_createSockets(struct node *n)
     g_assert(s != NULL);
     g_source_set_callback(s, (GSourceFunc)entry_udp_read, n, NULL);
     g_source_attach(s, g_main_context_default ());
+
+    n->netup = TRUE;
     //FIXME: free address
     //g_object_unref(sa);
 }

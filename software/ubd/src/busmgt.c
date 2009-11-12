@@ -88,7 +88,7 @@ void busmgt_inpacket(struct ubpacket* p)
                 return;
             }
             //send the OK if we have our interface ready
-            if( n->netadr != NULL ){
+            if( n->netup == TRUE){
                 response.dest = p->src;
                 response.len = 1;
                 response.data[0] = 'O';
@@ -96,6 +96,7 @@ void busmgt_inpacket(struct ubpacket* p)
                 //n->state = NODE_IDENTIFY;
                 n->state = NODE_NORMAL;
                 n->timeout = 30;
+                n->busup = TRUE;
             }
         break;
         //a keep alive packet

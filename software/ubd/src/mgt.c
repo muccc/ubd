@@ -62,6 +62,7 @@ struct node *mgt_createNode(gint type, gchar *id)
         n->type = type;
         strncpy(n->id,id,MAX_ID);
         address6_createAddress(n);
+        n->netup = FALSE;
     }
     return n;
 }
