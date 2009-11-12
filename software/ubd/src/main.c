@@ -1,11 +1,11 @@
 #include <config.h>
 #include <stdio.h>
-#include <gnet.h>
 #include <glib.h>
 #include <fcntl.h>
 #include <termios.h>
 #include <stdint.h>
 #include <string.h>
+#include <gio/gio.h>
 
 #include "ubpacket.h"
 #include "serial.h"
@@ -14,6 +14,8 @@
 #include "packet.h"
 #include "ubpacket.h"
 #include "busmgt.h"
+#include "address6.h"
+#include "mgt.h"
 
 gpointer reader(gpointer data)
 {
@@ -40,7 +42,8 @@ gpointer reader(gpointer data)
 int main (int argc, char *argv[])
 {
     if (!g_thread_supported ()) g_thread_init (NULL);
- 
+    g_type_init();
+    
     printf ("This is " PACKAGE_STRING ".\n");
 
     if( argc < 2 ){
@@ -55,24 +58,23 @@ int main (int argc, char *argv[])
 
     g_assert( net_init(argv[1], argv[2], 8) == 0);
 
-    if( argc < 4 ){
-        printf("Please specify a serial port to use.\n");
-        return 0;
-    }
+    mgt_init();
 
-    if( serial_open(argv[3]) == -1 ){
-        printf("Failed to open serial device %s\nAborting.\n", argv[1]);
-        return 0;
+    if( argc > 3 ){
+        if( serial_open(argv[3]) == -1 ){
+            printf("Failed to open serial device %s\nAborting.\n", argv[1]);
+            return 0;
+        }
+
+        packet_init(); 
+        busmgt_init();
+    }else{
+        printf("Please specify a serial port to use.\n");
+
+        mgt_createNode(TYPE_NODE, "blubb");
+        mgt_createNode(TYPE_NODE, "fnord");
     }
    
-    packet_init();
-
-    
-    busmgt_init();
-
-    //GThread * readerthread = g_thread_create(reader,NULL,FALSE,NULL);
-    
-
     GMainLoop * mainloop = g_main_loop_new(NULL,TRUE);
     g_main_loop_run(mainloop);
 

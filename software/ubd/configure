@@ -654,8 +654,8 @@ CCDEPMODE
 am__fastdepCC_TRUE
 am__fastdepCC_FALSE
 PKG_CONFIG
-GNET_CFLAGS
-GNET_LIBS
+GLIB_CFLAGS
+GLIB_LIBS
 GIO_CFLAGS
 GIO_LIBS
 LIBOBJS
@@ -670,8 +670,8 @@ LDFLAGS
 LIBS
 CPPFLAGS
 PKG_CONFIG
-GNET_CFLAGS
-GNET_LIBS
+GLIB_CFLAGS
+GLIB_LIBS
 GIO_CFLAGS
 GIO_LIBS'
 
@@ -1261,8 +1261,8 @@ Some influential environment variables:
   CPPFLAGS    C/C++/Objective C preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
   PKG_CONFIG  path to pkg-config utility
-  GNET_CFLAGS C compiler flags for GNET, overriding pkg-config
-  GNET_LIBS   linker flags for GNET, overriding pkg-config
+  GLIB_CFLAGS C compiler flags for GLIB, overriding pkg-config
+  GLIB_LIBS   linker flags for GLIB, overriding pkg-config
   GIO_CFLAGS  C compiler flags for GIO, overriding pkg-config
   GIO_LIBS    linker flags for GIO, overriding pkg-config
 
@@ -3272,7 +3272,6 @@ fi
 CFLAGS="$CFLAGS -Wall -Wextra"
 
 
-
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
 	if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
@@ -3393,20 +3392,20 @@ echo "${ECHO_T}no" >&6; }
 fi
 
 pkg_failed=no
-{ echo "$as_me:$LINENO: checking for GNET" >&5
-echo $ECHO_N "checking for GNET... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking for GLIB" >&5
+echo $ECHO_N "checking for GLIB... $ECHO_C" >&6; }
 
 if test -n "$PKG_CONFIG"; then
-    if test -n "$GNET_CFLAGS"; then
-        pkg_cv_GNET_CFLAGS="$GNET_CFLAGS"
+    if test -n "$GLIB_CFLAGS"; then
+        pkg_cv_GLIB_CFLAGS="$GLIB_CFLAGS"
     else
         if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gnet-2.0 > 2.0.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "gnet-2.0 > 2.0.0") 2>&5
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glib-2.0 > 2.0.0\"") >&5
+  ($PKG_CONFIG --exists --print-errors "glib-2.0 > 2.0.0") 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  pkg_cv_GNET_CFLAGS=`$PKG_CONFIG --cflags "gnet-2.0 > 2.0.0" 2>/dev/null`
+  pkg_cv_GLIB_CFLAGS=`$PKG_CONFIG --cflags "glib-2.0 > 2.0.0" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -3415,16 +3414,16 @@ else
 	pkg_failed=untried
 fi
 if test -n "$PKG_CONFIG"; then
-    if test -n "$GNET_LIBS"; then
-        pkg_cv_GNET_LIBS="$GNET_LIBS"
+    if test -n "$GLIB_LIBS"; then
+        pkg_cv_GLIB_LIBS="$GLIB_LIBS"
     else
         if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gnet-2.0 > 2.0.0\"") >&5
-  ($PKG_CONFIG --exists --print-errors "gnet-2.0 > 2.0.0") 2>&5
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"glib-2.0 > 2.0.0\"") >&5
+  ($PKG_CONFIG --exists --print-errors "glib-2.0 > 2.0.0") 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  pkg_cv_GNET_LIBS=`$PKG_CONFIG --libs "gnet-2.0 > 2.0.0" 2>/dev/null`
+  pkg_cv_GLIB_LIBS=`$PKG_CONFIG --libs "glib-2.0 > 2.0.0" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -3443,28 +3442,28 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GNET_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "gnet-2.0 > 2.0.0"`
+	        GLIB_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "glib-2.0 > 2.0.0"`
         else
-	        GNET_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gnet-2.0 > 2.0.0"`
+	        GLIB_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "glib-2.0 > 2.0.0"`
         fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$GNET_PKG_ERRORS" >&5
+	echo "$GLIB_PKG_ERRORS" >&5
 
 	{ echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
-                { { echo "$as_me:$LINENO: error: Cannot find GNet: Is gnet-config in path?" >&5
-echo "$as_me: error: Cannot find GNet: Is gnet-config in path?" >&2;}
+                { { echo "$as_me:$LINENO: error: Cannot find glib: Is glib-config in path?" >&5
+echo "$as_me: error: Cannot find glib: Is glib-config in path?" >&2;}
    { (exit 1); exit 1; }; }
 elif test $pkg_failed = untried; then
-	{ { echo "$as_me:$LINENO: error: Cannot find GNet: Is gnet-config in path?" >&5
-echo "$as_me: error: Cannot find GNet: Is gnet-config in path?" >&2;}
+	{ { echo "$as_me:$LINENO: error: Cannot find glib: Is glib-config in path?" >&5
+echo "$as_me: error: Cannot find glib: Is glib-config in path?" >&2;}
    { (exit 1); exit 1; }; }
 else
-	GNET_CFLAGS=$pkg_cv_GNET_CFLAGS
-	GNET_LIBS=$pkg_cv_GNET_LIBS
+	GLIB_CFLAGS=$pkg_cv_GLIB_CFLAGS
+	GLIB_LIBS=$pkg_cv_GLIB_LIBS
         { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
-	LIBS="$LIBS $GNET_LIBS" CFLAGS="$CFLAGS $GNET_CFLAGS"
+	LIBS="$LIBS $GLIB_LIBS" CFLAGS="$CFLAGS $GLIB_CFLAGS"
 fi
 
 
@@ -3542,6 +3541,78 @@ else
 echo "${ECHO_T}yes" >&6; }
 	LIBS="$LIBS $GIO_LIBS" CFLAGS="$CFLAGS $GIO_CFLAGS"
 fi
+
+
+{ echo "$as_me:$LINENO: checking for g_thread_init in -lgthread-2.0" >&5
+echo $ECHO_N "checking for g_thread_init in -lgthread-2.0... $ECHO_C" >&6; }
+if test "${ac_cv_lib_gthread_2_0_g_thread_init+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgthread-2.0  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char g_thread_init ();
+int
+main ()
+{
+return g_thread_init ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  ac_cv_lib_gthread_2_0_g_thread_init=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_gthread_2_0_g_thread_init=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_lib_gthread_2_0_g_thread_init" >&5
+echo "${ECHO_T}$ac_cv_lib_gthread_2_0_g_thread_init" >&6; }
+if test $ac_cv_lib_gthread_2_0_g_thread_init = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGTHREAD_2_0 1
+_ACEOF
+
+  LIBS="-lgthread-2.0 $LIBS"
+
+fi
+
 
 ac_config_headers="$ac_config_headers config.h"
 
@@ -4266,8 +4337,8 @@ CCDEPMODE!$CCDEPMODE$ac_delim
 am__fastdepCC_TRUE!$am__fastdepCC_TRUE$ac_delim
 am__fastdepCC_FALSE!$am__fastdepCC_FALSE$ac_delim
 PKG_CONFIG!$PKG_CONFIG$ac_delim
-GNET_CFLAGS!$GNET_CFLAGS$ac_delim
-GNET_LIBS!$GNET_LIBS$ac_delim
+GLIB_CFLAGS!$GLIB_CFLAGS$ac_delim
+GLIB_LIBS!$GLIB_LIBS$ac_delim
 GIO_CFLAGS!$GIO_CFLAGS$ac_delim
 GIO_LIBS!$GIO_LIBS$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim

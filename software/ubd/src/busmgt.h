@@ -13,5 +13,4 @@
 void busmgt_inpacket(struct ubpacket* p);
 void busmgt_init(void);
 
-
 #endif

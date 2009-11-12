@@ -1,6 +1,5 @@
 #include <config.h>
 #include <stdio.h>
-#include <gnet.h>
 #include <glib.h>
 #include <fcntl.h>
 #include <termios.h>

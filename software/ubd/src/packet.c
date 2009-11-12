@@ -7,7 +7,7 @@
 #include "ubpacket.h"
 #include "message.h"
 #include "serial.h"
-
+#include "busmgt.h"
 
 static void packet_inpacket(struct ubpacket* p);
 GHashTable* packet_callbacks;
@@ -72,12 +72,12 @@ gpointer packet_writerThread(gpointer data)
     }
 }
 
-static void printkey(gpointer key, gpointer value, gpointer data)
+/*static void printkey(gpointer key, gpointer value, gpointer data)
 {
     value = NULL;
     data = NULL;
     printf(key);
-}
+}*/
 
 static void packet_inpacket(struct ubpacket* p)
 {

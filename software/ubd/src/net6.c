@@ -1,57 +1,55 @@
-#include <gnet.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <glib.h>
 #include <gio/gio.h>
 
 #include "debug.h"
+#include "busmgt.h"
+#include "mgt.h"
+#include "address6.h"
+#include "interface.h"
+#include "bus.h"
 
-struct entry {
-    gchar * id;
-    GInetAddr*  addr;
-    GUdpSocket* udp;
-};
-GSequence * entries;
+//GSequence * entries;
 
-GIOChannel * udpio;
-GInetAddr*  net_base;
-GInetAddr*  net_last;
-GUdpSocket*  udpsocket;
+GInetAddress*  net_base;
+GSocket*  udpsocket;
 gint        net_prefix;
 char        net_interface[1024];
 
-gboolean udp_read(GIOChannel* serial, GIOCondition condition, gpointer data)
+gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
 {
-    g_file_new_for_path("blubb");
+    //g_file_new_for_path("blubb");
     uint8_t buf[100];
     gsize len;
-    GInetAddr * src;
-    serial = NULL;
+    GSocketAddress * src;
     condition = 0;
-    data = NULL;
-    len = gnet_udp_socket_receive(udpsocket, (char*)buf, 100, &src);
+    user_data = NULL;
+    len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
     if( len ){
         printf("udp: received:");debug_hexdump(buf,len);printf("\n");
+        g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
     }else{
         printf("udp: received empty msg\n");
     }
     return TRUE;
 }
 
-gboolean entry_udp_read(GIOChannel* iochan, GIOCondition condition, gpointer data)
+gboolean entry_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
 {
     uint8_t buf[100];
-    GInetAddr * src;
-    struct entry *e = data;
-    iochan = NULL;
+    GSocketAddress * src;
+    struct node *n = user_data;
     condition = 0;
 
-    int len = gnet_udp_socket_receive(e->udp, (char*)buf, 100, &src);
+    gsize len;
+    len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
     if( len ){
         printf("udp: received:");debug_hexdump(buf,len);printf("\n");
-        bus_sendToID(e->id, buf, len, FALSE);
-        gnet_udp_socket_send(e->udp, "ACK", 3, src);
+        bus_sendToID(n->id, buf, len, FALSE);
+        g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
     }else{
         printf("udp: received empty msg\n");
     }
@@ -60,58 +58,83 @@ gboolean entry_udp_read(GIOChannel* iochan, GIOCondition condition, gpointer dat
 
 gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
 {
-    gnet_init();
-    gnet_ipv6_set_policy(GIPV6_POLICY_IPV6_ONLY);
-    entries = g_sequence_new(g_free);
+    //entries = g_sequence_new(g_free);
+    GError * e = NULL;
 
     net_prefix = prefix;
 
     strcpy(net_interface, interface);
-    if( !gnet_inetaddr_is_canonical(baseaddress) ){
-        printf("base address is not canonical\n");
-        return -1;
-    }
-
-    net_base = gnet_inetaddr_new_nonblock(baseaddress, 0);
+    net_base = g_inet_address_new_from_string(baseaddress);
     if( net_base == NULL ){
-        printf("base address not available\n");
+        printf("could not parse base address");
         return -1;
     }
     
-    net_last = gnet_inetaddr_clone(net_base);
+    address6_init(net_base);
+    interface_init(interface);
 
-    udpsocket = gnet_udp_socket_new_full(net_base, 2323);
+    GSocketAddress * sa = g_inet_socket_address_new(net_base,2323);
+    udpsocket = g_socket_new(G_SOCKET_FAMILY_IPV6,
+                        G_SOCKET_TYPE_DATAGRAM,
+                        G_SOCKET_PROTOCOL_UDP,
+                        &e);
+    if( udpsocket == NULL && e != NULL ){
+        fprintf(stderr, "error while creating socket: %s\n", e->message);
+        g_error_free(e);
+    }
+    
     if( udpsocket == NULL ){
-        printf("gnet_udp_socket_new_full failed\n");
+        printf("g_socket_new failed\n");
         return -1;
     }
+    if( g_socket_bind(udpsocket,sa,TRUE,&e) == FALSE ){
+        fprintf(stderr, "error while binding socket: %s\n", e->message);
+        g_error_free(e);
+    }
+    g_object_unref(sa);
+    GSource *s = g_socket_create_source(udpsocket, G_IO_IN, NULL);
+    g_source_set_callback(s, (GSourceFunc)udp_read, NULL, NULL);
+    g_source_attach(s, g_main_context_default ());
 
-    udpio = gnet_udp_socket_get_io_channel(udpsocket);
-    g_io_add_watch(udpio,G_IO_IN,udp_read,udpsocket);
     return 0;
 }
 
-void net_addEntry(gchar *id, GInetAddr *addr)
+void net_createSockets(struct node *n)
 {
-    struct entry *e = g_new(struct entry,1);
-    e->id = id;
-    e->addr = addr;
-    
-    gchar *tmp = gnet_inetaddr_get_canonical_name(addr);
+    GError * err = NULL;
+    GInetAddress *addr = n->netadr;
+    gchar *tmp = g_inet_address_to_string(addr);
+
     printf("creating udp socket on ip: %s\n",tmp);
     g_free(tmp);
 
-    e->udp = gnet_udp_socket_new_full(addr, 2323);
-    g_assert(e->udp != NULL);
-    g_io_add_watch(
-        gnet_udp_socket_get_io_channel(e->udp),
-        G_IO_IN,
-        entry_udp_read,
-        e);
-    g_sequence_append(entries,e);
+    GSocketAddress * sa = g_inet_socket_address_new(addr,2323);
+    n->udp = g_socket_new(G_SOCKET_FAMILY_IPV6,
+                        G_SOCKET_TYPE_DATAGRAM,
+                        G_SOCKET_PROTOCOL_UDP,
+                        NULL);
+
+    g_assert(n->udp != NULL);
+
+    if( g_socket_bind(n->udp,sa,TRUE,&err) == FALSE ){
+        fprintf(stderr, "error while binding socket: %s\n", err->message);
+        g_error_free(err);
+    }
+
+    GSource *s = g_socket_create_source(n->udp, G_IO_IN, NULL);
+    g_assert(s != NULL);
+    g_source_set_callback(s, (GSourceFunc)entry_udp_read, n, NULL);
+    g_source_attach(s, g_main_context_default ());
+    //FIXME: free address
+    //g_object_unref(sa);
 }
 
-struct entry * net_getEntryById(gchar * id)
+void net_removeSockets(struct node *n)
+{
+    g_assert( g_socket_shutdown(n->udp, TRUE, TRUE, NULL) == TRUE );
+}
+
+/*struct entry * net_getEntryById(gchar * id)
 {
     GSequenceIter * i;
     for( i=g_sequence_get_begin_iter(entries);
@@ -123,114 +146,5 @@ struct entry * net_getEntryById(gchar * id)
         }
     }
     return NULL;
-}
+}*/
 
-gint net_removeEntryById(gchar * id)
-{
-    GSequenceIter * i;
-    for( i=g_sequence_get_begin_iter(entries);
-            i!=g_sequence_get_end_iter(entries); 
-            i=g_sequence_iter_next(i) ){
-        struct entry *e = g_sequence_get(i);
-        if( e->id != NULL && strcmp(id, e->id) == 0 ){
-            g_free(e->id);
-            g_free(e->addr);
-            g_sequence_remove(i);
-            return 0;
-        }
-    }
-    return 1;
-}
-
-
-//TODO: add something real here
-GInetAddr* net_getFreeAddr(void)
-{
-    gchar buf[16];
-    //gchar * tmp = gnet_inetaddr_get_canonical_name(net_last);
-    gnet_inetaddr_get_bytes(net_last,buf);
-    //printf("last address: %s\n",tmp);
-    //g_free(tmp);
-    
-    buf[15]++;
-    gnet_inetaddr_set_bytes(net_last,buf,16);
-    GInetAddr*  addr = gnet_inetaddr_new_bytes(buf,16);
-
-    gchar *tmp = gnet_inetaddr_get_canonical_name(net_last);
-    printf("free address: %s\n",tmp);
-    g_free(tmp);
-    return addr;
-}
-
-gint net_createAddress(GInetAddr*  addr)
-{
-    char buf[1024];
-    char *tmp = gnet_inetaddr_get_canonical_name(addr);
-
-    sprintf(buf,"ip addr del %s dev %s",
-                            tmp, net_interface);
-
-    system(buf);
-    
-    sprintf(buf,"ip addr add %s dev %s",
-                            tmp, net_interface);
-
-    int rc = system(buf);
-
-    g_free(tmp);
-    if( rc ){
-        printf("return value: %d\n",rc);
-        return -1;
-    }
-    return 0;
-
-}
-
-void net_removeAddress(GInetAddr*  addr)
-{
-    char buf[1024];
-    char *tmp = gnet_inetaddr_get_canonical_name(addr);
-
-    sprintf(buf,"ip addr del %s dev %s",
-                            tmp, net_interface);
-
-    system(buf);
-    
-    g_free(tmp);
-    return;
-}
-
-/*
- * Tries to add a new address to the interface supplied to net_init.
- * If there is already an address for this ID the no new address will
- * be created.
- * Parameter: id
- * Returns: 0 on success, -1 on error
-*/
-
-gint net_addAddressForID(gchar * id)
-{
-    printf("adding address for %s\n",id);
-
-    if( net_getEntryById(id) != NULL ){
-        printf("entry already exists\n");
-        return 0;
-    }
-    
-    GInetAddr *addr = net_getFreeAddr();
-    if( net_createAddress(addr) == -1 )
-        return -1;
-    net_addEntry(g_strdup(id), addr);
-    return 0;
-}
-
-
-gint net_removeAddressForID(gchar * id)
-{
-    struct entry *e;
-    if( (e = net_getEntryById(id)) != NULL ){
-        net_removeAddress(e->addr);
-        return net_removeEntryById(id);
-    }
-    return -1;
-}
