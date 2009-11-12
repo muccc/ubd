@@ -22,16 +22,16 @@ uint8_t busmgt_process(struct ubpacket_t * p)
 {
     uint8_t * d = p->data;
     PORTB ^= (1<<PB0);
-    if(!(p->flags & UB_PACKET_MGT))
+    if(!(p->header.flags & UB_PACKET_MGT))
         return 0;
 
     switch(d[0]){
         case 'S':
             //d[p->len] = 0;                  //TODO: check bufferlen
             //if( d[2] == '"' )
-            if(ubadr_compareID(d+3)){
+            if(ubadr_compareID(d+2)){
 
-                ubadr_setAddress(d[2]);
+                ubadr_setAddress(d[1]);
                 ubconfig.configured = 1;
                 //switch(busmgt_state){
                 //    case DISCOVER:
@@ -71,6 +71,7 @@ void busmgt_tick(void)
 {
     struct ubpacket_t * p;
     static uint16_t time = 0;
+    static uint16_t blubb = 0;
     if(!time--){
         time = 1000;
     }
@@ -101,7 +102,8 @@ void busmgt_tick(void)
                 ubpacket_send();
             break;
             case CONNECTED:
-                if( ubpacket_free() ){
+                if( ubpacket_free() ){//  && blubb-- == 0){
+                    blubb = 10;
                     p->header.dest = UB_ADDRESS_MASTER;
                     p->header.src = ubadr_getAddress();
                     p->header.flags = UB_PACKET_MGT;

@@ -47,7 +47,7 @@ volatile uint8_t rs485s_rand;
 volatile uint8_t rs485s_configured;
 volatile uint8_t rs485s_aquired;
 volatile uint8_t rs485s_packetdata[UB_PACKETLEN+2];    //+ 2 byte crc
-
+volatile uint8_t rs485s_incomming = 0;
 void rs485slave_init(void)
 {
     ubtimer_init();
@@ -94,7 +94,8 @@ inline void rs485s_gotQuery(void)
 inline uint8_t rs485slave_getPacket(struct ubpacket_t * packet)
 {
     uint8_t len = 0;
-    if( rs485s_busState == RS485S_BUS_RECV_DONE ){
+    //if( rs485s_busState == RS485S_BUS_RECV_DONE ){
+    if( rs485s_incomming ){
         uint8_t msgtype = rs485msg_getType();
         if( msgtype == UB_START ){
             len = rs485msg_getLen();
@@ -110,7 +111,8 @@ inline uint8_t rs485slave_getPacket(struct ubpacket_t * packet)
                 len = 0;
             }
         }
-        rs485s_busState = RS485S_BUS_IDLE;
+        //rs485s_busState = RS485S_BUS_IDLE;
+        rs485s_incomming = 0;
     }
     return len;
 }
@@ -136,9 +138,9 @@ inline void rs485s_gotDiscover(void)
 inline void rs485s_gotMessage(void)
 {
     rs485s_busState = RS485S_BUS_RECV_DONE;
+    rs485s_incomming = 1;
     //we have the bus for the next 10ms
     //TODO: this is the wrong place for this
-    //we havr to check for our adr
     uint8_t adr = ((struct ubheader_t *)rs485msg_getMsg())->dest;
     if( ubadr_isLocal(adr) ){
         rs485s_aquired = 8;

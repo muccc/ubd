@@ -106,6 +106,8 @@ if ( ubconfig.slave ){
     PORTA ^= (1<<4);
     if( ub_sendPacket(&outpacket) == UB_OK ){
         packet_fired = 1;
+        if( outpacket.header.flags & UB_PACKET_NOACK )
+            packet_out_full = 0;
 #ifdef UB_ENABLEMASTER
         serial_sendFrames("DsPok");
 #endif
@@ -185,12 +187,15 @@ void ubpacket_process(void)
         PORTA ^= (1<<5);
         if( ub_sendPacket(&outpacket) == UB_OK ){
             packet_fired = 1;
+            if( outpacket.header.flags & UB_PACKET_NOACK )
+                packet_out_full = 0;
+
 #ifdef UB_ENABLEMASTER
             serial_sendFrames("DsPok");
 #endif
         }else{
 
-        PORTA ^= (1<<7);
+        //PORTA ^= (1<<7);
 #ifdef UB_ENABLEMASTER
             serial_sendFrames("DsPerror");
 #endif
@@ -211,6 +216,9 @@ void ubpacket_processPacket(struct ubpacket_t * in)
     uint8_t seq = (in->header.flags & UB_PACKET_SEQ)?1:0;
     //do we have to forward that packet to the serial interface?
     uint8_t forward = 0;
+        if( in->header.flags & UB_PACKET_NOACK )
+            PORTA ^= (1<<7);
+
 #ifdef UB_ENABLEMASTER
 if( ubconfig.master ){
     if( in->header.src == UB_ADDRESS_MASTER ){
@@ -241,6 +249,9 @@ if( ubconfig.master ){
             serial_sendFrames("Dbridge: sc");
             memcpy(&outpacket,in,in->header.len + sizeof(in->header));
             ubpacket_send();
+            if( in->header.flags & UB_PACKET_NOACK){
+                ubmaster_done();
+            }
         }
         return;
     }
@@ -304,7 +315,9 @@ if ( ubconfig.slave &&
         }
 }
 #endif
-        packet_ack(in);
+
+        if( !(in->header.flags & UB_PACKET_NOACK) )
+            packet_ack(in);
         //don't forward the dupe to the app
         if( in->header.flags & 0x40 )
             return;
