@@ -69,6 +69,7 @@ void busmgt_inpacket(struct ubpacket* p)
             strcpy(n->id,id);
             //n->state = NODE_DISCOVER;
             n->state = NODE_IDENTIFY;
+            n->timeout = 30;
         break;
         
         //The node confirms an address
@@ -111,7 +112,7 @@ void busmgt_inpacket(struct ubpacket* p)
                 packet_outpacket(&response);
             }else{
                 //reset the timeout
-                n->timeout = 30;
+                n->timeout = 5;
                 /*response.dest = p->src;
                 response.len = 1;
                 response.flags ^= UB_PACKET_MGT;

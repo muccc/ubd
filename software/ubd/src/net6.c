@@ -42,16 +42,30 @@ gboolean entry_udp_read(GSocket *socket, GIOCondition condition, gpointer user_d
     uint8_t buf[100];
     GSocketAddress * src;
     struct node *n = user_data;
-    condition = 0;
-
     gsize len;
-    len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
-    if( len ){
-        printf("udp: received:");debug_hexdump(buf,len);printf("\n");
-        bus_sendToID(n->id, buf, len, FALSE);
-        g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
+    if( condition == G_IO_IN ){
+        len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
+        if( len ){
+            printf("udp: received:");debug_hexdump(buf,len);printf("\n");
+            bus_sendToID(n->id, buf, len, FALSE);
+            g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
+        }else{
+            printf("udp: received empty msg\n");
+        }
+    }else if( condition == G_IO_ERR ){
+        printf("entry udp: error\n");
+    }else if( condition == G_IO_HUP ){ 
+        printf("entry udp: hang up\n");
+    }else if( condition == G_IO_OUT ){ 
+        printf("entry udp: out\n");
+    }else if( condition == G_IO_PRI ){ 
+        printf("entry udp: pri\n");
+    }else if( condition == G_IO_NVAL ){ 
+        printf("entry udp: nval\ndropping source\n");
+        //drop this source
+        return FALSE;
     }else{
-        printf("udp: received empty msg\n");
+        printf("entry udp: condition = %d\n",condition);
     }
     return TRUE;
 }
@@ -133,7 +147,17 @@ void net_createSockets(struct node *n)
 
 void net_removeSockets(struct node *n)
 {
-    g_assert( g_socket_shutdown(n->udp, TRUE, TRUE, NULL) == TRUE );
+    GError * err = NULL;
+    printf("removing sockets of id %s\n",n->id);
+    //gboolean rc = g_socket_shutdown(n->udp, FALSE, FALSE, &err);
+    gboolean rc = g_socket_close(n->udp, &err);
+    if( rc  == TRUE ){
+        printf("success\n");
+    }else{
+        fprintf(stderr, "error in g_socket_shutdown: %s\n", err->message);
+        g_error_free(err);
+    }
+    g_object_unref(n->udp);
 }
 
 /*struct entry * net_getEntryById(gchar * id)
