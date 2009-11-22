@@ -2,8 +2,10 @@
 #include <avr/io.h>
 
 #include "ubpacket.h"
-#include "busmgt.h"
+#include "ubslavemgt.h"
 #include "ubaddress.h"
+
+#include "settings.h"
 
 enum mgtstate {
     DISCOVER,
@@ -11,14 +13,14 @@ enum mgtstate {
     CONNECTED
 };
 
-uint8_t busmgt_state;
+uint8_t ubslavemgt_state;
 
-void busmgt_init(void)
+void ubslavemgt_init(void)
 {
-    busmgt_state = DISCOVER;
+    ubslavemgt_state = DISCOVER;
 }
 
-uint8_t busmgt_process(struct ubpacket_t * p)
+uint8_t ubslavemgt_process(struct ubpacket_t * p)
 {
     uint8_t * d = p->data;
     PORTB ^= (1<<PB0);
@@ -33,27 +35,27 @@ uint8_t busmgt_process(struct ubpacket_t * p)
 
                 ubadr_setAddress(d[1]);
                 ubconfig.configured = 1;
-                //switch(busmgt_state){
+                //switch(ubslavemgt_state){
                 //    case DISCOVER:
-                        busmgt_state = IDENTIFY;
+                        ubslavemgt_state = IDENTIFY;
                 //    break;
                 //}
             }
         break;
         case 'O':
-            //switch(busmgt_state){
+            //switch(ubslavemgt_state){
             //    case IDENTIFY:
-                    busmgt_state = CONNECTED;
+                    ubslavemgt_state = CONNECTED;
             //    break;
             //}
         break;
-        /*case 's':
-            settings_setID(d+2);
+        case 's':
+            settings_setid(d+1);
         break;
         case 'r':
             while(1);
         break;
-        case 'g':
+        /*case 'g':
             p = packet_getSendBuffer();
             p->dest = UB_ADDRESS_BROADCAST;
             p->flags = 0;
@@ -67,7 +69,7 @@ uint8_t busmgt_process(struct ubpacket_t * p)
     return 1;
 }
 
-void busmgt_tick(void)
+void ubslavemgt_tick(void)
 {
     struct ubpacket_t * p;
     static uint16_t time = 0;
@@ -78,20 +80,20 @@ void busmgt_tick(void)
 
     if(time == 0){
         p = ubpacket_getSendBuffer();
-        switch(busmgt_state){
-            /*case DISCOVER:
-
-                PORTA ^= 0x04;
+        switch(ubslavemgt_state){
+            case DISCOVER:
                 p->header.src = ubadr_getAddress();
                 p->header.dest = UB_ADDRESS_BROADCAST;
-                p->header.flags = 0;
-                p->data[0] = 'M';
-                p->data[1] = MGT_DISCOVER;
-                strcpy((char*)p->data+2,(char*)ubadr_getID());
-                //strcpy((char*)p->data+2,"node1");
+                p->header.flags = UB_PACKET_MGT;
+                if( ubconfig.master ){
+                    p->data[0] = MGT_MASTER;
+                }else if( ubconfig.slave ){
+                    p->data[0] = MGT_DISCOVER;
+                }
+                strcpy((char*)p->data+1,(char*)ubadr_getID());
                 p->header.len = strlen((char*)p->data);
                 ubpacket_send();
-            break;*/
+            break;
             case IDENTIFY:
                 p->header.dest = UB_ADDRESS_MASTER;
                 p->header.src = ubadr_getAddress();

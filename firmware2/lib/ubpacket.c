@@ -4,19 +4,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ub.h"
 #include "ubpacket.h"
-#include "serial_handler.h"
-#include "busmgt.h"
 #include "ubstat.h"
 #include "ubaddress.h"
-#include "ub.h"
 #include "ubmaster.h"
+
+#include "ubslavemgt.h"
+#include "ubmastermgt.h"
+
+#include "serial_handler.h"
 
 typedef uint16_t    time_t;
 
 struct ubpacket_t outpacket;
 struct ubpacket_t inpacket;
-//struct ubpacket_t uspacket;     //packet for unsolicitet transmits
 
 uint8_t packet_out_full = 0;
 uint8_t packet_fired = 0;
@@ -58,9 +60,11 @@ inline struct ubpacket_t * ubpacket_getSendBuffer(void)
 void ubpacket_send(void)
 {
     //don't do anything until we are configured
-    if( ubconfig.configured == 0){
+    //the busmgt is allowed to send
+    if( !(outpacket.header.flags & UB_PACKET_MGT) && ubconfig.configured == 0){
         return;
     }
+
     packet_timeout = UB_PACKET_TIMEOUT;
 
     //packet_acked won't be set if this is a retransmit
@@ -224,15 +228,15 @@ if( ubconfig.master ){
     if( in->header.src == UB_ADDRESS_MASTER ){
         if( ubadr_isLocal(in->header.dest) ){
             serial_sendFrames("Dbridge: local");
-            //this packet was soly for us and needs no special care
+            //this packet was only for us and needs no special care
             packet_incomming = 1;
             ubmaster_done();
         }else if( ubadr_isBroadcast(in->header.dest) ){
             serial_sendFrames("Dbridge: bc");
             //broadcasts also go the other interfaces
             packet_incomming = 1;
-            //packets from teh master will only be received when
-            //the other iterfaces are ready to accept a packet
+            //packets from the master will only be received when
+            //the other interfaces are ready to accept a packet
             ub_sendPacket(in);
             ubmaster_done();
         }else if( ubadr_isLocalMulticast(in->header.dest) ){
@@ -252,6 +256,10 @@ if( ubconfig.master ){
             if( in->header.flags & UB_PACKET_NOACK){
                 ubmaster_done();
             }
+        }
+        if(packet_incomming && ubmastermgt_process(&inpacket)){
+            //this was a management packet
+            packet_incomming = 0;
         }
         return;
     }
@@ -302,7 +310,9 @@ if ( ubconfig.slave &&
         //if we still have something to send let the master retry
         if( !ubpacket_free() ){
             //the packet might have been lost
+            //force a retransmit
             packet_fired = 0;
+            //the master will retry
             return;
         }
         //a slave only gets packets from the master
@@ -333,7 +343,7 @@ if ( ubconfig.slave &&
         //broadcasts go to both
         packet_incomming = 1;
         forward = 1;
-    }else if(  ubadr_isLocalMulticast(in->header.dest)){
+    }else if(  ubadr_isLocalMulticast(in->header.dest) ){
         //this multicast is for us
         packet_incomming = 1;
     }
@@ -344,17 +354,14 @@ if ( ubconfig.master ){
     }
 }
 #endif
-
-    if(packet_incomming){
 #ifdef UB_ENABLESLAVE
 if ( ubconfig.slave ){
-        //don't bother the app with management packets
-        if(busmgt_process(&inpacket)){
-            packet_incomming = 0;
-        }
+    if( packet_incomming && ubslavemgt_process(&inpacket) ){
+        //this was a management packet
+        packet_incomming = 0;
+    }
 }
 #endif
-    }
 }
 
 void ubpacket_tick(void)

@@ -22,11 +22,11 @@ inline void ubslave_process(void)
 
 inline void ubslave_tick(void)
 {
-    static uint16_t discover = 0;
-    struct ubpacket_t p;
+    //static uint16_t discover = 0;
+    //struct ubpacket_t p;
     //send discovers until the bus is configured
     if( ubconfig.configured == 0){
-        if( discover++ == 500 ){
+/*        if( discover++ == 500 ){
             discover = 0;
             p.header.src = ubadr_getAddress();
             p.header.dest = UB_ADDRESS_BROADCAST;
@@ -35,7 +35,7 @@ inline void ubslave_tick(void)
             p.data[0] = 'D';
             memcpy(p.data+1,ubadr_getID(),ubadr_getIDLen());
             ubslave_sendPacket(&p);
-        }
+        }*/
     }else{
         //TODO: get the information about the configured interface from
         //the busmgt

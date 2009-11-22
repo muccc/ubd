@@ -110,10 +110,8 @@ void rs485master_init(void)
     uint8_t i;
     ubtimer_init();
     rs485uart_init( UART_BAUD_SELECT(RS485_BITRATE,F_CPU));
-    //ubtimer_start(UB_TICKSPERBYTE);      //start+8+stop
     for(i=0; i<UB_MAXQUERY; i++){
         rs485m_query[i].adr = i;
-        //rs485m_query[i].interval = UB_QUERYINTERVALMAXCOUNT; 
         rs485m_query[i].interval = UB_QUERYINTERVALMAXCOUNT/1; 
         rs485m_query[i].counter  = UB_QUERYINTERVALMAXCOUNT/1;
     }

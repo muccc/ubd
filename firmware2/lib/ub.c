@@ -8,7 +8,8 @@
 #include "random.h"
 #include "ubaddress.h"
 #include "ubpacket.h"
-#include "busmgt.h"
+#include "ubslavemgt.h"
+#include "ubmastermgt.h"
 
 struct ub_config ubconfig;
 uint8_t ub_address = 0;
@@ -26,6 +27,8 @@ void ub_init(uint8_t ubmode)
         ubadr_setAddress(UB_ADDRESS_BRIDGE);
         ubstat_init();
         ubmaster_init();
+        ubpacket_init();
+        ubmastermgt_init();
         ubconfig.configured = 1;
     }
 #endif
@@ -35,9 +38,9 @@ void ub_init(uint8_t ubmode)
         ubconfig.slave = 1;
         //we don't know better
         ubadr_setAddress(0);
-//        ubstat_init();
         ubslave_init();
         ubpacket_init();
+        ubslavemgt_init();
         ubconfig.configured = 0;
     }
 #endif
@@ -63,13 +66,13 @@ void ub_tick(void)
 #ifdef UB_ENABLEMASTER
     if( ubconfig.master ){
         ubmaster_tick();
+        ubmastermgt_tick();
    }
 #endif
 #ifdef UB_ENABLESLAVE
     if( ubconfig.slave ){
         ubslave_tick();
-
-        busmgt_tick();
+        ubslavemgt_tick();
     }   
 #endif
     ubpacket_tick();
@@ -105,3 +108,18 @@ uint8_t ub_getPacket(struct ubpacket_t * packet)
 #endif
     return 0;
 }
+
+/*uint8_t ub_mgt(struct ubpacket_t * packet)
+{
+#ifdef UB_ENABLEMASTER
+    if( ubconfig.master ){
+        return ubmastermgt_process(packet);
+    }
+#endif
+#ifdef UB_ENABLESLAVE
+    if( ubconfig.slave ){
+        return ubslavemgt_process(packet);
+    }
+#endif
+    return 0;
+}*/
