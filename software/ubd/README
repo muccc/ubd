@@ -1,1 +1,9 @@
-Simple HW prog
+This is the uberbus deamon
+
+lauch:
+
+ubd <interface> <base address> <serial interface>
+
+Example:
+
+ubd lo ::1 /dev/ttyUSB0
