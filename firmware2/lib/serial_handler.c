@@ -62,7 +62,6 @@ uint16_t serial_readline(uint8_t * buf)
 {
     uint16_t l;
 
-    PORTC ^= 0x08;
     l = readline();
     if(l){
         memcpy(buf,buffer,l);
@@ -81,9 +80,6 @@ uint16_t readline( void )
         return 0;
     }
     data = i&0xFF;
-    //uart1_putc(data);
-    //PORTA ^= 0x01;
-    PORTC ^= 0x01;
     if(data == SERIAL_ESCAPE){
         if(!escaped){
             escaped = 1;

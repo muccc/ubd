@@ -7,7 +7,8 @@ struct ubstat_t {
     uint8_t known:1;
     uint8_t rs485:1;
     uint8_t rf:1;
-    uint8_t querymax:1;     //query only a minimal amount
+    uint8_t interval:4;
+    uint8_t counter:4;
     uint8_t inseq:1;
     uint8_t outseq:1;
 };

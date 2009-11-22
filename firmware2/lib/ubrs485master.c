@@ -56,14 +56,8 @@ struct rs485m_slot {
     uint8_t     full;
 };
 
-struct rs485m_queryinterval {     // contains the intervals to query special nodes
-    uint8_t adr;
-    uint8_t interval;
-    uint8_t counter;
-};
 
 struct rs485m_slot rs485m_slots[RS485M_SLOTCOUNT];
-struct rs485m_queryinterval rs485m_query[UB_QUERYMAX];
 
 uint8_t    rs485m_state = RS485M_STATE_INIT;
 uint16_t   rs485m_ticks = 0;
@@ -81,40 +75,32 @@ volatile uint8_t rs485m_granted = 0;
 
 volatile uint8_t rs485m_incomming;
 volatile uint8_t rs485m_packetdata[UB_PACKETLEN+2];    //+ 2 byte crc
+
 //buffer for the slave id during a query
 uint8_t rs485m_querybuf[1];
 volatile uint8_t rs485m_stalled = 0;
+
 UBSTATUS rs485master_setQueryInterval(uint8_t adr, uint16_t interval)
 { 
-    uint8_t i;
-    //Check for correct intervalls
-    if( interval < UB_QUERYINTERVALMIN || interval > UB_QUERYINTERVALMAX )
-        return UB_ERROR;
+    //Check for correct intervals
+    if( interval < UB_QUERYINTERVALMIN )
+        interval = UB_QUERYINTERVALMIN;
+    if( interval > UB_QUERYINTERVALMAX )
+        interval = UB_QUERYINTERVALMAX;
     
     interval = interval / UB_QUERYINTERVALMIN;
-    //find an unused query slot
-    for(i=0; i< UB_MAXQUERY; i++){
-        if( rs485m_query[i].interval == UB_QUERYINTERVALMAXCOUNT ){
-            rs485m_query[i].adr = adr;
-            rs485m_query[i].interval = interval;
-            rs485m_query[i].counter = interval;
-            return UB_OK;
-        }
-    }
-    //no slot found
-    return UB_ERROR;
+
+    struct ubstat_t * flags = ubstat_getFlags(adr);
+    flags->interval = interval;
+    flags->counter  = interval;
+    return UB_OK;
 }
 
 void rs485master_init(void)
 {
     uint8_t i;
     ubtimer_init();
-    rs485uart_init( UART_BAUD_SELECT(RS485_BITRATE,F_CPU));
-    for(i=0; i<UB_MAXQUERY; i++){
-        rs485m_query[i].adr = i;
-        rs485m_query[i].interval = UB_QUERYINTERVALMAXCOUNT/1; 
-        rs485m_query[i].counter  = UB_QUERYINTERVALMAXCOUNT/1;
-    }
+    rs485uart_init(UART_BAUD_SELECT(RS485_BITRATE,F_CPU));
 
     for(i=0; i<RS485M_SLOTCOUNT; i++){
         rs485m_slots[i].full = 0;
@@ -128,16 +114,6 @@ void rs485master_init(void)
     PORTA ^= 0x02;
     DDRD |= (1<<PD6);
 }
-
-//check for incomming messages
-/*void rs485master_processIncomming(void)
-{
-    switch(rs458m_incomming){
-        case UB_START:          //a new packet was received
-            
-        break;
-    }
-}*/
 
 int16_t rs485master_getPacket(struct ubpacket_t * packet)
 {
@@ -192,52 +168,43 @@ UBSTATUS rs485master_discover(void)
     rs485m_slots[RS485M_DISCOVERSLOT].full = 1;
     return UB_OK;
 }
-
+/*
+ *  Query the next node.
+ *  We don't want do check every node during each run. So only only the
+ *  minimum number of nodes is checkes in each interval.
+ */
 void rs485master_querynodes(void)
 {
-    static uint8_t query = 0;
-    static uint8_t querymax = 0;
+    uint8_t i;
 
-    static uint8_t queryperiod = UB_QUERYINTERVALMIN;
-    static uint8_t queryperiodmax =  UB_QUERYINTERVALMAXCOUNT;
-
-
-    if( queryperiod-- == 0 ){
-        query = UB_MAXQUERY - 1;
-        queryperiod = UB_QUERYINTERVALMIN;
-
-        //time to check the rest?
-        if( queryperiodmax-- == 0 ){
-            queryperiodmax =  UB_QUERYINTERVALMAXCOUNT;
-            querymax = 1;
-        }
+    //decrement every node during one minimum interval if it is not to be
+    //checked already
+    static uint8_t counterindex = 0;
+    for(i=0; i<(UB_NODEMAX/UB_QUERYINTERVALMIN); i++){
+        struct ubstat_t * flags = ubstat_getFlags(counterindex++);
+        if( flags->counter )
+            flags->counter--;
+        if( counterindex == UB_NODEMAX )
+            counterindex = 0;
     }
 
-    if( query < UB_MAXQUERY ){
-        if( rs485m_query[query].counter-- == 0 ){   //check this node
-            if(rs485master_query(rs485m_query[query].adr) == UB_OK){
-                rs485m_query[query].counter = rs485m_query[query].interval;
-            }else{
-                rs485m_query[query].counter = 1;
-                query++;        //check again later
+    //check the nodes with interval == 0
+    //if we have to check to often this will limit the query interval
+    //to the maximum of 1000 queries per second!
+    static uint8_t queryindex = 0;
+    for(i=0; i<(UB_NODEMAX/UB_QUERYINTERVALMIN); i++){
+        uint8_t adr = queryindex;
+        struct ubstat_t * flags = ubstat_getFlags(queryindex++);
+        if( queryindex == UB_NODEMAX )
+            queryindex = 0;
+        //TODO: maybe this uses to much cpu time
+        if( flags->known && flags->counter == 0){
+            if( rs485master_query(adr) == UB_OK ){
+                flags->counter = flags->interval;
             }
+            //we do only one check per ms
+            break;
         }
-        query--;                //stops the check by underrun
-    }
-
-    //testing:
-    //check the other nodes, one per timer
-
-    if( querymax ){
-        struct ubstat_t * flags = ubstat_getFlags(querymax);
-        if( flags->known && flags->rs485 && flags->querymax ){
-            if(rs485master_query(querymax) == UB_ERROR){
-                querymax--;     //check again later
-            }
-        }
-        querymax++;
-        if( querymax == UB_NODEMAX )
-            querymax = 0;
     }
 }
 

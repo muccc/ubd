@@ -48,13 +48,13 @@ inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
     //are we free to send?
     //if( ubpacket_free() )
     //    PORTC ^= 0x01;
-    if( rs485master_free()  == UB_OK)
-        PORTC ^= 0x02;
+    //if( rs485master_free()  == UB_OK)
+    //    PORTC ^= 0x02;
 
     if(  ubpacket_free() && (rs485master_free() == UB_OK) ){
         if( (len = serial_readline((uint8_t *)packet)) ){
 
-            PORTC ^= 0x04;
+            //PORTC ^= 0x04;
             //serial_sendFrames("Di");
             //PORTA ^= 0x01;
             //we got a packet from the host

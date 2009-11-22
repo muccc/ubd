@@ -24,7 +24,6 @@ void ubslavemgt_init(void)
 uint8_t ubslavemgt_process(struct ubpacket_t * p)
 {
     uint8_t * d = p->data;
-    PORTB ^= (1<<PB0);
     if(!(p->header.flags & UB_PACKET_MGT))
         return 0;
 
