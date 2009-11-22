@@ -1,6 +1,7 @@
 #include <string.h>
 #include <avr/io.h>
 
+#include "ub.h"
 #include "ubpacket.h"
 #include "ubslavemgt.h"
 #include "ubaddress.h"

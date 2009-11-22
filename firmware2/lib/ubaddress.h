@@ -2,14 +2,7 @@
 #define UB_ADDRESS_H_
 #include <stdint.h>
 #include "ub.h"
-
-typedef uint8_t ubaddress_t;
-
-#define UB_ADDRESS_MASTER       1
-#define UB_ADDRESS_BRIDGE       2
-
-#define UB_ADDRESS_BROADCAST     ((1<<sizeof(address_t)*8)-1)     //all ones
-#define UB_ADDRESS_MULTICAST     (1<<(sizeof(address_t)*8-1))     //first bit is one
+#include "ubconfig.h"
 
 void ubadr_init(void);
 
