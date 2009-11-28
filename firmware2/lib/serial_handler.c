@@ -58,12 +58,14 @@ void serial_sendFramec(uint8_t s)
     serial_putStop();
 }
 
-uint16_t serial_readline(uint8_t * buf)
+uint16_t serial_readline(uint8_t * buf, uint8_t max)
 {
     uint16_t l;
 
     l = readline();
-    if(l){
+    if( l ){
+        if( l > max )
+            l = max;
         memcpy(buf,buffer,l);
     }
     return l;

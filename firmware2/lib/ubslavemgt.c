@@ -1,5 +1,6 @@
+//#include <avr/io.h>
 #include <string.h>
-#include <avr/io.h>
+#include <stdio.h>
 
 #include "ub.h"
 #include "ubpacket.h"
@@ -8,7 +9,7 @@
 
 #include "settings.h"
 
-enum mgtstate {
+enum slavemgtstate {
     DISCOVER,
     IDENTIFY,
     CONNECTED
@@ -24,6 +25,8 @@ void ubslavemgt_init(void)
 uint8_t ubslavemgt_process(struct ubpacket_t * p)
 {
     uint8_t * d = p->data;
+    struct ubpacket_t * out;
+
     if(!(p->header.flags & UB_PACKET_MGT))
         return 0;
 
@@ -55,6 +58,16 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
         case 'r':
             while(1);
         break;
+        case 'V':
+            out = ubpacket_getSendBuffer();
+            out->header.dest = UB_ADDRESS_MASTER;
+            out->header.src = ubadr_getAddress();
+            out->header.flags = UB_PACKET_MGT;
+            sprintf((char *)out->data,"D="__DATE__);
+            out->header.len = strlen((char*)out->data);
+            ubpacket_send();
+        break;
+
         /*case 'g':
             p = packet_getSendBuffer();
             p->dest = UB_ADDRESS_BROADCAST;
@@ -73,7 +86,6 @@ void ubslavemgt_tick(void)
 {
     struct ubpacket_t * p;
     static uint16_t time = 0;
-    static uint16_t blubb = 0;
     if(!time--){
         time = 1000;
     }
@@ -85,11 +97,7 @@ void ubslavemgt_tick(void)
                 p->header.src = ubadr_getAddress();
                 p->header.dest = UB_ADDRESS_BROADCAST;
                 p->header.flags = UB_PACKET_MGT;
-                if( ubconfig.master ){
-                    p->data[0] = MGT_MASTER;
-                }else if( ubconfig.slave ){
-                    p->data[0] = MGT_DISCOVER;
-                }
+                p->data[0] = MGT_DISCOVER;
                 strcpy((char*)p->data+1,(char*)ubadr_getID());
                 p->header.len = strlen((char*)p->data);
                 ubpacket_send();
@@ -104,8 +112,7 @@ void ubslavemgt_tick(void)
                 ubpacket_send();
             break;
             case CONNECTED:
-                if( ubpacket_free() ){//  && blubb-- == 0){
-                    blubb = 10;
+                if( ubpacket_free() ){
                     p->header.dest = UB_ADDRESS_MASTER;
                     p->header.src = ubadr_getAddress();
                     p->header.flags = UB_PACKET_MGT;

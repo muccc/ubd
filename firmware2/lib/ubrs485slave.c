@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include <avr/interrupt.h>
 
 #include "ubrs485slave.h"
 #include "ubtimer.h"
@@ -85,8 +86,9 @@ inline void rs485slave_process(void)
 inline void rs485s_gotQuery(void)
 {
     //PORTA ^= 0x02;
-    if( rs485s_configured )
+    if( rs485s_configured ){
         rs485slave_transmit();
+    }
 }
 
 //get received message
@@ -145,6 +147,7 @@ inline void rs485s_gotMessage(void)
     if( ubadr_isLocal(adr) ){
         rs485s_aquired = 8;
         //transmit a packet in the queue. this stops the receiver
+        //
         rs485slave_transmit();
     } 
 }
@@ -181,8 +184,12 @@ UBSTATUS rs485slave_sendPacket(struct ubpacket_t * packet)
     uint8_t len = packet->header.len + sizeof(packet->header);
 
     //use the free packet slot
-    if( rs485s_slots[RS485S_PACKETSLOT].full )
+    //cli();
+    if( rs485s_slots[RS485S_PACKETSLOT].full ){
+        //sei();
         return UB_ERROR;
+    }
+    //sei();
 
     //TODO: check for overflow!
     memcpy((char*)rs485s_packetdata, packet, len);
@@ -284,7 +291,7 @@ inline void rs485slave_tx(void)
             rs485s_busState = RS485S_BUS_SEND_DONE;
         break;
         case RS485S_BUS_SEND_DONE:
-            //we have to wat for the tx_end call to disable the transmitter
+            //we have to wait for the tx_end call to disable the transmitter
             //the UDRE bit will be cleared by rs485uart
         break;
         case RS485S_BUS_IDLE:

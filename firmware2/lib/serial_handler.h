@@ -22,5 +22,5 @@ void serial_sendFrames(char * s);
 void serial_sendFramec(uint8_t s);
 void serial_putenc(uint8_t * d, uint16_t n);
 uint16_t readline( void );
-uint16_t serial_readline(uint8_t * buf);
+uint16_t serial_readline(uint8_t * buf, uint8_t max);
 #endif

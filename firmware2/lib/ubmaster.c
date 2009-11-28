@@ -30,7 +30,9 @@ inline UBSTATUS ubmaster_sendPacket(struct ubpacket_t * packet)
     //TDOD: use the correct interface
     if( packet->header.dest == UB_ADDRESS_MASTER ){
         ubmaster_forward(packet);
-    }if( ubadr_isBroadcast(packet->header.dest) ){
+    }
+
+    if( ubadr_isBroadcast(packet->header.dest) ){
         rs485master_sendPacket(packet);
         if( packet->header.src != UB_ADDRESS_MASTER ){
             ubmaster_forward(packet);
@@ -46,17 +48,9 @@ inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
 {
     uint8_t len = 0;
     //are we free to send?
-    //if( ubpacket_free() )
-    //    PORTC ^= 0x01;
-    //if( rs485master_free()  == UB_OK)
-    //    PORTC ^= 0x02;
-
     if(  ubpacket_free() && (rs485master_free() == UB_OK) ){
-        if( (len = serial_readline((uint8_t *)packet)) ){
-
-            //PORTC ^= 0x04;
-            //serial_sendFrames("Di");
-            //PORTA ^= 0x01;
+        if( (len = serial_readline((uint8_t *)packet,
+                                    sizeof(struct ubpacket_t))) ){
             //we got a packet from the host
             return len;
         }

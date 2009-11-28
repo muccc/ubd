@@ -1,3 +1,5 @@
+#include <avr/interrupt.h>
+
 #include "ubconfig.h"
 #include "ubrs485uart.h"
 #include "ubstat.h"
@@ -10,12 +12,14 @@
 #include "ubpacket.h"
 #include "ubslavemgt.h"
 #include "ubmastermgt.h"
+#include "serial_handler.h"
 
 struct ub_config ubconfig;
 uint8_t ub_address = 0;
 
 void ub_init(uint8_t ubmode)
 {
+    cli();
     udebug_init();
     ubadr_init();
     random_init(ubadr_getID(),ubadr_getIDLen());
@@ -44,6 +48,7 @@ void ub_init(uint8_t ubmode)
         ubconfig.configured = 0;
     }
 #endif
+    sei();
 }
 
 void ub_process(void)
@@ -51,6 +56,13 @@ void ub_process(void)
 #ifdef UB_ENABLEMASTER
     if( ubconfig.master ){
         ubmaster_process();
+    }else{
+        //check if the host wants us to be the master
+        uint8_t buf[16];
+        uint8_t l = serial_readline(buf, sizeof(buf));
+        if( l == 1 && buf[0] == 'B'){
+            ub_init(UB_MASTER);
+        }
     }
 #endif
 #ifdef UB_ENABLESLAVE
