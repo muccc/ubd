@@ -143,6 +143,18 @@ void serial_writeMessage(struct message * outmsg)
     //tcflush(fd,TCOFLUSH);
 }
 
+void serial_switch(void)
+{
+    printf("switching node to bridge mode\n");
+    serial_sendFrames("B");
+    struct message m;
+    while(1){
+        serial_readMessage(&m);
+        if( m.len == 1 && m.data[0] == 'B' )
+            break;
+    }
+}
+
 int serial_open (char * device)
 {
     fd = open(device, O_RDWR|O_NOCTTY);// |O_SYNC);//|O_NONBLOCK);
@@ -160,7 +172,7 @@ int serial_open (char * device)
     tio.c_cc[VMIN]  = 1;
     tcsetattr (fd, TCSANOW, &tio);
     tcflush (fd, TCIFLUSH);
-    tcflush (fd, TCOFLUSH);
+    tcflush (fd, TCOFLUSH); 
     return fd;
 }
 

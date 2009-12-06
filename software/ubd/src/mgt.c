@@ -18,9 +18,12 @@ static gboolean mgt_tick(gpointer data);
 void mgt_init(void)
 {
     gint i;
+
     for(i=0;i<MAX_NODE;i++){
         nodes[i].type=TYPE_NONE;
     }
+
+    nodes[2].type = TYPE_BRIDGE;       //this node is reserved
     g_timeout_add_seconds(1,mgt_tick,NULL);
 }
 
@@ -48,9 +51,8 @@ static gboolean mgt_tick(gpointer data)
     struct node *n;
     mgt_checkTimeout();
     while( (addr = interface_getConfiguredAddress()) != NULL ){
-        if( (n = mgt_getNodeByNetAdr(addr)) != NULL ){
-            net_createSockets(n);
-        }
+        g_assert( (n = mgt_getNodeByNetAdr(addr)) != NULL );
+        net_createSockets(n);
     }
     return TRUE;
 }
@@ -64,6 +66,17 @@ struct node *mgt_createNode(gint type, gchar *id)
         address6_createAddress(n);
         n->netup = FALSE;
     }
+    return n;
+}
+
+struct node *mgt_createBridge(gchar *id)
+{
+    struct node *n = &nodes[2];
+    n->busadr = 2;
+    n->type = TYPE_BRIDGE;
+    strncpy(n->id,id,MAX_ID);
+    address6_createAddress(n);
+    n->netup = FALSE;
     return n;
 }
 
@@ -124,7 +137,7 @@ struct node* mgt_getNodeByNetAdr(GInetAddress *addr)
     return 0;
 }*/
 
-struct node* mgt_getFreeNode(void)
+static struct node* mgt_getFreeNode(void)
 {
     gint i;
     for(i=4; i<MAX_NODE; i+=1){

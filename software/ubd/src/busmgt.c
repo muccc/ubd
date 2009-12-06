@@ -7,37 +7,38 @@
 #include "debug.h"
 #include "busmgt.h"
 #include "mgt.h"
+#include "ubconfig.h"
 
+static void busmgt_sendReset(uint8_t adr);
+static void busmgt_setQueryInterval(uint8_t adr, uint16_t interval);
+static void busmgt_sendCmd(uint8_t adr, uint8_t cmd);
+static void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
+                                uint8_t *data, uint8_t len);
+static void busmgt_setAddress(uint8_t adr, gchar *id);
+static void busmgt_sendOK(uint8_t adr);
 
 void busmgt_init(void)
 {
-    //packet_addCallback(BUSMGT_ID, busmgt_inpacket);
-    struct ubpacket reset;
-    reset.dest = UB_ADDRESS_BROADCAST;
-    reset.len = 1;
-    reset.data[0] = 'r';
-    packet_outpacket(&reset);
+    busmgt_sendReset(UB_ADDRESS_BROADCAST);
 }
 
 void busmgt_inpacket(struct ubpacket* p)
 {
-    //address_t new;
     gchar id[100];
     struct node * n;
-    struct ubpacket response;
-
+    uint16_t interval;
     printf("busmgt: read packet from %u to %u flags: %x len %u: ", 
             p->src, p->dest, p->flags, p->len);
     debug_hexdump(p->data, p->len);
     printf("\n");
 
-    response.flags = UB_PACKET_MGT;
     switch(p->data[0]){
         //A new node tries to get an address
         case 'D':
             //TODO some len checks
-            memcpy(id, p->data+1, p->len-1);
-            id[p->len-1] = 0;
+            interval = (p->data[1]<<8) + p->data[2];
+            memcpy(id, p->data+3, p->len-3);
+            id[p->len-3] = 0;
 
             printf("busmgt: got discover from %s\n", id);
 
@@ -50,24 +51,14 @@ void busmgt_inpacket(struct ubpacket* p)
                     return;
                 }
                 g_assert(n->busadr != 0);
-                printf("busmgt: new address: %u\n",n->busadr);
+                printf("busmgt: new bus address: %u\n",n->busadr);
             }else{
-                printf("busmgt: old address: %u\n",n->busadr);
+                printf("busmgt: old bus address: %u\n",n->busadr);
             }
-            
-            response.dest = UB_ADDRESS_BROADCAST;
-            response.len = strlen(id)+3;
-            response.data[0] = 'S';
-            response.data[1] = n->busadr;
-            strncpy((char*)response.data+2, id, UB_PACKET_DATA-2);
-            
-            if( response.len > UB_PACKET_DATA )
-                response.len = UB_PACKET_DATA;
-            response.data[response.len-1] = 0;
 
-            packet_outpacket(&response);
-            strcpy(n->id,id);
-            //n->state = NODE_DISCOVER;
+            //TODO: check if the interval is available
+            busmgt_setQueryInterval(n->busadr, interval);
+            busmgt_setAddress(n->busadr, id);
             n->state = NODE_IDENTIFY;
             n->timeout = 30;
         break;
@@ -80,20 +71,12 @@ void busmgt_inpacket(struct ubpacket* p)
 
             n = mgt_getNodeById(id);
             if( n == NULL ){
-                printf("Address %u unkown. Sending reset.\n", p->src);
-                response.dest = p->src;
-                response.len = 1;
-                //response.data[0] = 'M';
-                response.data[0] = 'r';
-                packet_outpacket(&response);
+                busmgt_sendReset(p->src);
                 return;
             }
             //send the OK if we have our interface ready
             if( n->netup == TRUE){
-                response.dest = p->src;
-                response.len = 1;
-                response.data[0] = 'O';
-                packet_outpacket(&response);
+                busmgt_sendOK(p->src);
                 //n->state = NODE_IDENTIFY;
                 n->state = NODE_NORMAL;
                 n->timeout = 30;
@@ -104,24 +87,82 @@ void busmgt_inpacket(struct ubpacket* p)
         case 'A':
             n = mgt_getNodeByBusAdr(p->src);
             if( n == NULL ){
-                printf("Address %u unkown. Sending reset.\n", p->src);
-                response.dest = p->src;
-                response.len = 1;
-                //response.data[0] = 'M';
-                response.data[0] = 'r';
-                packet_outpacket(&response);
-            }else{
-                //reset the timeout
-                n->timeout = 5;
-                /*response.dest = p->src;
-                response.len = 1;
-                response.flags ^= UB_PACKET_MGT;
-                response.data[0] = 'V';
-                packet_outpacket(&response);*/
+                busmgt_sendReset(p->src);
+                return;
             }
+            //reset the timeout
+            n->timeout = 5;
+        break;
+        //the bridge id
+        case 'B':
+            memcpy(id, p->data+1, p->len-1);
+            id[p->len-1] = 0;
+            printf("busmgt: bridge id %s\n", id);
+            mgt_createBridge(id);
+            n = mgt_getNodeByBusAdr(p->src);
+            busmgt_sendOK(p->src);
+            n->state = NODE_NORMAL;
+            n->timeout = 30;
+            n->busup = TRUE;
+
         break;
     };
     g_free(p); 
 }
 
+void busmgt_addToMulticast(uint8_t adr, uint8_t mcast)
+{
+    printf("Adding node %d to multicast group %d\n",adr,mcast);
+    uint8_t data[] = {mcast};
+    busmgt_sendCmdData(adr,'1',data,sizeof(data));
+}
 
+static void busmgt_sendReset(uint8_t adr)
+{
+    printf("Setting reset to %u\n", adr);
+    busmgt_sendCmd(adr,'r');
+}
+
+static void busmgt_setQueryInterval(uint8_t adr, uint16_t interval)
+{
+    printf("Setting query interval of %u to %u\n", adr,interval);
+    uint8_t data[] = {adr,interval>>8,interval&0xFF};
+    busmgt_sendCmdData(UB_ADDRESS_BRIDGE,'q',data,sizeof(data));
+}
+
+static void busmgt_setAddress(uint8_t adr, gchar *id)
+{
+    uint8_t data[strlen(id)+2];
+    data[0] = adr;
+    strcpy((char*)data+1, id);
+    busmgt_sendCmdData(UB_ADDRESS_BROADCAST,'S',data,sizeof(data));
+}
+
+static void busmgt_sendOK(uint8_t adr)
+{
+    printf("Sending OK to %u\n",adr);
+    busmgt_sendCmd(adr,'O');
+
+    printf("Getting version from  %u\n",adr);
+    busmgt_sendCmd(adr,'V');
+}
+
+static void busmgt_sendCmd(uint8_t adr, uint8_t cmd)
+{
+    busmgt_sendCmdData(adr,cmd,NULL,0);
+}
+
+static void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
+                                uint8_t *data, uint8_t len)
+{
+    struct ubpacket p;
+    p.dest = adr;
+    p.len = len+1;
+    p.data[0] = cmd;
+    while(len--)
+        p.data[len+1] = data[len];
+    p.flags = UB_PACKET_MGT;
+
+    g_assert(p.len <= UB_PACKET_DATA);
+    packet_outpacket(&p);
+}

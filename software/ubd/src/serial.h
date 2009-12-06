@@ -10,5 +10,6 @@
 
 void serial_readMessage(struct message *);
 int serial_open(char * device);
+void serial_switch(void);
 void serial_writeMessage(struct message *);
 #endif

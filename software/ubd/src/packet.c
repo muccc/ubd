@@ -97,6 +97,7 @@ static void packet_inpacket(struct ubpacket* p)
     if( p->flags & UB_PACKET_MGT ){
         busmgt_inpacket(p);
     }else{
+        //TODO: add packet forwarding
         printf("forwarding packet");
     }
 }

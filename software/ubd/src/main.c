@@ -55,7 +55,7 @@ int main (int argc, char *argv[])
         printf("Please specify a base address to use.\n");
         return 0;
     }
-
+    db_init("nodes.db", "groups.db");
     g_assert( net_init(argv[1], argv[2], 8) == 0);
 
     mgt_init();
@@ -66,6 +66,7 @@ int main (int argc, char *argv[])
             return 0;
         }
 
+        serial_switch();
         packet_init(); 
         busmgt_init();
     }else{

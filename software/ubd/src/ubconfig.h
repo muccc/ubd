@@ -26,7 +26,7 @@
 
 
 #define UB_ENABLEMASTER 1
-//#define UB_ENABLESLAVE 1
+#define UB_ENABLESLAVE 1
 
 #define UB_HOSTADR      1
 #define UB_MASTERADR    2
@@ -34,6 +34,16 @@
 #define UB_QUERYMAX     30
 #define UB_MAXMULTICAST 8
 
-#define UB_PACKET_TIMEOUT   50
+#define UB_PACKET_TIMEOUT   2500
+#define UB_PACKET_RETRIES   5
+
+typedef uint8_t ubaddress_t;
+
+#define UB_ADDRESS_MASTER       1
+#define UB_ADDRESS_BRIDGE       2
+
+#define UB_ADDRESS_BROADCAST     ((1<<sizeof(address_t)*8)-1)     //all ones
+#define UB_ADDRESS_MULTICAST     (1<<(sizeof(address_t)*8-1))     //first bit is one
+
 #endif
 

@@ -13,6 +13,7 @@ enum nodestate{
 
 enum type{
     TYPE_NONE,
+    TYPE_BRIDGE,
     TYPE_MULTICAST,
     TYPE_NODE
 };
@@ -41,6 +42,7 @@ struct node{
 
 void mgt_init(void);
 
+struct node *mgt_createBridge(gchar *id);
 struct node *mgt_createNode(gint type, gchar *id);
 struct node* mgt_getNodeById(gchar* id);
 struct node* mgt_getNodeByBusAdr(gint adr);
