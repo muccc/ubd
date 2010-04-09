@@ -14,12 +14,14 @@ void address6db_init(GInetAddress *base)
 
 }
 
-//TODO: add something real here
+//TODO: use a better algorithm to calculate new addresse
+//based on the netmask
 GInetAddress *address6db_getFreeAddr(gchar *id)
 {
     gchar *tmp;
     guint8 *buf;
     GInetAddress *addr;
+    id = NULL;
     do{
         tmp = g_inet_address_to_string(address6db_last);
         printf("old address: %s\n",tmp);
@@ -38,7 +40,6 @@ GInetAddress *address6db_getFreeAddr(gchar *id)
         printf("free address: %s\n",tmp);
         g_free(tmp);
     }while( db_isIPKnown(addr) == TRUE );
-    db_addNode(id, addr);
     return addr;
 }
 
