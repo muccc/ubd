@@ -102,9 +102,10 @@ static uint16_t serial_in(uint8_t data)
             return tmp;
         }
     }
-    if( fill > -1 )
+    if( fill > -1 ){
+        //TODO: prevent overflow!
         serial_buffer[fill++] = data;
-    else if(fill >= SERIAL_BUFFERLEN){
+    }else if(fill >= SERIAL_BUFFERLEN){
         fill = -1;
     }
     return 0;
@@ -121,8 +122,13 @@ void serial_readMessage(struct message * msg)
             if( len ){
                 printf("%ld.%06ld serial: new message: ->",start.tv_sec,start.tv_usec);debug_hexdump(serial_buffer, len);printf("<-\n");
                 msg->len = len;
-                memcpy(msg->data,serial_buffer,msg->len);
-                return;
+                if( sizeof(msg->data) >= len ){
+                    memcpy(msg->data,serial_buffer,msg->len);
+                    return;
+                }else{
+                    //TODO: log this error
+                    g_assert( sizeof(msg->data) >= len);
+                }
             }
         }else if( rc == 0){
             printf("timeout on serial line\n");
@@ -145,7 +151,7 @@ void serial_writeMessage(struct message * outmsg)
 
 void serial_switch(void)
 {
-    printf("switching node to bridge mode\n");
+    printf("switching serial node to bridge mode\n");
     serial_sendFrames("B");
     struct message m;
     while(1){
