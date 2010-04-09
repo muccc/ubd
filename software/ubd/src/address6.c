@@ -25,14 +25,10 @@ void address6_init(GInetAddress *base)
 void address6_createAddress(struct node *n)
 {
     printf("adding address for %s\n",n->id);
-    GInetAddress *addr;
-    if( db_isNodeKnown(n->id) ){
-        addr = db_getIP(n->id);
-    }else{
-        addr = address6db_getFreeAddr(n->id);
+    if( n->netadr == NULL ){
+        n->netadr = address6db_getFreeAddr(n->id);
     }
-    interface_pushAddress(addr);
-    n->netadr = addr;
+    interface_pushAddress(n->netadr);
 }
 
 void address6_removeAddress(struct node *n)
