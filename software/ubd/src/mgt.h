@@ -1,6 +1,6 @@
 #ifndef _MGT_H_
 #define _MGT_H_
-
+#include <stdint.h>
 #include <glib.h>
 #include <gio/gio.h>
 
@@ -22,6 +22,7 @@ enum type{
 struct node{
     gint        type;
     gchar       id[MAX_ID];
+    gchar       name[MAX_ID];
 
     gint        busadr;
     gboolean    busup;
@@ -36,6 +37,8 @@ struct node{
     gint        ttimeout;
     
     GSocket*    udp;
+
+    uint8_t     groups[32];
 };
 
 #define MAX_NODE    256

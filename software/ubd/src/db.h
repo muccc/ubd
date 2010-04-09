@@ -6,6 +6,7 @@
 #include <glib.h>
 #include <gdbm.h>
 #include <gio/gio.h>
+#include "mgt.h"
 
 typedef gchar* DB_NODEKEY;
 struct DB_NODE {
@@ -13,6 +14,7 @@ struct DB_NODE {
     uint16_t    groups[32];
     uint16_t    permission;
     uint8_t     ip[16];
+    char        name[MAX_ID];
 };
 
 typedef uint16_t DB_GROUP_KEY;
@@ -21,9 +23,10 @@ struct DB_GROUP {
 };
 
 void db_init(gchar *nodes, gchar *groups);
-void db_addNode(gchar *name, GInetAddress *a);
-gboolean db_isNodeKnown(gchar *name);
+void db_addNode(struct node *n);
+void db_loadNode(struct node *n);
+gboolean db_isNodeKnown(gchar *id);
 gboolean db_isIPKnown(GInetAddress *a);
-GInetAddress * db_getIP(gchar *name);
+GInetAddress * db_getIP(gchar *id);
 
 #endif
