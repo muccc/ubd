@@ -16,6 +16,7 @@
 #include "busmgt.h"
 #include "address6.h"
 #include "mgt.h"
+#include "db.h"
 
 gpointer reader(gpointer data)
 {
@@ -65,15 +66,15 @@ int main (int argc, char *argv[])
             printf("Failed to open serial device %s\nAborting.\n", argv[1]);
             return 0;
         }
-
+        //activate bridge
         serial_switch();
         packet_init(); 
         busmgt_init();
     }else{
         printf("Please specify a serial port to use.\n");
 
-        mgt_createNode(TYPE_NODE, "blubb");
-        mgt_createNode(TYPE_NODE, "fnord");
+        mgt_createNode(TYPE_NODE, "blubb.exmaple.com");
+        mgt_createNode(TYPE_NODE, "fnord.barrr,example.com");
     }
    
     GMainLoop * mainloop = g_main_loop_new(NULL,TRUE);
