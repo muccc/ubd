@@ -10,7 +10,7 @@
 #include "busmgt.h"
 
 static void packet_inpacket(struct ubpacket* p);
-GHashTable* packet_callbacks;
+//GHashTable* packet_callbacks;
 
 GAsyncQueue * packet_status;
 GAsyncQueue * packet_out;
@@ -19,6 +19,8 @@ gpointer packet_readerThread(gpointer data)
 {
     data = NULL;
     struct message in;
+    struct ubpacket p;
+
     printf("started packet_readerThread()\n");
     while( 1 ){
         serial_readMessage(&in);
@@ -27,10 +29,10 @@ gpointer packet_readerThread(gpointer data)
             switch( in.data[0] ){
                 case PACKET_PACKET:
                     printf("new packet\n");
-                    struct ubpacket * p = g_new(struct ubpacket,1);
-                    memcpy(p,in.data+1,in.len-1);
+                    //TODO: check len
+                    memcpy(&p,in.data+1,in.len-1);
                     //g_async_queue_push(packet_queues.packet_in,p);
-                    packet_inpacket(p);
+                    packet_inpacket(&p);
                 break;
                 case PACKET_DONE:
                     printf("%c: packet done\n", in.data[0]);
@@ -65,6 +67,7 @@ gpointer packet_writerThread(gpointer data)
         g_assert(status != NULL);
 
         if( status == (gpointer)PACKET_ABORT ){
+            //TODO: add log
             printf("PACKET WAS ABORTED\n");
         }else if( status == (gpointer)PACKET_DONE ){
             printf("packet done\n");
@@ -104,7 +107,7 @@ static void packet_inpacket(struct ubpacket* p)
 
 void packet_init(void)
 {
-    packet_callbacks = g_hash_table_new(g_str_hash, g_str_equal); 
+    //packet_callbacks = g_hash_table_new(g_str_hash, g_str_equal); 
     //packet_queues.packet_in = g_async_queue_new(); 
     packet_status = g_async_queue_new();
     packet_out = g_async_queue_new();
@@ -113,7 +116,7 @@ void packet_init(void)
     g_thread_create(packet_writerThread,NULL,FALSE,NULL);
 }
 
-void packet_addCallback(gchar key, void(*cb)(struct ubpacket*))
+/*void packet_addCallback(gchar key, void(*cb)(struct ubpacket*))
 {
     gchar buf[2];
     buf[0] = key;
@@ -122,7 +125,7 @@ void packet_addCallback(gchar key, void(*cb)(struct ubpacket*))
     g_hash_table_insert(packet_callbacks, g_strdup(buf), cb);
 
     printf("Added callback for message type %c to 0x%x\n",key,(unsigned int)cb);
-}
+}*/
 
 void packet_outpacket(struct ubpacket* p)
 {

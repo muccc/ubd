@@ -24,6 +24,7 @@ void busmgt_init(void)
 
 void busmgt_inpacket(struct ubpacket* p)
 {
+    //TODO: check len of id buffer
     gchar id[100];
     struct node * n;
     uint16_t interval;
@@ -56,7 +57,8 @@ void busmgt_inpacket(struct ubpacket* p)
                 printf("busmgt: old bus address: %u\n",n->busadr);
             }
 
-            //TODO: check if the interval is available
+            //TODO: check if it is possible for the bus to query
+            //the node at this interval
             busmgt_setQueryInterval(n->busadr, interval);
             busmgt_setAddress(n->busadr, id);
             n->state = NODE_IDENTIFY;
@@ -65,6 +67,7 @@ void busmgt_inpacket(struct ubpacket* p)
         
         //The node confirms an address
         case 'I':
+            //TODO:check len
             memcpy(id, p->data+1, p->len-1);
             id[p->len-1] = 0;
             printf("mgt: got identify from %s\n", id);
@@ -107,9 +110,9 @@ void busmgt_inpacket(struct ubpacket* p)
 
         break;
     };
-    g_free(p); 
 }
 
+//add an address to a multicast group
 void busmgt_addToMulticast(uint8_t adr, uint8_t mcast)
 {
     printf("Adding node %d to multicast group %d\n",adr,mcast);
@@ -130,6 +133,7 @@ static void busmgt_setQueryInterval(uint8_t adr, uint16_t interval)
     busmgt_sendCmdData(UB_ADDRESS_BRIDGE,'q',data,sizeof(data));
 }
 
+//send a broadcast to set the address of the node with name '*id'
 static void busmgt_setAddress(uint8_t adr, gchar *id)
 {
     uint8_t data[strlen(id)+2];
@@ -138,6 +142,7 @@ static void busmgt_setAddress(uint8_t adr, gchar *id)
     busmgt_sendCmdData(UB_ADDRESS_BROADCAST,'S',data,sizeof(data));
 }
 
+//send an OK to the address and request the software version
 static void busmgt_sendOK(uint8_t adr)
 {
     printf("Sending OK to %u\n",adr);
@@ -147,11 +152,13 @@ static void busmgt_sendOK(uint8_t adr)
     busmgt_sendCmd(adr,'V');
 }
 
+//send a command without any data
 static void busmgt_sendCmd(uint8_t adr, uint8_t cmd)
 {
     busmgt_sendCmdData(adr,cmd,NULL,0);
 }
 
+//send a command with attaches data
 static void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
                                 uint8_t *data, uint8_t len)
 {
@@ -163,6 +170,8 @@ static void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
         p.data[len+1] = data[len];
     p.flags = UB_PACKET_MGT;
 
+    //TODO: log error
+    //TODO: fragment packet?
     g_assert(p.len <= UB_PACKET_DATA);
     packet_outpacket(&p);
 }
