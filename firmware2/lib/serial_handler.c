@@ -82,6 +82,10 @@ uint16_t readline( void )
         return 0;
     }
     data = i&0xFF;
+/*serial_putStart();
+serial_putcenc('D');
+serial_putcenc(data);
+serial_putStop();*/
     if(data == SERIAL_ESCAPE){
         if(!escaped){
             escaped = 1;
