@@ -27,7 +27,7 @@ uint8_t settings_compareid(uint8_t * buf)
 
 void settings_setid(uint8_t * buf)
 {
-    buf[30] = 0;
+    buf[50] = 0;
     uint8_t len = strlen((char*)buf);
 //    if(len > (sizeof(id)-1)){
 //        len = sizeof(id)-1;
