@@ -28,6 +28,7 @@ void db_init(gchar *nodes, gchar *groups)
         gchar *tmp = g_inet_address_to_string(addr);
         printf("node: id=%s ip=%s name=%s\n",key.dptr,tmp,dbnode->name);
         g_free(tmp);
+        //g_free(addr);
         key = gdbm_nextkey(db_nodes, key);
     }
     

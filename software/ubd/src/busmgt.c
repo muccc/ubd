@@ -12,8 +12,6 @@
 static void busmgt_sendReset(uint8_t adr);
 static void busmgt_setQueryInterval(uint8_t adr, uint16_t interval);
 static void busmgt_sendCmd(uint8_t adr, uint8_t cmd);
-static void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
-                                uint8_t *data, uint8_t len);
 static void busmgt_setAddress(uint8_t adr, gchar *id);
 static void busmgt_sendOK(uint8_t adr);
 
@@ -120,6 +118,13 @@ void busmgt_addToMulticast(uint8_t adr, uint8_t mcast)
     busmgt_sendCmdData(adr,'1',data,sizeof(data));
 }
 
+void busmgt_setName(uint8_t adr, char *name)
+{
+    printf("Setting name of %u to %s\n",adr,name);
+    //append the trailing 0
+    busmgt_sendCmdData(adr,'s',name,strlen(name)+1);
+}
+
 static void busmgt_sendReset(uint8_t adr)
 {
     printf("Setting reset to %u\n", adr);
@@ -159,19 +164,47 @@ static void busmgt_sendCmd(uint8_t adr, uint8_t cmd)
 }
 
 //send a command with attaches data
-static void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
+void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
                                 uint8_t *data, uint8_t len)
 {
     struct ubpacket p;
     p.dest = adr;
     p.len = len+1;
     p.data[0] = cmd;
+    //g_assert(p.len <= UB_PACKET_DATA);
+    if( p.len > sizeof(p.data)){
+        printf("busmgt_sendCmdData(): packet to big!\n");
+        //TODO: log this error
+        //TODO: fragment packet?
+        return;
+    }
+
     while(len--)
         p.data[len+1] = data[len];
+
     p.flags = UB_PACKET_MGT;
 
-    //TODO: log error
-    //TODO: fragment packet?
-    g_assert(p.len <= UB_PACKET_DATA);
     packet_outpacket(&p);
 }
+
+void busmgt_sendData(uint8_t adr, uint8_t *data, uint8_t len)
+{
+    struct ubpacket p;
+    p.dest = adr;
+    p.len = len;
+    //g_assert(p.len <= UB_PACKET_DATA);
+    if( p.len > sizeof(p.data)){
+        printf("busmgt_sendCmdData(): packet to big!\n");
+        //TODO: log this error
+        //TODO: fragment packet?
+        return;
+    }
+
+    while(len--)
+        p.data[len] = data[len];
+
+    p.flags = UB_PACKET_MGT;
+
+    packet_outpacket(&p);
+}
+

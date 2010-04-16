@@ -13,7 +13,7 @@
 #define RS485_nRE_PORT      PORTC
 #define RS485_nRE_DDR       DDRC
 
-#define UB_PACKETLEN        30
+#define UB_PACKETLEN        50
 
 #define UB_ESCAPE     '\\'
 #define UB_NONE         '0'

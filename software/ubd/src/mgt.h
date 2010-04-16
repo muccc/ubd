@@ -23,6 +23,7 @@ struct node{
     gint        type;
     gchar       id[MAX_ID];
     gchar       name[MAX_ID];
+    gchar       domain[MAX_ID];
 
     gint        busadr;
     gboolean    busup;
@@ -37,6 +38,7 @@ struct node{
     gint        ttimeout;
     
     GSocket*    udp;
+    GSocket*    mgtudp;
 
     uint8_t     groups[32];
 };

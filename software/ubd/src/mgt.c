@@ -26,7 +26,7 @@ void mgt_init(void)
         nodes[i].type=TYPE_NONE;
     }
 
-    nodes[2].type = TYPE_BRIDGE;       //this node is reserved
+    nodes[2].type = TYPE_BRIDGE;  //this node is reserved
     nodes[2].netadr = NULL;       //this node is reserved
     g_timeout_add_seconds(1,mgt_tick,NULL);
 }
@@ -126,14 +126,23 @@ static void mgt_registerNode(struct node * n, char *id, uint8_t type, uint8_t bu
     }
 }
 
+//Create the name of the node
+//If the id contains a ',' marking the start of the domain
+//the domain is ommitted
 static void mgt_setNameFromID(struct node *n)
-{ 
-    memcpy(n->name,n->id,MAX_ID);
+{
+    //n->name is of size n->id
+    g_assert(sizeof(n->name) >= sizeof(n->id));
+    strcpy(n->name,n->id);
     char *s = strchr(n->name,',');
 
     if( s != NULL){
         *s = 0;
+        //TODO: make sure n->domain is large enough
+        g_assert(sizeof(n->domain) >= sizeof(n->id));
+        strcpy(n->domain,s++);
     }else{
+        //there was no domain in the id
         printf("ill formated id for this node: %s\n",n->id);
     }
 }

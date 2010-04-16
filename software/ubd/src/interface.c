@@ -4,7 +4,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include "interface.h"
-//this hold new requests for interfaces
+//this hold done requests for interfaces
 GAsyncQueue * interface_donequeue;
 gchar *interface_interface;
 
