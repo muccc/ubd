@@ -20,6 +20,11 @@ uint8_t ub_address = 0;
 void ub_init(uint8_t ubmode)
 {
     cli();
+    ubconfig.rs485master = 0;
+    ubconfig.master = 0;
+    ubconfig.slave = 0;
+    ubconfig.rs485slave = 0;
+
     udebug_init();
     ubadr_init();
     random_init(ubadr_getID(),ubadr_getIDLen());
@@ -34,6 +39,7 @@ void ub_init(uint8_t ubmode)
         ubpacket_init();
         ubmastermgt_init();
         ubconfig.configured = 1;
+        serial_sendFramec('B');
     }
 #endif
 #ifdef UB_ENABLESLAVE
@@ -62,6 +68,7 @@ void ub_process(void)
         uint8_t l = serial_readline(buf, sizeof(buf));
         if( l == 1 && buf[0] == 'B'){
             ub_init(UB_MASTER);
+            return;
         }
     }
 #endif
