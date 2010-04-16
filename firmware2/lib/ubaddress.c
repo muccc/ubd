@@ -70,6 +70,8 @@ inline ubaddress_t ubadr_getAddress(void)
 UBSTATUS ubadr_addMulticast(ubaddress_t adr)
 {
     uint8_t i;
+    if( !ubadr_isMulticast(adr) )
+        return UB_ERROR;
     for(i=0; i<UB_MAXMULTICAST; i++){
         if( ubadr_multicast[i] == 0 ){
             ubadr_multicast[i] = adr;
