@@ -35,6 +35,12 @@ uint8_t packet_outseq = 0;
 
 void ubpacket_init(void)
 {
+    packet_out_full = 0;
+    packet_fired = 0;
+    packet_acked = 1;
+    packet_ack_full = 0;
+    packet_sniff = 0;
+    packet_outseq = 0;
 }
 
 inline struct ubpacket_t * ubpacket_getIncomming(void)
@@ -66,6 +72,11 @@ void ubpacket_send(void)
     }
 
     packet_timeout = UB_PACKET_TIMEOUT;
+
+    //TODO: comment on this? dont't understand it anymore
+    if( outpacket.header.dest == UB_ADDRESS_MASTER && ubconfig.master )
+    //                                                  ^^ maybe needed for the master?
+        outpacket.header.flags |= UB_PACKET_NOACK;
 
     //packet_acked won't be set if this is a retransmit
     if(ubadr_isUnicast(outpacket.header.dest) &&
@@ -107,19 +118,23 @@ if ( ubconfig.slave ){
 
     packet_out_full = 1;
 
-    PORTA ^= (1<<4);
+    //PORTA ^= (1<<4);
     if( ub_sendPacket(&outpacket) == UB_OK ){
         packet_fired = 1;
         if( outpacket.header.flags & UB_PACKET_NOACK )
             packet_out_full = 0;
 #ifdef UB_ENABLEMASTER
+if( ubconfig.master ){
         serial_sendFrames("DsPok");
+}
 #endif
     }else{
-        PORTA ^= (1<<4);
+        //PORTA ^= (1<<4);
         packet_fired = 0;
 #ifdef UB_ENABLEMASTER
+if( ubconfig.master ){
         serial_sendFrames("DsPerror");
+}
 #endif
     }
 }
@@ -147,12 +162,16 @@ static void packet_ack(struct ubpacket_t * p)
     ack.len = 0;
     if( ub_sendPacket((struct ubpacket_t *)&ack) == UB_ERROR ){
 #ifdef UB_ENABLEMASTER
+if( ubconfig.master ){
         serial_sendFrames("DAsPerror");
+}
 #endif
         packet_ack_full = 1;
     }else{
 #ifdef UB_ENABLEMASTER
+if( ubconfig.master ){
         serial_sendFrames("DAsPOK");
+}
 #endif
     }
 }
@@ -178,11 +197,15 @@ void ubpacket_process(void)
         if( ub_sendPacket((struct ubpacket_t *)&ack) == UB_OK ){
             packet_ack_full = 0;
 #ifdef UB_ENABLEMASTER
+if( ubconfig.master ){
             serial_sendFrames("DAsPok");
+}
 #endif
         }else{
 #ifdef UB_ENABLEMASTER
+if( ubconfig.master ){
             serial_sendFrames("DAsPerror");
+}
 #endif
         }
         return;
@@ -195,13 +218,17 @@ void ubpacket_process(void)
                 packet_out_full = 0;
 
 #ifdef UB_ENABLEMASTER
+if( ubconfig.master ){
             serial_sendFrames("DsPok");
+}
 #endif
         }else{
 
         //PORTA ^= (1<<7);
 #ifdef UB_ENABLEMASTER
+if( ubconfig.master ){
             serial_sendFrames("DsPerror");
+}
 #endif
         }
         //return;
@@ -220,8 +247,8 @@ void ubpacket_processPacket(struct ubpacket_t * in)
     uint8_t seq = (in->header.flags & UB_PACKET_SEQ)?1:0;
     //do we have to forward that packet to the serial interface?
     uint8_t forward = 0;
-        if( in->header.flags & UB_PACKET_NOACK )
-            PORTA ^= (1<<7);
+        //if( in->header.flags & UB_PACKET_NOACK )
+        //    PORTA ^= (1<<7);
 
 #ifdef UB_ENABLEMASTER
 if( ubconfig.master ){
@@ -352,6 +379,9 @@ if ( ubconfig.master ){
     if( forward ){
         ubmaster_forward(in);
     }
+    if( packet_incomming && in->header.flags & UB_PACKET_MGT ){
+        packet_incomming = 0;
+    }
 }
 #endif
 #ifdef UB_ENABLESLAVE
@@ -373,7 +403,7 @@ void ubpacket_tick(void)
             return;
         }
         ubpacket_send();
-        PORTA ^= 0x04;
+        //PORTA ^= 0x04;
     }
 }
 
