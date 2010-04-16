@@ -30,6 +30,7 @@ inline UBSTATUS ubmaster_sendPacket(struct ubpacket_t * packet)
     //TDOD: use the correct interface
     if( packet->header.dest == UB_ADDRESS_MASTER ){
         ubmaster_forward(packet);
+        return UB_OK;
     }
 
     if( ubadr_isBroadcast(packet->header.dest) ){
@@ -49,10 +50,16 @@ inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
     uint8_t len = 0;
     //are we free to send?
     if(  ubpacket_free() && (rs485master_free() == UB_OK) ){
+        
         if( (len = serial_readline((uint8_t *)packet,
                                     sizeof(struct ubpacket_t))) ){
             //we got a packet from the host
-            return len;
+            //ignore control messages for now
+            if( len > 1 ){
+                return len;
+            }
+            serial_sendFrames("D1");
+            ub_init(UB_MASTER);
         }
     }
     if( (len = rs485master_getPacket(packet)) )
