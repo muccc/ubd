@@ -63,7 +63,7 @@ int main (int argc, char *argv[])
 
     if( argc > 3 ){
         if( serial_open(argv[3]) == -1 ){
-            printf("Failed to open serial device %s\nAborting.\n", argv[1]);
+            printf("Failed to open serial device %s\nAborting.\n", argv[3]);
             return 0;
         }
         //activate bridge
@@ -73,8 +73,8 @@ int main (int argc, char *argv[])
     }else{
         printf("Please specify a serial port to use.\n");
 
-        mgt_createNode(TYPE_NODE, "blubb.exmaple.com");
-        mgt_createNode(TYPE_NODE, "fnord.barrr,example.com");
+        //mgt_createNode(TYPE_NODE, "blubb.exmaple.com");
+        //mgt_createNode(TYPE_NODE, "fnord.barrr,example.com");
     }
    
     GMainLoop * mainloop = g_main_loop_new(NULL,TRUE);
