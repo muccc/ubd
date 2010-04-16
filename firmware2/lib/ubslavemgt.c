@@ -1,4 +1,4 @@
-//#include <avr/io.h>
+#include <avr/wdt.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -24,38 +24,29 @@ void ubslavemgt_init(void)
 
 uint8_t ubslavemgt_process(struct ubpacket_t * p)
 {
-    uint8_t * d = p->data;
+    uint8_t * data = p->data;
     struct ubpacket_t * out;
 
     if(!(p->header.flags & UB_PACKET_MGT))
         return 0;
 
-    switch(d[0]){
+    switch(data[0]){
         case 'S':
             //d[p->len] = 0;                  //TODO: check bufferlen
-            //if( d[2] == '"' )
-            if(ubadr_compareID(d+2)){
-
-                ubadr_setAddress(d[1]);
+            if(ubadr_compareID(data+2)){
+                ubadr_setAddress(data[1]);
                 ubconfig.configured = 1;
-                //switch(ubslavemgt_state){
-                //    case DISCOVER:
-                        ubslavemgt_state = IDENTIFY;
-                //    break;
-                //}
+                ubslavemgt_state = IDENTIFY;
             }
         break;
         case 'O':
-            //switch(ubslavemgt_state){
-            //    case IDENTIFY:
-                    ubslavemgt_state = CONNECTED;
-            //    break;
-            //}
+            ubslavemgt_state = CONNECTED;
         break;
         case 's':
-            settings_setid(d+1);
+            settings_setid(data+1);
         break;
         case 'r':
+            wdt_enable(WDTO_30MS);
             while(1);
         break;
         case 'V':
@@ -63,11 +54,16 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
             out->header.dest = UB_ADDRESS_MASTER;
             out->header.src = ubadr_getAddress();
             out->header.flags = UB_PACKET_MGT;
-            sprintf((char *)out->data,"D="__DATE__);
+            sprintf((char *)out->data,"V="__DATE__);
             out->header.len = strlen((char*)out->data);
             ubpacket_send();
         break;
-
+        case 1:
+            ubadr_addMulticast(data[1]);
+        break;
+        case 2:
+            ubadr_removeMulticast(data[1]);
+        break;
         /*case 'g':
             p = packet_getSendBuffer();
             p->dest = UB_ADDRESS_BROADCAST;
@@ -92,20 +88,21 @@ void ubslavemgt_tick(void)
 
     if(time == 0){
         p = ubpacket_getSendBuffer();
+        p->header.src = ubadr_getAddress();
+        p->header.flags = UB_PACKET_MGT;
+
         switch(ubslavemgt_state){
             case DISCOVER:
-                p->header.src = ubadr_getAddress();
                 p->header.dest = UB_ADDRESS_BROADCAST;
-                p->header.flags = UB_PACKET_MGT;
                 p->data[0] = MGT_DISCOVER;
-                strcpy((char*)p->data+1,(char*)ubadr_getID());
+                p->data[1] = UB_INTERVAL>>8;
+                p->data[2] = UB_INTERVAL&0xFF;
+                strcpy((char*)p->data+3,(char*)ubadr_getID());
                 p->header.len = strlen((char*)p->data);
                 ubpacket_send();
             break;
             case IDENTIFY:
                 p->header.dest = UB_ADDRESS_MASTER;
-                p->header.src = ubadr_getAddress();
-                p->header.flags = UB_PACKET_MGT;
                 p->data[0] = MGT_IDENTIFY;
                 strcpy((char*)p->data+1,(char*)ubadr_getID());
                 p->header.len = strlen((char*)p->data);
@@ -114,8 +111,6 @@ void ubslavemgt_tick(void)
             case CONNECTED:
                 if( ubpacket_free() ){
                     p->header.dest = UB_ADDRESS_MASTER;
-                    p->header.src = ubadr_getAddress();
-                    p->header.flags = UB_PACKET_MGT;
                     p->data[0] = MGT_ALIVE;
                     p->header.len = 1;
                     ubpacket_send();
