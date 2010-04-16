@@ -111,7 +111,7 @@ void rs485master_init(void)
     rs485m_incomming = UB_NONE;
     rs485uart_enableReceive();
     
-    PORTA ^= 0x02;
+    //PORTA ^= 0x02;
     DDRD |= (1<<PD6);
 }
 
@@ -140,7 +140,8 @@ int16_t rs485master_getPacket(struct ubpacket_t * packet)
         uint8_t adr = packet->header.dest;
         if( !ubadr_isMulticast(adr) &&
             !ubadr_isBroadcast(adr) &&
-            !(packet->header.flags & UB_PACKET_ACK)){
+            !(packet->header.flags & UB_PACKET_ACK) &&
+            !(packet->header.flags & UB_PACKET_NOACK)){
             rs485m_stalled = 1;
         }
     }else if( incomming != UB_NONE ){
@@ -201,6 +202,9 @@ void rs485master_querynodes(void)
         if( flags->known && flags->counter == 0){
             if( rs485master_query(adr) == UB_OK ){
                 flags->counter = flags->interval;
+            }else{
+                //the query failed. check again next time
+                queryindex = adr;
             }
             //we do only one check per ms
             break;
@@ -350,7 +354,7 @@ inline void rs485master_edge(void)
 {
     if( rs485m_busState == RS485M_BUS_SEND_TIMER ){
         if( rs485uart_lineActive() && rs485uart_isReceiving() ){
-            PORTA ^= (1<<PA2);
+            //PORTA ^= (1<<PA2);
             rs485m_busState = RS485M_BUS_RECV;
             rs485uart_edgeDisable();
             //return to RS485M_BUS_IDLE if nothing gets received(noise)
@@ -370,7 +374,7 @@ inline void rs485master_timer(void)
     if( rs485m_busState ==  RS485M_BUS_SEND_TIMER || rs485m_busState == RS485M_BUS_RECV ){
         //proceed to the next slot
         rs485m_busState = RS485M_BUS_IDLE;
-        PORTA &=~ 0x02;
+        //PORTA &=~ 0x02;
     }
     rs485uart_edgeDisable();
     ubtimer_stop();
@@ -381,7 +385,7 @@ inline void rs485master_setTimeout(void)
     //wait for 4 bytes before timeout
     ubtimer_start(rs485m_timer);
     rs485m_busState = RS485M_BUS_SEND_TIMER;
-    PORTA |= 0x02;
+    //PORTA |= 0x02;
     rs485uart_edgeEnable();
 }
 
