@@ -102,9 +102,12 @@ SRC = $(TARGET).c \
 	../lib/udebug.c \
 	../lib/random.c \
 	../lib/ubpacket.c \
+	../lib/ubslavemgt.c \
 	../lib/ubmastermgt.c \
-#	../lib/ubslave.c \
-#	../lib/ubrs485slave.c \
+	../lib/ubslave.c \
+	../lib/ubrs485slave.c \
+	../lib/settings.c
+
 #	isrdispatch.c \
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
