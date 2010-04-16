@@ -10,6 +10,7 @@ PKG_CHECK_MODULES(GIO, gio-2.0 > 2.0.0,
   [LIBS="$LIBS $GIO_LIBS" CFLAGS="$CFLAGS $GIO_CFLAGS"],
     AC_MSG_ERROR(Cannot find gio: Is gio-config in path?))
 AC_CHECK_LIB(gthread-2.0, g_thread_init)
+AC_CHECK_LIB(gdbm, gdbm_open)
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
