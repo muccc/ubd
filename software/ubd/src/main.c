@@ -17,6 +17,7 @@
 #include "address6.h"
 #include "mgt.h"
 #include "db.h"
+#include "cmdparser.h"
 
 gpointer reader(gpointer data)
 {
@@ -68,7 +69,7 @@ int main (int argc, char *argv[])
         }
         //activate bridge
         serial_switch();
-        packet_init(); 
+        packet_init();     
         busmgt_init();
     }else{
         printf("Please specify a serial port to use.\n");
@@ -76,7 +77,7 @@ int main (int argc, char *argv[])
         //mgt_createNode(TYPE_NODE, "blubb.exmaple.com");
         //mgt_createNode(TYPE_NODE, "fnord.barrr,example.com");
     }
-   
+    cmdparser_init();
     GMainLoop * mainloop = g_main_loop_new(NULL,TRUE);
     g_main_loop_run(mainloop);
 

@@ -11,6 +11,7 @@
 #include "address6.h"
 #include "interface.h"
 #include "bus.h"
+#include "cmdparser.h"
 
 //GSequence * entries;
 
@@ -73,6 +74,63 @@ gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_da
         printf("data udp: unkown condition = %d\n",condition);
     }
     return TRUE;
+}
+
+void data_listener_read(GInputStream *in, GAsyncResult *res,
+                            struct nodebuffer *buf)
+{
+    GError * e = NULL;
+    gssize n = g_input_stream_read_finish(in, res, &e);
+    if( n > 0 ){
+        printf("data_listener_read received %d data bytes\n", n);
+        if( buf->n == NULL ){
+            printf("node is null -> control data\n");
+            gchar* result = NULL;
+            n = cmdparser_cmd(buf->buf, n, &result);
+            if( n > 0 ){
+                g_output_stream_write(buf->out, result, n, NULL, NULL);
+                g_free(result);
+            }if( n < 0 ){
+                g_output_stream_write(buf->out, result, strlen(result), NULL, NULL);
+                g_free(result);
+                g_object_unref(buf->connection);
+                return;
+            }
+        }
+        g_input_stream_read_async(in, buf->buf, MAX_BUF, G_PRIORITY_DEFAULT,
+        NULL, (GAsyncReadyCallback) data_listener_read, buf); 
+    }else if( n == 0){
+        printf("data_listener_read: connection closed\n");
+        g_object_unref(buf->connection);
+    }else{
+        printf("data_listener_read received an error\n");
+    }
+}
+
+gboolean data_listener(GSocketService    *service,
+                        GSocketConnection *connection,
+                        GObject           *source_object,
+                        gpointer           user_data){
+    service = NULL;
+    source_object = NULL;
+
+    struct nodebuffer *buf = g_new0(struct nodebuffer,1);
+    g_assert(buf != NULL);
+
+    buf->n = (struct node*)user_data;
+    buf->connection = connection; 
+    buf->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
+    buf->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
+
+    if( user_data == NULL){
+        char *msg = "Welcome to the data interface\n>";
+        g_output_stream_write(buf->out, msg,strlen(msg),NULL,NULL);
+    }
+    g_input_stream_read_async(buf->in, buf->buf, MAX_BUF,
+        G_PRIORITY_DEFAULT, NULL, (GAsyncReadyCallback)data_listener_read,
+        buf);
+    g_object_ref(connection);
+    return FALSE;
 }
 
 gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
@@ -148,6 +206,19 @@ gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
         fprintf(stderr, "error while binding socket: %s\n", e->message);
         g_error_free(e);
     }
+
+    //set up data tcp listener
+    GSocketService *gss = g_socket_service_new();
+    if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
+        G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &e)
+            == FALSE ){
+        fprintf(stderr, "error while creaeting socket listener: %s\n",
+                e->message);
+        g_error_free(e);
+    }
+    g_signal_connect(gss, "incoming", G_CALLBACK(data_listener),NULL);
+    g_socket_service_start(gss);
+ 
     g_object_unref(sa);
 
     GSource *source = g_socket_create_source(udpsocket, G_IO_IN, NULL);
@@ -161,6 +232,7 @@ void net_createSockets(struct node *n)
 {
     GError * err = NULL;
     GInetAddress *addr = n->netadr;
+    GSource *source;
 
     gchar *tmp = g_inet_address_to_string(addr);
     printf("creating udp sockets on ip: %s\n",tmp);
@@ -181,11 +253,26 @@ void net_createSockets(struct node *n)
         g_error_free(err);
     }
 
-    GSource *source = g_socket_create_source(n->udp, G_IO_IN, NULL);
+    source = g_socket_create_source(n->udp, G_IO_IN, NULL);
     g_assert(source != NULL);
     g_source_set_callback(source, (GSourceFunc)data_udp_read, n, NULL);
     g_source_attach(source, g_main_context_default ());
+    //while(1);
+    printf("Creating data tcp listener on port 2323\n");
+    //set up data tcp listener
+    GSocketService *gss = g_socket_service_new();
+    printf("still\n");
+    if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
+        G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, /*n*/NULL, NULL, &err)
+            == FALSE ){
+        fprintf(stderr, "error while creaeting socket listener: %s\n", err->message);
+        g_error_free(err);
+    }
 
+    printf("creating callback\n");
+    g_signal_connect(gss, "incoming", G_CALLBACK(data_listener),n);
+    g_socket_service_start(gss);
+ 
     //set up mgt udp socket
     printf("Creating mgt udp socket on port 2324\n");
     sa = g_inet_socket_address_new(addr,2324);
@@ -214,7 +301,7 @@ void net_createSockets(struct node *n)
 
 void net_removeSockets(struct node *n)
 {
-    GError * err = NULL;
+    GError *err = NULL;
     printf("removing sockets of id %s\n",n->id);
     //remove data udp socket
     //gboolean rc = g_socket_shutdown(n->udp, FALSE, FALSE, &err);

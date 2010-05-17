@@ -24,6 +24,7 @@ struct node{
     gchar       id[MAX_ID];
     gchar       name[MAX_ID];
     gchar       domain[MAX_ID];
+    gchar       version[MAX_ID];
 
     gint        busadr;
     gboolean    busup;
@@ -43,10 +44,21 @@ struct node{
     uint8_t     groups[32];
 };
 
+#define MAX_BUF     100
+struct nodebuffer {
+    struct node * n;
+    char buf[MAX_BUF];
+    GSocketConnection *connection;
+    GOutputStream *out;
+    GInputStream *in;
+};
+
 #define MAX_NODE    256
 
 void mgt_init(void);
 
+int mgt_getNodeCount(void);
+struct node *mgt_getNode(int i);
 struct node *mgt_createBridge(gchar *id);
 struct node *mgt_createNode(gint type, gchar *id);
 struct node* mgt_getNodeById(gchar* id);

@@ -83,6 +83,11 @@ void busmgt_inpacket(struct ubpacket* p)
                 n->timeout = 30;
                 n->busup = TRUE;
             }
+
+        break;
+        case 'V':
+            n = mgt_getNodeByBusAdr(p->src);
+            memcpy(n->version, p->data+2, p->len-2);
         break;
         //a keep alive packet
         case 'A':
@@ -122,7 +127,7 @@ void busmgt_setName(uint8_t adr, char *name)
 {
     printf("Setting name of %u to %s\n",adr,name);
     //append the trailing 0
-    busmgt_sendCmdData(adr,'s',name,strlen(name)+1);
+    busmgt_sendCmdData(adr,'s',(uint8_t*)name,strlen(name)+1);
 }
 
 static void busmgt_sendReset(uint8_t adr)

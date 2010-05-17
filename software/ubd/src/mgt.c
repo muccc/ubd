@@ -24,11 +24,33 @@ void mgt_init(void)
 
     for(i=0;i<MAX_NODE;i++){
         nodes[i].type=TYPE_NONE;
+        nodes[i].id[0] = 0;
+        nodes[i].name[0] = 0;
+        nodes[i].domain[0] = 0;
+        nodes[i].version[0] = 0;
     }
 
     nodes[2].type = TYPE_BRIDGE;  //this node is reserved
     nodes[2].netadr = NULL;       //this node is reserved
+    strcpy(nodes[2].id,"unkown bridge");
+    nodes[2].busadr = 2;
     g_timeout_add_seconds(1,mgt_tick,NULL);
+}
+
+struct node *mgt_getNode(int i)
+{
+    return nodes+i;
+}
+
+int mgt_getNodeCount(void)
+{
+    int i;
+    int count = 0;
+    for(i=0;i<MAX_NODE;i++){
+        if( nodes[i].type != TYPE_NONE )
+            count++;
+    }
+    return count;
 }
 
 static gboolean mgt_tick(gpointer data)

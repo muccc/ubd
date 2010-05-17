@@ -154,11 +154,13 @@ void serial_switch(void)
     printf("switching serial node to bridge mode\n");
     serial_sendFrames("B");
     struct message m;
+    //return;
     while(1){
         serial_readMessage(&m);
         if( m.len == 1 && m.data[0] == 'B' )
             break;
     }
+    //usleep(1000*1000*2);
 }
 
 int serial_open (char * device)
