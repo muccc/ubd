@@ -18,6 +18,7 @@
 #include "mgt.h"
 #include "db.h"
 #include "cmdparser.h"
+#include "xmlconfig.h"
 
 gpointer reader(gpointer data)
 {
@@ -57,6 +58,8 @@ int main (int argc, char *argv[])
         printf("Please specify a base address to use.\n");
         return 0;
     }
+
+    xml_init("ubdconfig.h");
     db_init("nodes.db", "groups.db");
     g_assert( net_init(argv[1], argv[2], 8) == 0);
 

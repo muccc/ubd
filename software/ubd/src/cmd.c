@@ -36,4 +36,5 @@ gchar *cmd_list_groups(void)
     }
     return result;
 */
+    return NULL;
 }

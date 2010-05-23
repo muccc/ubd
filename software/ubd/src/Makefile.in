@@ -43,13 +43,17 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_ubd_OBJECTS = main.$(OBJEXT) serial.$(OBJEXT) debug.$(OBJEXT) \
-	net6.$(OBJEXT) packet.$(OBJEXT) busmgt.$(OBJEXT) \
-	address6db.$(OBJEXT) interface.$(OBJEXT) address6.$(OBJEXT) \
-	bus.$(OBJEXT) mgt.$(OBJEXT) db.$(OBJEXT) cmd.$(OBJEXT) \
-	cmdparser.$(OBJEXT)
+am_ubd_OBJECTS = ubd-main.$(OBJEXT) ubd-serial.$(OBJEXT) \
+	ubd-debug.$(OBJEXT) ubd-net6.$(OBJEXT) ubd-packet.$(OBJEXT) \
+	ubd-busmgt.$(OBJEXT) ubd-address6db.$(OBJEXT) \
+	ubd-interface.$(OBJEXT) ubd-address6.$(OBJEXT) \
+	ubd-bus.$(OBJEXT) ubd-mgt.$(OBJEXT) ubd-db.$(OBJEXT) \
+	ubd-cmd.$(OBJEXT) ubd-cmdparser.$(OBJEXT) \
+	ubd-xmlconfig.$(OBJEXT)
 ubd_OBJECTS = $(am_ubd_OBJECTS)
 ubd_LDADD = $(LDADD)
+ubd_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(ubd_LDFLAGS) $(LDFLAGS) -o \
+	$@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -107,6 +111,8 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+XML_CFLAGS = @XML_CFLAGS@
+XML_LIBS = @XML_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -148,7 +154,9 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ubd_SOURCES = main.c serial.c debug.c net6.c packet.c busmgt.c ubpacket.h serial.h debug.h net6.h packet.h busmgt.h ubconfig.h message.h address6db.c address6db.h interface.c interface.h address6.h address6.c bus.c bus.h mgt.h mgt.c db.c db.h cmd.c cmd.h cmdparser.c cmdparser.h
+ubd_SOURCES = main.c serial.c debug.c net6.c packet.c busmgt.c ubpacket.h serial.h debug.h net6.h packet.h busmgt.h ubconfig.h message.h address6db.c address6db.h interface.c interface.h address6.h address6.c bus.c bus.h mgt.h mgt.c db.c db.h cmd.c cmd.h cmdparser.c cmdparser.h xmlconfig.c xmlconfig.h
+ubd_CPPFLAGS = $(XML_CFLAGS)
+ubd_LDFLAGS = $(XML_LIBS)
 all: all-am
 
 .SUFFIXES:
@@ -207,7 +215,7 @@ clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
 ubd$(EXEEXT): $(ubd_OBJECTS) $(ubd_DEPENDENCIES) 
 	@rm -f ubd$(EXEEXT)
-	$(LINK) $(ubd_OBJECTS) $(ubd_LDADD) $(LIBS)
+	$(ubd_LINK) $(ubd_OBJECTS) $(ubd_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -215,20 +223,21 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/address6.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/address6db.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bus.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/busmgt.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmdparser.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/db.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/interface.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mgt.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net6.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/packet.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serial.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-address6.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-address6db.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-bus.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-busmgt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-cmd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-cmdparser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-db.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-debug.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-interface.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-mgt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-net6.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-packet.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-serial.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubd-xmlconfig.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -243,6 +252,216 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+ubd-main.o: main.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-main.o -MD -MP -MF $(DEPDIR)/ubd-main.Tpo -c -o ubd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-main.Tpo $(DEPDIR)/ubd-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='ubd-main.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+
+ubd-main.obj: main.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-main.obj -MD -MP -MF $(DEPDIR)/ubd-main.Tpo -c -o ubd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-main.Tpo $(DEPDIR)/ubd-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='ubd-main.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+
+ubd-serial.o: serial.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-serial.o -MD -MP -MF $(DEPDIR)/ubd-serial.Tpo -c -o ubd-serial.o `test -f 'serial.c' || echo '$(srcdir)/'`serial.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-serial.Tpo $(DEPDIR)/ubd-serial.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='serial.c' object='ubd-serial.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-serial.o `test -f 'serial.c' || echo '$(srcdir)/'`serial.c
+
+ubd-serial.obj: serial.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-serial.obj -MD -MP -MF $(DEPDIR)/ubd-serial.Tpo -c -o ubd-serial.obj `if test -f 'serial.c'; then $(CYGPATH_W) 'serial.c'; else $(CYGPATH_W) '$(srcdir)/serial.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-serial.Tpo $(DEPDIR)/ubd-serial.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='serial.c' object='ubd-serial.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-serial.obj `if test -f 'serial.c'; then $(CYGPATH_W) 'serial.c'; else $(CYGPATH_W) '$(srcdir)/serial.c'; fi`
+
+ubd-debug.o: debug.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-debug.o -MD -MP -MF $(DEPDIR)/ubd-debug.Tpo -c -o ubd-debug.o `test -f 'debug.c' || echo '$(srcdir)/'`debug.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-debug.Tpo $(DEPDIR)/ubd-debug.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='debug.c' object='ubd-debug.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-debug.o `test -f 'debug.c' || echo '$(srcdir)/'`debug.c
+
+ubd-debug.obj: debug.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-debug.obj -MD -MP -MF $(DEPDIR)/ubd-debug.Tpo -c -o ubd-debug.obj `if test -f 'debug.c'; then $(CYGPATH_W) 'debug.c'; else $(CYGPATH_W) '$(srcdir)/debug.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-debug.Tpo $(DEPDIR)/ubd-debug.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='debug.c' object='ubd-debug.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-debug.obj `if test -f 'debug.c'; then $(CYGPATH_W) 'debug.c'; else $(CYGPATH_W) '$(srcdir)/debug.c'; fi`
+
+ubd-net6.o: net6.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-net6.o -MD -MP -MF $(DEPDIR)/ubd-net6.Tpo -c -o ubd-net6.o `test -f 'net6.c' || echo '$(srcdir)/'`net6.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-net6.Tpo $(DEPDIR)/ubd-net6.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='net6.c' object='ubd-net6.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-net6.o `test -f 'net6.c' || echo '$(srcdir)/'`net6.c
+
+ubd-net6.obj: net6.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-net6.obj -MD -MP -MF $(DEPDIR)/ubd-net6.Tpo -c -o ubd-net6.obj `if test -f 'net6.c'; then $(CYGPATH_W) 'net6.c'; else $(CYGPATH_W) '$(srcdir)/net6.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-net6.Tpo $(DEPDIR)/ubd-net6.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='net6.c' object='ubd-net6.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-net6.obj `if test -f 'net6.c'; then $(CYGPATH_W) 'net6.c'; else $(CYGPATH_W) '$(srcdir)/net6.c'; fi`
+
+ubd-packet.o: packet.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-packet.o -MD -MP -MF $(DEPDIR)/ubd-packet.Tpo -c -o ubd-packet.o `test -f 'packet.c' || echo '$(srcdir)/'`packet.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-packet.Tpo $(DEPDIR)/ubd-packet.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='packet.c' object='ubd-packet.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-packet.o `test -f 'packet.c' || echo '$(srcdir)/'`packet.c
+
+ubd-packet.obj: packet.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-packet.obj -MD -MP -MF $(DEPDIR)/ubd-packet.Tpo -c -o ubd-packet.obj `if test -f 'packet.c'; then $(CYGPATH_W) 'packet.c'; else $(CYGPATH_W) '$(srcdir)/packet.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-packet.Tpo $(DEPDIR)/ubd-packet.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='packet.c' object='ubd-packet.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-packet.obj `if test -f 'packet.c'; then $(CYGPATH_W) 'packet.c'; else $(CYGPATH_W) '$(srcdir)/packet.c'; fi`
+
+ubd-busmgt.o: busmgt.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-busmgt.o -MD -MP -MF $(DEPDIR)/ubd-busmgt.Tpo -c -o ubd-busmgt.o `test -f 'busmgt.c' || echo '$(srcdir)/'`busmgt.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-busmgt.Tpo $(DEPDIR)/ubd-busmgt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='busmgt.c' object='ubd-busmgt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-busmgt.o `test -f 'busmgt.c' || echo '$(srcdir)/'`busmgt.c
+
+ubd-busmgt.obj: busmgt.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-busmgt.obj -MD -MP -MF $(DEPDIR)/ubd-busmgt.Tpo -c -o ubd-busmgt.obj `if test -f 'busmgt.c'; then $(CYGPATH_W) 'busmgt.c'; else $(CYGPATH_W) '$(srcdir)/busmgt.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-busmgt.Tpo $(DEPDIR)/ubd-busmgt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='busmgt.c' object='ubd-busmgt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-busmgt.obj `if test -f 'busmgt.c'; then $(CYGPATH_W) 'busmgt.c'; else $(CYGPATH_W) '$(srcdir)/busmgt.c'; fi`
+
+ubd-address6db.o: address6db.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-address6db.o -MD -MP -MF $(DEPDIR)/ubd-address6db.Tpo -c -o ubd-address6db.o `test -f 'address6db.c' || echo '$(srcdir)/'`address6db.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-address6db.Tpo $(DEPDIR)/ubd-address6db.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='address6db.c' object='ubd-address6db.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-address6db.o `test -f 'address6db.c' || echo '$(srcdir)/'`address6db.c
+
+ubd-address6db.obj: address6db.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-address6db.obj -MD -MP -MF $(DEPDIR)/ubd-address6db.Tpo -c -o ubd-address6db.obj `if test -f 'address6db.c'; then $(CYGPATH_W) 'address6db.c'; else $(CYGPATH_W) '$(srcdir)/address6db.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-address6db.Tpo $(DEPDIR)/ubd-address6db.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='address6db.c' object='ubd-address6db.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-address6db.obj `if test -f 'address6db.c'; then $(CYGPATH_W) 'address6db.c'; else $(CYGPATH_W) '$(srcdir)/address6db.c'; fi`
+
+ubd-interface.o: interface.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-interface.o -MD -MP -MF $(DEPDIR)/ubd-interface.Tpo -c -o ubd-interface.o `test -f 'interface.c' || echo '$(srcdir)/'`interface.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-interface.Tpo $(DEPDIR)/ubd-interface.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='interface.c' object='ubd-interface.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-interface.o `test -f 'interface.c' || echo '$(srcdir)/'`interface.c
+
+ubd-interface.obj: interface.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-interface.obj -MD -MP -MF $(DEPDIR)/ubd-interface.Tpo -c -o ubd-interface.obj `if test -f 'interface.c'; then $(CYGPATH_W) 'interface.c'; else $(CYGPATH_W) '$(srcdir)/interface.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-interface.Tpo $(DEPDIR)/ubd-interface.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='interface.c' object='ubd-interface.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-interface.obj `if test -f 'interface.c'; then $(CYGPATH_W) 'interface.c'; else $(CYGPATH_W) '$(srcdir)/interface.c'; fi`
+
+ubd-address6.o: address6.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-address6.o -MD -MP -MF $(DEPDIR)/ubd-address6.Tpo -c -o ubd-address6.o `test -f 'address6.c' || echo '$(srcdir)/'`address6.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-address6.Tpo $(DEPDIR)/ubd-address6.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='address6.c' object='ubd-address6.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-address6.o `test -f 'address6.c' || echo '$(srcdir)/'`address6.c
+
+ubd-address6.obj: address6.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-address6.obj -MD -MP -MF $(DEPDIR)/ubd-address6.Tpo -c -o ubd-address6.obj `if test -f 'address6.c'; then $(CYGPATH_W) 'address6.c'; else $(CYGPATH_W) '$(srcdir)/address6.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-address6.Tpo $(DEPDIR)/ubd-address6.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='address6.c' object='ubd-address6.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-address6.obj `if test -f 'address6.c'; then $(CYGPATH_W) 'address6.c'; else $(CYGPATH_W) '$(srcdir)/address6.c'; fi`
+
+ubd-bus.o: bus.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-bus.o -MD -MP -MF $(DEPDIR)/ubd-bus.Tpo -c -o ubd-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-bus.Tpo $(DEPDIR)/ubd-bus.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bus.c' object='ubd-bus.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-bus.o `test -f 'bus.c' || echo '$(srcdir)/'`bus.c
+
+ubd-bus.obj: bus.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-bus.obj -MD -MP -MF $(DEPDIR)/ubd-bus.Tpo -c -o ubd-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-bus.Tpo $(DEPDIR)/ubd-bus.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bus.c' object='ubd-bus.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-bus.obj `if test -f 'bus.c'; then $(CYGPATH_W) 'bus.c'; else $(CYGPATH_W) '$(srcdir)/bus.c'; fi`
+
+ubd-mgt.o: mgt.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-mgt.o -MD -MP -MF $(DEPDIR)/ubd-mgt.Tpo -c -o ubd-mgt.o `test -f 'mgt.c' || echo '$(srcdir)/'`mgt.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-mgt.Tpo $(DEPDIR)/ubd-mgt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mgt.c' object='ubd-mgt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-mgt.o `test -f 'mgt.c' || echo '$(srcdir)/'`mgt.c
+
+ubd-mgt.obj: mgt.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-mgt.obj -MD -MP -MF $(DEPDIR)/ubd-mgt.Tpo -c -o ubd-mgt.obj `if test -f 'mgt.c'; then $(CYGPATH_W) 'mgt.c'; else $(CYGPATH_W) '$(srcdir)/mgt.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-mgt.Tpo $(DEPDIR)/ubd-mgt.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mgt.c' object='ubd-mgt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-mgt.obj `if test -f 'mgt.c'; then $(CYGPATH_W) 'mgt.c'; else $(CYGPATH_W) '$(srcdir)/mgt.c'; fi`
+
+ubd-db.o: db.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-db.o -MD -MP -MF $(DEPDIR)/ubd-db.Tpo -c -o ubd-db.o `test -f 'db.c' || echo '$(srcdir)/'`db.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-db.Tpo $(DEPDIR)/ubd-db.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='db.c' object='ubd-db.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-db.o `test -f 'db.c' || echo '$(srcdir)/'`db.c
+
+ubd-db.obj: db.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-db.obj -MD -MP -MF $(DEPDIR)/ubd-db.Tpo -c -o ubd-db.obj `if test -f 'db.c'; then $(CYGPATH_W) 'db.c'; else $(CYGPATH_W) '$(srcdir)/db.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-db.Tpo $(DEPDIR)/ubd-db.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='db.c' object='ubd-db.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-db.obj `if test -f 'db.c'; then $(CYGPATH_W) 'db.c'; else $(CYGPATH_W) '$(srcdir)/db.c'; fi`
+
+ubd-cmd.o: cmd.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-cmd.o -MD -MP -MF $(DEPDIR)/ubd-cmd.Tpo -c -o ubd-cmd.o `test -f 'cmd.c' || echo '$(srcdir)/'`cmd.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-cmd.Tpo $(DEPDIR)/ubd-cmd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cmd.c' object='ubd-cmd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-cmd.o `test -f 'cmd.c' || echo '$(srcdir)/'`cmd.c
+
+ubd-cmd.obj: cmd.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-cmd.obj -MD -MP -MF $(DEPDIR)/ubd-cmd.Tpo -c -o ubd-cmd.obj `if test -f 'cmd.c'; then $(CYGPATH_W) 'cmd.c'; else $(CYGPATH_W) '$(srcdir)/cmd.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-cmd.Tpo $(DEPDIR)/ubd-cmd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cmd.c' object='ubd-cmd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-cmd.obj `if test -f 'cmd.c'; then $(CYGPATH_W) 'cmd.c'; else $(CYGPATH_W) '$(srcdir)/cmd.c'; fi`
+
+ubd-cmdparser.o: cmdparser.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-cmdparser.o -MD -MP -MF $(DEPDIR)/ubd-cmdparser.Tpo -c -o ubd-cmdparser.o `test -f 'cmdparser.c' || echo '$(srcdir)/'`cmdparser.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-cmdparser.Tpo $(DEPDIR)/ubd-cmdparser.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cmdparser.c' object='ubd-cmdparser.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-cmdparser.o `test -f 'cmdparser.c' || echo '$(srcdir)/'`cmdparser.c
+
+ubd-cmdparser.obj: cmdparser.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-cmdparser.obj -MD -MP -MF $(DEPDIR)/ubd-cmdparser.Tpo -c -o ubd-cmdparser.obj `if test -f 'cmdparser.c'; then $(CYGPATH_W) 'cmdparser.c'; else $(CYGPATH_W) '$(srcdir)/cmdparser.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-cmdparser.Tpo $(DEPDIR)/ubd-cmdparser.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cmdparser.c' object='ubd-cmdparser.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-cmdparser.obj `if test -f 'cmdparser.c'; then $(CYGPATH_W) 'cmdparser.c'; else $(CYGPATH_W) '$(srcdir)/cmdparser.c'; fi`
+
+ubd-xmlconfig.o: xmlconfig.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-xmlconfig.o -MD -MP -MF $(DEPDIR)/ubd-xmlconfig.Tpo -c -o ubd-xmlconfig.o `test -f 'xmlconfig.c' || echo '$(srcdir)/'`xmlconfig.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-xmlconfig.Tpo $(DEPDIR)/ubd-xmlconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmlconfig.c' object='ubd-xmlconfig.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-xmlconfig.o `test -f 'xmlconfig.c' || echo '$(srcdir)/'`xmlconfig.c
+
+ubd-xmlconfig.obj: xmlconfig.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ubd-xmlconfig.obj -MD -MP -MF $(DEPDIR)/ubd-xmlconfig.Tpo -c -o ubd-xmlconfig.obj `if test -f 'xmlconfig.c'; then $(CYGPATH_W) 'xmlconfig.c'; else $(CYGPATH_W) '$(srcdir)/xmlconfig.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ubd-xmlconfig.Tpo $(DEPDIR)/ubd-xmlconfig.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmlconfig.c' object='ubd-xmlconfig.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ubd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ubd-xmlconfig.obj `if test -f 'xmlconfig.c'; then $(CYGPATH_W) 'xmlconfig.c'; else $(CYGPATH_W) '$(srcdir)/xmlconfig.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
