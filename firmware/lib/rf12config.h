@@ -14,16 +14,6 @@
 #endif
 
 #if (BOARD == BOARD_RF_0_1 || BOARD == BOARD_RF_0_2)
-/*#define RF_IRQDDR	DDRD
-#define RF_IRQPIN	PIND
-#define RF_IRQPORT  PORTD
-#define IRQ		2
-
-#define RF_EICR     _EICRA
-#define RF_EICR_MASK    (1<<ISC01)
-#define RF_EIMSK    _EIMSK
-#define RF_EXTINT   INT0
-#define RF_SIGNAL   INT0_vect*/
 #define RF_IRQDDR	DDRB
 #define RF_IRQPIN	PINB
 #define RF_IRQPORT  PORTB

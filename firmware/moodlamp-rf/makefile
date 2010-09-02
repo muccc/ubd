@@ -109,7 +109,9 @@ SRC = $(TARGET).c \
 	../lib/ubrs485slave.c \
 	../lib/ubslave.c \
 	../lib/ubslavemgt.c \
-	../lib/ubmastermgt.c
+	../lib/ubmastermgt.c \
+	../lib/ubrf12.c \
+	../lib/ubrf.c
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
 

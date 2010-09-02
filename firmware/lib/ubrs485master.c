@@ -149,7 +149,8 @@ int16_t rs485master_getPacket(struct ubpacket_t * packet)
         rs485m_incomming = UB_NONE;
         PORTD &= ~(1<<PD6);
     }
-    return len;
+    //return len;
+    return len?UB_OK:UB_ERROR;
 }
 
 //try to send a query to a node

@@ -45,16 +45,13 @@ uint8_t ubmastermgt_process(struct ubpacket_t * p)
             ubconfig.configured = 1;
             ubmastermgt_state = CONNECTED;
         break;
+        case 's':
+            settings_setid(data+1);
+        break;
         case 'r':
             //XXX: think about implementing this again
             //why did this get removed?
             //while(1);
-        break;
-        case 1:
-            ubadr_addMulticast(data[1]);
-        break;
-        case 2:
-            ubadr_removeMulticast(data[1]);
         break;
         case 'V':
             out = ubpacket_getSendBuffer();
@@ -64,6 +61,12 @@ uint8_t ubmastermgt_process(struct ubpacket_t * p)
             sprintf((char *)out->data,"V="__DATE__);
             out->header.len = strlen((char*)out->data);
             ubpacket_send();
+        break;
+        case 1:
+            ubadr_addMulticast(data[1]);
+        break;
+        case 2:
+            ubadr_removeMulticast(data[1]);
         break;
     }
     return 1;

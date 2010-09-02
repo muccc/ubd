@@ -3,7 +3,10 @@
 #include <stdint.h>
 #include "ubpacket.h"
 
-enum UB_INTERFACE { UB_NOIF, UB_RS485, UB_RF };
+enum UB_INTERFACE { UB_NOIF  = 0, 
+                    UB_RS485 = 1,
+                    UB_RF    = 2
+                  };
 
 enum UB_ERR_CODE { UB_OK, UB_ERROR };
 typedef uint8_t UBSTATUS;
@@ -15,10 +18,11 @@ struct ub_config {
     uint8_t master;
     uint8_t slave;
     uint8_t configured;
+    uint8_t rf;
 };
 
 extern struct ub_config ubconfig;
-void ub_init(uint8_t ubmode);
+void ub_init(uint8_t ubmode, int8_t interfaces);
 void ub_process(void);
 void ub_tick(void);
 inline uint8_t ub_getAddress(void);

@@ -15,17 +15,17 @@ void leds_init(void)
 
 inline void leds_rx(void)
 {
-//    uint8_t sreg = SREG; cli();
-//    PIN_SET(LED2);
-//    SREG = sreg;
+    uint8_t sreg = SREG; cli();
+    PIN_SET(LED2);
+    SREG = sreg;
 }
 
 
 inline void leds_rxend(void)
 {
-//    uint8_t sreg = SREG; cli();
-//    PIN_CLEAR(LED2);
-//    SREG = sreg;
+    uint8_t sreg = SREG; cli();
+    PIN_CLEAR(LED2);
+    SREG = sreg;
 }
 
 inline void leds_adc(void)
@@ -45,17 +45,17 @@ inline void leds_adcend(void)
 
 inline void leds_tx(void)
 {
-//    uint8_t sreg = SREG; cli();
-//    PIN_SET(LED3);
-//    SREG = sreg;
+    uint8_t sreg = SREG; cli();
+    PIN_SET(LED3);
+    SREG = sreg;
 }
 
 
 inline void leds_txend(void)
 {
-//    uint8_t sreg = SREG; cli();
-//    PIN_CLEAR(LED3);
-//    SREG = sreg;
+    uint8_t sreg = SREG; cli();
+    PIN_CLEAR(LED3);
+    SREG = sreg;
 }
 
 inline void leds_main(void)

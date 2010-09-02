@@ -236,8 +236,8 @@ if( ubconfig.master ){
 
     //don't overwrite data
     if( !ubpacket_gotPacket() ){
-        int8_t len = ub_getPacket(&inpacket);
-        if( len > 0 )
+        int8_t ret = ub_getPacket(&inpacket);
+        if( ret == UB_OK )
             ubpacket_processPacket(&inpacket);
     }
 }
@@ -251,6 +251,7 @@ void ubpacket_processPacket(struct ubpacket_t * in)
         //    PORTA ^= (1<<7);
 
 #ifdef UB_ENABLEMASTER
+serial_sendFrames("Dbridge: processing");
 if( ubconfig.master ){
     if( in->header.src == UB_ADDRESS_MASTER ){
         if( ubadr_isLocal(in->header.dest) ){

@@ -133,7 +133,7 @@ void settings_read(void)
     }
     eeprom_read_block(idbuf,name,50);
     if(idbuf[0] == 255){
-        strcpy((char*)idbuf,"newlamp.local");
+        strcpy((char*)idbuf,"newlamp,local");
         eeprom_write_block(idbuf,name,50);
     }
 

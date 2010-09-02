@@ -27,6 +27,8 @@ uint8_t rs485msg_put(uint8_t data)
             return UB_NONE;
         }else if( data == UB_DISCOVER ){
             return rs485msg_type = data;
+        }else if( data == UB_BOOTLOADER ){
+            return UB_NONE;
         }else if( data == UB_STOP ){
             if( msgtype == UB_START ){
                 msgtype = UB_NONE;

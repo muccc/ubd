@@ -139,8 +139,8 @@ int main(void) {
 
     control_init();
 
-    ub_init(UB_SLAVE);
-    //ub_init(UB_MASTER);
+    ub_init(UB_SLAVE, UB_RF | UB_RS485);
+    //ub_init(UB_MASTER, UB_RF | UB_RS485);
 
     /* enable interrupts globally */
     sei();
@@ -148,6 +148,7 @@ int main(void) {
 //    global.state = STATE_PAUSE;
 //    global.flags.running = 0;
     wdt_enable(WDTO_2S);
+
     while (1) {
         wdt_reset();
         leds_main();

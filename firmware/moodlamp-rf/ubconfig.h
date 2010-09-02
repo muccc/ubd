@@ -21,12 +21,14 @@
 #define UB_STOP         '2'
 #define UB_DISCOVER     '3'
 #define UB_QUERY        '4'
+#define UB_BOOTLOADER   '5'
 
 #define UB_NODEMAX      128
 
 
 #define UB_ENABLEMASTER 1
-#define UB_ENABLESLAVE 1
+#define UB_ENABLESLAVE  1
+#define UB_ENABLERF     1
 
 #define UB_HOSTADR      1
 #define UB_MASTERADR    2

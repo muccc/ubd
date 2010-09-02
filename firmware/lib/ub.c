@@ -17,20 +17,35 @@
 struct ub_config ubconfig;
 uint8_t ub_address = 0;
 
-void ub_init(uint8_t ubmode)
+void ub_init(uint8_t ubmode, int8_t interfaces)
 {
     cli();
-    ubconfig.rs485master = 0;
+    if( interfaces == -1 ){
+        if( ubconfig.rs485slave || ubconfig.rs485master )
+            interfaces = UB_RS485;
+#ifdef UB_ENABLERF
+        if( ubconfig.rf )
+            interfaces |= UB_RF;
+#endif
+    }
+
     ubconfig.master = 0;
-    ubconfig.slave = 0;
+    ubconfig.slave = 0;   
     ubconfig.rs485slave = 0;
+    ubconfig.rs485master = 0;
+    ubconfig.rf = 0;
 
     udebug_init();
     ubadr_init();
     random_init(ubadr_getID(),ubadr_getIDLen());
 #ifdef UB_ENABLEMASTER
     if( ubmode == UB_MASTER ){
-        ubconfig.rs485master = 1;
+        if( interfaces & UB_RS485 )
+            ubconfig.rs485master = 1;
+#ifdef UB_ENABLERF
+        if( interfaces & UB_RF )
+            ubconfig.rf = 1;
+#endif
         ubconfig.master = 1;
         //the bridge has a fixed address
         ubadr_setAddress(UB_ADDRESS_BRIDGE);
@@ -39,18 +54,26 @@ void ub_init(uint8_t ubmode)
         ubpacket_init();
         ubmastermgt_init();
         ubconfig.configured = 1;
+        //This tells the host that we are ready
+        sei();
         serial_sendFramec('B');
     }
 #endif
 #ifdef UB_ENABLESLAVE
     if ( ubmode == UB_SLAVE ){
-        ubconfig.rs485slave = 1;
+        if( interfaces & UB_RS485 )
+            ubconfig.rs485slave = 1;
+#ifdef UB_ENABLERF
+        if( interfaces & UB_RF )
+            ubconfig.rf = 1;
+#endif
         ubconfig.slave = 1;
         //we don't know better
         ubadr_setAddress(0);
         ubslave_init();
         ubpacket_init();
         ubslavemgt_init();
+        //wait until we get an address assigned to an interface
         ubconfig.configured = 0;
     }
 #endif
@@ -67,7 +90,7 @@ void ub_process(void)
         uint8_t buf[16];
         uint8_t l = serial_readline(buf, sizeof(buf));
         if( l == 1 && buf[0] == 'B'){
-            ub_init(UB_MASTER);
+            ub_init(UB_MASTER,-1);
             return;
         }
     }

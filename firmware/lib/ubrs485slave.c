@@ -104,7 +104,8 @@ inline uint8_t rs485slave_getPacket(struct ubpacket_t * packet)
             uint8_t * msg = rs485msg_getMsg();
 
             //PORTA ^= 0x02;
-            //check the crc of the new message and copy it to the packet buffer
+            //check the crc of the new message and
+            //copy it to the packet buffer
             uint16_t crc = ubcrc16_data(msg, len - 2);
             if( (crc>>8) == msg[len-2] && (crc&0xFF) == msg[len-1] ){
                 memcpy(packet, msg , len);
@@ -116,7 +117,7 @@ inline uint8_t rs485slave_getPacket(struct ubpacket_t * packet)
         //rs485s_busState = RS485S_BUS_IDLE;
         rs485s_incomming = 0;
     }
-    return len;
+    return len?UB_OK:UB_ERROR;
 }
 
 inline void rs485s_gotDiscover(void)
