@@ -17,9 +17,9 @@ GTimeVal start;
 
 static uint16_t serial_in(uint8_t data);
 
-inline void serial_putc(uint8_t c)
+inline int serial_putc(uint8_t c)
 {
-    write(fd,&c,1);
+    return write(fd,&c,1);
 }
 
 inline void serial_putcenc(uint8_t c)

@@ -48,17 +48,18 @@ static gint interface_createInterface(GInetAddress *addr)
 {
     char buf[1024];
     char *tmp = g_inet_address_to_string(addr);
+    int rc;
 
     sprintf(buf,"ip addr del %s dev %s",
                             tmp, interface_interface);
     printf("shell: %s\n",buf);
-    system(buf);
+    rc = system(buf);
     //usleep(1000*1000*3); 
     sprintf(buf,"ip addr add %s dev %s",
                             tmp, interface_interface);
 
     printf("shell: %s\n",buf);
-    int rc = system(buf);
+    rc = system(buf);
 
     g_free(tmp);
     if( rc ){
@@ -74,11 +75,14 @@ void interface_removeAddress(GInetAddress *addr)
 {
     char buf[1024];
     char *tmp = g_inet_address_to_string(addr);
-
+    int rc;
     sprintf(buf,"ip addr del %s dev %s",
                             tmp, interface_interface);
 
-    system(buf);
+    rc = system(buf);
+    if( rc ){
+        printf("%s\nerror: return value: %d\n",buf,rc);
+    }
     g_free(tmp);
     return;
 }

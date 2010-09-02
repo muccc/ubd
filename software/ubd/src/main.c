@@ -16,31 +16,9 @@
 #include "busmgt.h"
 #include "address6.h"
 #include "mgt.h"
-#include "db.h"
 #include "cmdparser.h"
 #include "xmlconfig.h"
-
-gpointer reader(gpointer data)
-{
-    //struct queues * q = data;
-    printf("reader thread started\n");
-    while(1){
-        data = NULL;
-    /*    printf("waiting for packet...");
-        struct ubpacket * p = g_async_queue_pop(packet_queues.packet_in); 
-        printf("read packet from %u to %u flags: %x seq=%u len %u: ", 
-                p->src, p->dest, p->flags, p->seq, p->len);
-        debug_hexdump(p->data, p->len);
-        printf("\n");*/
-    }
-    printf("reader thread stoped\n");
-}
-
-
-/*void main_inpacket(struct ubpacket* p)
-{
-
-}*/
+#include "groups.h"
 
 int main (int argc, char *argv[])
 {
@@ -59,8 +37,10 @@ int main (int argc, char *argv[])
         return 0;
     }
 
-    xml_init("ubdconfig.h");
-    db_init("nodes.db", "groups.db");
+    nodes_init();
+    groups_init();
+    xml_init("ubdconfig.xml");
+    //db_init("","");
     g_assert( net_init(argv[1], argv[2], 8) == 0);
 
     mgt_init();

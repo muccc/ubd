@@ -7,7 +7,6 @@
 #include "net6.h"
 #include "interface.h"
 #include "mgt.h"
-#include "db.h"
 
 void address6_init(GInetAddress *base)
 {

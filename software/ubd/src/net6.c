@@ -13,6 +13,7 @@
 #include "bus.h"
 #include "cmdparser.h"
 
+#include "nodes.h"
 //GSequence * entries;
 
 GInetAddress*  net_base;

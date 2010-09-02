@@ -1,7 +1,7 @@
 while [ true ]
 do
-echo -e "C\x0F\x00\x00" | nc6 -u $1 2323 -q 0
+echo -e "C\xFF\x00\x00" | nc6 -u $1 2323 -q 0
 sleep 0.5
-echo -e "C\x00\x00\x0F" | nc6 -u $1 2323 -q 0
+echo -e "C\x00\x00\xFF" | nc6 -u $1 2323 -q 0
 sleep 0.5
 done

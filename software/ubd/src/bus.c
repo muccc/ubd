@@ -10,7 +10,7 @@
 gint bus_sendToID(gchar *id, guchar *buf, gint len, gboolean reply)
 { 
     struct ubpacket packet;
-    struct node* n = mgt_getNodeById(id);
+    struct node* n = nodes_getNodeById(id);
     g_assert(n != NULL);
 
     packet.dest = n->busadr;

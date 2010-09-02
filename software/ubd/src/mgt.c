@@ -4,53 +4,20 @@
 #include <string.h>
 
 #include "mgt.h"
+#include "busmgt.h"
 #include "address6.h"
 #include "ubpacket.h"
 #include "interface.h"
-#include "db.h"
+#include "nodes.h"
 
-struct node nodes[MAX_NODE];
-
-static struct node* mgt_getFreeNode(void);
 static void mgt_checkTimeout(void);
 static gboolean mgt_tick(gpointer data);
-static void mgt_setNameFromID(struct node *n);
-static void mgt_registerNode(struct node * n, char *id,
+static struct node *mgt_registerNode(struct node * n, char *id,
                              uint8_t type, uint8_t busadr);
 
 void mgt_init(void)
 {
-    gint i;
-
-    for(i=0;i<MAX_NODE;i++){
-        nodes[i].type=TYPE_NONE;
-        nodes[i].id[0] = 0;
-        nodes[i].name[0] = 0;
-        nodes[i].domain[0] = 0;
-        nodes[i].version[0] = 0;
-    }
-
-    nodes[2].type = TYPE_BRIDGE;  //this node is reserved
-    nodes[2].netadr = NULL;       //this node is reserved
-    strcpy(nodes[2].id,"unkown bridge");
-    nodes[2].busadr = 2;
     g_timeout_add_seconds(1,mgt_tick,NULL);
-}
-
-struct node *mgt_getNode(int i)
-{
-    return nodes+i;
-}
-
-int mgt_getNodeCount(void)
-{
-    int i;
-    int count = 0;
-    for(i=0;i<MAX_NODE;i++){
-        if( nodes[i].type != TYPE_NONE )
-            count++;
-    }
-    return count;
 }
 
 static gboolean mgt_tick(gpointer data)
@@ -60,7 +27,7 @@ static gboolean mgt_tick(gpointer data)
     struct node *n;
     mgt_checkTimeout();
     while( (addr = interface_getConfiguredAddress()) != NULL ){
-        g_assert( (n = mgt_getNodeByNetAdr(addr)) != NULL );
+        g_assert( (n = nodes_getNodeByNetAdr(addr)) != NULL );
         net_createSockets(n);
     }
     return TRUE;
@@ -68,123 +35,64 @@ static gboolean mgt_tick(gpointer data)
 
 struct node *mgt_createNode(gint type, gchar *id)
 {
-    struct node *n =  mgt_getFreeNode();
-    if( n != NULL ){
-        mgt_registerNode(n, id, type, 0);
-    }
-    return n;
+    return mgt_registerNode(NULL, id, type, 0);
 }
 
 struct node *mgt_createBridge(gchar *id)
 {
-    struct node *n = &nodes[2];
-    mgt_registerNode(n, id, TYPE_BRIDGE, 2);
-    return n;
+    return mgt_registerNode(NULL, id, TYPE_BRIDGE, 2);
 }
 
-struct node* mgt_getNodeById(gchar* id)
+static struct node *mgt_registerNode(struct node * n, char *id, uint8_t type, uint8_t busadr)
 {
-    gint i;
-    for(i=0; i<MAX_NODE; i++){
-        if( nodes[i].type != TYPE_NONE ){
-            if( strncmp(id, nodes[i].id, MAX_ID) == 0){
-                return &nodes[i];
-            }
-        }
-    }
-    printf("mgt: getnodebyid: node %s unknown\n",id);
-    return NULL;
-}
+    struct node *dbn = nodes_getNodeById(id);
 
-struct node* mgt_getNodeByBusAdr(gint adr)
-{
-    gint i;
-    for(i=0; i<MAX_NODE; i++){
-        if( nodes[i].type != TYPE_NONE ){
-            if( nodes[i].busadr == adr ){
-                return &nodes[i];
-            }
-        }
-    }
-    return NULL;
-}
-
-struct node* mgt_getNodeByNetAdr(GInetAddress *addr)
-{
-    gint i;
-    for(i=0; i<MAX_NODE; i++){
-        if( nodes[i].type != TYPE_NONE && nodes[i].netadr != NULL ){
-            if( g_inet_address_get_native_size(addr) == 
-                g_inet_address_get_native_size(nodes[i].netadr) &&
-                memcmp(g_inet_address_to_bytes(addr),
-                        g_inet_address_to_bytes(nodes[i].netadr),
-                        g_inet_address_get_native_size(addr)) == 0 ){
-                return &nodes[i];
-            }
-        }
-    }
-    return NULL;
-}
-
-static void mgt_registerNode(struct node * n, char *id, uint8_t type, uint8_t busadr)
-{
-    n->type = type;
-    if( busadr )
-        n->busadr = busadr;
-    strncpy(n->id,id,MAX_ID);
-
-    if( db_isNodeKnown(n->id) ){
+    if( dbn != NULL){
         printf("node known\n");
-        db_loadNode(n);
-        address6_createAddress(n);
     }else{
         printf("node unknown\n");
-        n->netup = FALSE;
-        memset(n->groups,0,sizeof(n->groups));
-        n->netadr = NULL;
-        mgt_setNameFromID(n);
-        address6_createAddress(n);
-        db_addNode(n);
-    }
-}
-
-//Create the name of the node
-//If the id contains a ',' marking the start of the domain
-//the domain is ommitted
-static void mgt_setNameFromID(struct node *n)
-{
-    //n->name is of size n->id
-    g_assert(sizeof(n->name) >= sizeof(n->id));
-    strcpy(n->name,n->id);
-    char *s = strchr(n->name,',');
-
-    if( s != NULL){
-        *s = 0;
-        //TODO: make sure n->domain is large enough
-        g_assert(sizeof(n->domain) >= sizeof(n->id));
-        strcpy(n->domain,s++);
-    }else{
-        //there was no domain in the id
-        printf("ill formated id for this node: %s\n",n->id);
-    }
-}
-
-static struct node* mgt_getFreeNode(void)
-{
-    gint i;
-    for(i=4; i<MAX_NODE; i+=1){
-        if( nodes[i].type == TYPE_NONE){
-            nodes[i].busadr = i;       //FIXME fieser hack
-            return &nodes[i];
+        dbn = nodes_getFreeNode();
+        if( dbn == NULL ){
+            printf("mgt.c: warning: got no new node!\n");
+            return dbn;     //FIXME don't fail silently
         }
+        printf("copying id %s\n",id);
+        strncpy(dbn->id,id,MAX_ID);
+        printf("adding node %s\n",dbn->id);
+        nodes_addNode(dbn);
     }
-    return NULL;
+    if( busadr )
+        dbn->busadr = busadr;
+    else
+        dbn->busadr = busmgt_getFreeBusAdr();
+    dbn->type = type;
+    address6_createAddress(dbn);
+    nodes_activateNode(dbn);
+    return dbn;
 }
 
 static void mgt_checkTimeout(void)
 {
+    //TODO: redo timeout check with nodes.c
+    gint count = nodes_getNodeCount();
     gint i;
-    for(i=4; i<MAX_NODE; i+=1){
+    for(i=0; i<count; i++){
+        struct node *n = nodes_getNode(i);
+        if( n->state == NODE_IDENTIFY || n->state == NODE_NORMAL ){
+            if( n->timeout-- == 0 ){
+                printf("removing %s\n",n->id);
+                net_removeSockets(n);
+                address6_removeAddress(n);
+                //TODO: remove sockets too
+                n->type = TYPE_NONE;
+                nodes_deactivateNode(n);
+            }
+        }
+    }
+#if 0
+
+    gint i;
+    for(i=4; i<MAX_NODE; i++){
         if( nodes[i].state == NODE_IDENTIFY ||
             nodes[i].state == NODE_NORMAL ){
             if( nodes[i].timeout-- == 0 ){
@@ -196,24 +104,6 @@ static void mgt_checkTimeout(void)
             }
         }
     }
+    #endif
 }
 
-
-
-/*gint mgt_removeEntryById(gchar * id)
-{
-    id = NULL;
-    GSequenceIter * i;
-    for( i=g_sequence_get_begin_iter(entries);
-            i!=g_sequence_get_end_iter(entries); 
-            i=g_sequence_iter_next(i) ){
-        struct entry *e = g_sequence_get(i);
-        if( e->id != NULL && strcmp(id, e->id) == 0 ){
-            g_free(e->id);
-            g_object_unref(e->addr);
-            g_sequence_remove(i);
-            return 0;
-        }
-    }
-    return 1;
-}*/

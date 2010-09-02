@@ -20,6 +20,17 @@ void busmgt_init(void)
     busmgt_sendReset(UB_ADDRESS_BROADCAST);
 }
 
+gint busmgt_getFreeBusAdr()
+{
+    int i;
+    for(i=3; i<255; i++){
+        if( nodes_getNodeByBusAdr(i) == NULL )
+            return i;
+    }
+    printf("busmgt.c: warning: found no free address!\n");
+    return -1;
+}
+
 void busmgt_inpacket(struct ubpacket* p)
 {
     //TODO: check len of id buffer
@@ -41,7 +52,7 @@ void busmgt_inpacket(struct ubpacket* p)
 
             printf("busmgt: got discover from %s\n", id);
 
-            n = mgt_getNodeById(id);
+            n = nodes_getNodeById(id);
             if( n == NULL ){
                 printf("busmgt: creating new node\n");
                 n = mgt_createNode(TYPE_NODE, id);
@@ -70,7 +81,7 @@ void busmgt_inpacket(struct ubpacket* p)
             id[p->len-1] = 0;
             printf("mgt: got identify from %s\n", id);
 
-            n = mgt_getNodeById(id);
+            n = nodes_getNodeById(id);
             if( n == NULL ){
                 busmgt_sendReset(p->src);
                 return;
@@ -86,12 +97,12 @@ void busmgt_inpacket(struct ubpacket* p)
 
         break;
         case 'V':
-            n = mgt_getNodeByBusAdr(p->src);
+            n = nodes_getNodeByBusAdr(p->src);
             memcpy(n->version, p->data+2, p->len-2);
         break;
         //a keep alive packet
         case 'A':
-            n = mgt_getNodeByBusAdr(p->src);
+            n = nodes_getNodeByBusAdr(p->src);
             if( n == NULL ){
                 busmgt_sendReset(p->src);
                 return;
@@ -105,7 +116,7 @@ void busmgt_inpacket(struct ubpacket* p)
             id[p->len-1] = 0;
             printf("busmgt: bridge id %s\n", id);
             mgt_createBridge(id);
-            n = mgt_getNodeByBusAdr(p->src);
+            n = nodes_getNodeByBusAdr(p->src);
             busmgt_sendOK(p->src);
             n->state = NODE_NORMAL;
             n->timeout = 30;

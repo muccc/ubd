@@ -1,70 +1,170 @@
 #include <stdio.h>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#include "xmlconfig.h"
+#include <mxml.h>
+#include "groups.h"
+#include "nodes.h"
 
-xmlDocPtr doc;
-xmlNodePtr cur;
-char *config;
+struct xml_node{
+    char *id;
+    char *address;
+    int groups[32];
+};
 
-void parseStory (xmlDocPtr doc, xmlNodePtr cur, char *keyword)
+
+mxml_node_t *tree = NULL;
+#define xml_iterate(tree, node, element) for (node = mxmlFindElement(tree, tree,element, NULL, NULL, MXML_DESCEND); node != NULL; node = mxmlFindElement(node, tree, element, NULL, NULL, MXML_DESCEND))
+
+ 
+void xml_print(mxml_node_t *t)
 {
-    xmlNodePtr p = xmlNewTextChild (cur, NULL, "keyword", "test");
-    //xmlNodeAddContentLen(cur,"\n",1);
-    return;
+    mxml_node_t *node = t;
+    int count = 0;
+    do{
+        printf("Node %d: type=", count++);
+        switch(node->type){
+            case MXML_TEXT:
+                printf("TEXT");
+            break;
+            case MXML_INTEGER:
+                printf("INTEGER");
+            break;
+            case MXML_ELEMENT:
+                printf("ELEMENT");
+            break;
+            case MXML_OPAQUE:
+                printf("OPAQUE");
+            break;
+            case MXML_REAL:
+                printf("REAL");
+            break;
+            case MXML_IGNORE:
+                printf("IGNORE");
+            break;
+            default:
+                printf("ELSE");
+            break;
+        }
+        printf(" value=");
+        switch(node->type){
+            case MXML_TEXT:
+                printf("%s",node->value.text.string);
+            break;
+            case MXML_ELEMENT:
+                printf("%s",node->value.element.name);
+                int i;
+                if( node->value.element.num_attrs )
+                    printf(" Element contains attributes:");
+                for(i=0; i<node->value.element.num_attrs; i++){
+                    printf(" %s=%s", node->value.element.attrs[i].name, node->value.element.attrs[i].value);
+                }
+            break;
+            case MXML_INTEGER:
+                printf("%d",node->value.integer);
+            break;
+            default:
+                printf("ELSE");
+            break;
+        }
+        printf("\n");
+    }while( (node = mxmlWalkNext(node, t, MXML_DESCEND)) );
 }
 
-xmlDocPtr xml_parseConfig(void)
+char *xml_getAttribute(mxml_node_t *node, char *attribute)
 {
-    doc = xmlParseFile(config);
-    
-    if (doc == NULL ) {
-        fprintf(stderr,"Document not parsed successfully. \n");
-        return (NULL);
+    int i;
+    for(i=0; i<node->value.element.num_attrs; i++){
+        if( strcmp(attribute, node->value.element.attrs[i].name)== 0 )
+            return node->value.element.attrs[i].value;
     }
-    
-    cur = xmlDocGetRootElement(doc);
-    
-    if (cur == NULL) {
-        fprintf(stderr,"empty document\n");
-        xmlFreeDoc(doc);
-        return (NULL);
-    }
-    
-    if (xmlStrcmp(cur->name, (const xmlChar *) "ubdconfig")) {
-        fprintf(stderr,"document of the wrong type, root node != ubdconfig");
-        xmlFreeDoc(doc);
-        return (NULL);
-    }
-    
-    /*cur = cur->xmlChildrenNode;
-    while (cur != NULL) {
-        if ((!xmlStrcmp(cur->name, (const xmlChar *)"storyinfo"))){
-            parseStory (doc, cur, "keyword");
-        } 
-        cur = cur->next;
-    }
-    */
+    return NULL;
 }
 
-void xml_save(void)
+void xml_free(void)
 {
-    if (doc != NULL) {
-        xmlSetCompressMode(0);
-        xmlSaveFormatFile (config, doc, 1);
+    if( tree )
+        mxmlDelete(tree);
+}
+
+void xml_load(char *filename)
+{
+    FILE *fp;
+    fp = fopen(filename, "r");
+    if( fp==NULL ){
+        printf("no configuration file found\n");
+        exit(1);
+    }
+    printf("Parsing configuration file\n");
+    xml_free();
+    tree = mxmlLoadFile(NULL, fp, MXML_NO_CALLBACK);
+    //tree = mxmlLoadFile(NULL, fp, MXML_TEXT_CALLBACK);
+    if( tree == NULL ){
+        printf("configuration invalid\n");
+        exit(1);
+    }
+    printf("configuration seems valid\n");
+    fclose(fp);
+}
+
+void xml_parseNode(mxml_node_t *node)
+{
+    gchar *id = xml_getAttribute(node,"id");
+    gchar *address = xml_getAttribute(node,"address");
+
+    printf("parsing node %s address %s\n", id, address);
+
+    struct node *n = nodes_getFreeNode();
+    strncpy(n->id, id, MAX_ID);
+    if( address != NULL && strlen(address) != 0 ){
+        n->netadr = g_inet_address_new_from_string(address);
+        //g_assert(n->netadr != NULL);
+    }else{
+        //the address will be chosen automagically
+        n->netadr = NULL;
+    }
+
+    int i = 0;
+    mxml_node_t *group;
+    xml_iterate(node, group, "group"){
+        n->groups[i] = groups_getGroupNumber(
+                            xml_getAttribute(group,"name"));
+        printf("found new group name=%s id=%d\n",
+               xml_getAttribute(group,"name"), n->groups[i]);
+        i++;
+    }
+    nodes_addNode(n);
+}
+
+void xml_parseNodes(mxml_node_t *nodes)
+{
+    mxml_node_t *node;
+    printf("parsing nodes\n");
+    xml_iterate(nodes, node, "node"){
+        xml_parseNode(node);
     }
 }
 
-//read the config file into the internal data set
-void xml_init(char *configfile)
+void xml_parseGroups(mxml_node_t *groups)
 {
-    // try to remove all spaces from the input
-    // this is a heuristif, from libxml2 and should be removed
-    // but is needed to get indentation without counting the levels
-    // inside the tree
-    xmlKeepBlanksDefault(0);
-    xmlIndentTreeOutput = 1;
-    config = configfile;
-    
-    xml_parseConfig();
+     mxml_node_t *group;
+     printf("parsing groups\n");
+     xml_iterate(groups, group, "group"){
+        groups_addGroup(xml_getAttribute(group,"name"));
+     }
+}
+
+void xml_parse(void)
+{
+    mxml_node_t *groups = mxmlFindElement(
+            tree, tree, "groups", NULL, NULL, MXML_DESCEND);
+    xml_parseGroups(groups);
+
+    mxml_node_t *nodes = mxmlFindElement(
+            tree, tree, "nodes", NULL, NULL, MXML_DESCEND);
+    xml_parseNodes(nodes);
+}
+
+void xml_init(char *filename)
+{
+    xml_load(filename);
+    xml_print(tree);
+    xml_parse();
 }

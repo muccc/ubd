@@ -6,6 +6,9 @@
 /* Define to 1 if you have the `gthread-2.0' library (-lgthread-2.0). */
 #undef HAVE_LIBGTHREAD_2_0
 
+/* Define to 1 if you have the `mxml' library (-lmxml). */
+#undef HAVE_LIBMXML
+
 /* Name of package */
 #undef PACKAGE
 
@@ -20,6 +23,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
