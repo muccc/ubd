@@ -57,6 +57,7 @@ inline UBSTATUS ubmaster_sendPacket(struct ubpacket_t * packet)
 #endif
     }else{
         //TODO: decide on which interface the dest is reachable
+        return ubrf_sendPacket(packet);
         return rs485master_sendPacket(packet);
     }
 
