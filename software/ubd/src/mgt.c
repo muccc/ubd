@@ -89,21 +89,5 @@ static void mgt_checkTimeout(void)
             }
         }
     }
-#if 0
-
-    gint i;
-    for(i=4; i<MAX_NODE; i++){
-        if( nodes[i].state == NODE_IDENTIFY ||
-            nodes[i].state == NODE_NORMAL ){
-            if( nodes[i].timeout-- == 0 ){
-                printf("removing %s\n",nodes[i].id);
-                net_removeSockets(&nodes[i]);
-                address6_removeAddress(&nodes[i]);
-                //TODO: remove sockets too
-                nodes[i].type = TYPE_NONE;
-            }
-        }
-    }
-    #endif
 }
 

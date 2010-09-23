@@ -37,8 +37,24 @@ void busmgt_inpacket(struct ubpacket* p)
     gchar id[100];
     struct node * n;
     uint16_t interval;
-    printf("busmgt: read packet from %u to %u flags: %x len %u: ", 
-            p->src, p->dest, p->flags, p->len);
+    gchar flags[200] = "";
+    
+    if( p->flags & 0x80 )
+        strcat(flags, "PACKET NOT ACKED | ");
+    if( p->flags & 0x40 )
+        strcat(flags, "DUPE | ");
+    if( p->flags & UB_PACKET_MGT )
+        strcat(flags, "MGT | ");
+    if( p->flags & UB_PACKET_NOACK )
+        strcat(flags, "NOACK | ");
+    if( p->flags & UB_PACKET_DONE )
+        strcat(flags, "DONE | ");
+    if( p->flags & UB_PACKET_SEQ )
+        strcat(flags, "SEQ | ");
+    if( p->flags & UB_PACKET_ACK )
+        strcat(flags, "ACK | ");
+    printf("busmgt: read packet from %u to %u flags: %x: %s len %u: ",  
+            p->src, p->dest, p->flags, flags, p->len);
     debug_hexdump(p->data, p->len);
     printf("\n");
 
@@ -52,8 +68,8 @@ void busmgt_inpacket(struct ubpacket* p)
 
             printf("busmgt: got discover from %s\n", id);
 
-            n = nodes_getNodeById(id);
-            if( n == NULL ){
+            //n = nodes_getNodeById(id);
+            //if( n == NULL ){
                 printf("busmgt: creating new node\n");
                 n = mgt_createNode(TYPE_NODE, id);
                 if( n == NULL){
@@ -62,9 +78,9 @@ void busmgt_inpacket(struct ubpacket* p)
                 }
                 g_assert(n->busadr != 0);
                 printf("busmgt: new bus address: %u\n",n->busadr);
-            }else{
-                printf("busmgt: old bus address: %u\n",n->busadr);
-            }
+            //}else{
+            //    printf("busmgt: old bus address: %u\n",n->busadr);
+            //}
 
             //TODO: check if it is possible for the bus to query
             //the node at this interval
@@ -79,20 +95,23 @@ void busmgt_inpacket(struct ubpacket* p)
             //TODO:check len
             memcpy(id, p->data+1, p->len-1);
             id[p->len-1] = 0;
-            printf("mgt: got identify from %s\n", id);
+            printf("busmgt: got identify from %s\n", id);
 
             n = nodes_getNodeById(id);
             if( n == NULL ){
+                printf("busmgt: unkown node\n");
                 busmgt_sendReset(p->src);
                 return;
             }
             //send the OK if we have our interface ready
             if( n->netup == TRUE){
+                printf("busmgt: node known\n");
                 busmgt_sendOK(p->src);
                 //n->state = NODE_IDENTIFY;
                 n->state = NODE_NORMAL;
                 n->timeout = 30;
                 n->busup = TRUE;
+                nodes_activateNode(n);
             }
 
         break;
@@ -108,7 +127,7 @@ void busmgt_inpacket(struct ubpacket* p)
                 return;
             }
             //reset the timeout
-            n->timeout = 5;
+            n->timeout = 50;
         break;
         //the bridge id
         case 'B':
@@ -144,8 +163,13 @@ void busmgt_setName(uint8_t adr, char *name)
 static void busmgt_sendReset(uint8_t adr)
 {
     printf("Setting reset to %u\n", adr);
-    busmgt_sendCmd(adr,'r');
-}
+    //busmgt_sendCmd(adr,'r');
+    struct ubpacket p;
+    p.dest = adr;
+    p.len = 1;
+    p.data[0] = 'r';
+    p.flags = UB_PACKET_MGT | UB_PACKET_NOACK;
+    packet_outpacket(&p);}
 
 static void busmgt_setQueryInterval(uint8_t adr, uint16_t interval)
 {
@@ -171,6 +195,9 @@ static void busmgt_sendOK(uint8_t adr)
 
     printf("Getting version from  %u\n",adr);
     busmgt_sendCmd(adr,'V');
+
+    printf("sending multicast groups\n");
+    busmgt_sendCmdData(adr,'a',(uint8_t*)"\xFE",1);
 }
 
 //send a command without any data

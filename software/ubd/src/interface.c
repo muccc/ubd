@@ -78,7 +78,7 @@ void interface_removeAddress(GInetAddress *addr)
     int rc;
     sprintf(buf,"ip addr del %s dev %s",
                             tmp, interface_interface);
-
+    printf("shell: %s\n",buf);
     rc = system(buf);
     if( rc ){
         printf("%s\nerror: return value: %d\n",buf,rc);

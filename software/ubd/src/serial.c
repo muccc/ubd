@@ -119,7 +119,7 @@ void serial_readMessage(struct message * msg)
         int rc = read(fd,&c,1);
         if( rc > 0){
             len = serial_in(c);
-            if( len ){
+            if( len && serial_buffer[0] != ' ' ){
                 printf("%ld.%06ld serial: new message: ->",start.tv_sec,start.tv_usec);debug_hexdump(serial_buffer, len);printf("<-\n");
                 msg->len = len;
                 if( sizeof(msg->data) >= len ){

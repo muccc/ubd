@@ -53,7 +53,7 @@ gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_da
         len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
         if( len ){
             printf("data udp: received:");debug_hexdump(buf,len);printf("\n");
-            bus_sendToID(n->id, buf, len, FALSE);
+            bus_sendToID(n->id, buf, len, TRUE);
             //TODO: somehow check if the message really gets to the node
             g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
         }else{

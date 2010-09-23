@@ -15,6 +15,7 @@ gint bus_sendToID(gchar *id, guchar *buf, gint len, gboolean reply)
 
     packet.dest = n->busadr;
     packet.len = len;
+    packet.flags = 0;
     if( !reply )
         packet.flags = UB_PACKET_NOACK;
     memcpy(packet.data, buf, len);

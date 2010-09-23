@@ -2,7 +2,7 @@
 <ubdconfig version="1">
     <network interface="lo" base="1::1/64"/>
     <nodes>
-        <node id="bridge4,local" address="dfs">
+        <node id="bridge5,local" address="dfs">
             <group name="usb"/>
         </node>
         <node id="fnord,blubb.com" address="::2">
