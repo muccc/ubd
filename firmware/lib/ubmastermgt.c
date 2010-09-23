@@ -14,12 +14,13 @@
 #define  MGT_BRIDGEDISCOVER     'B'
 #define  MGT_MASTERALIVE        'A'
 
+uint8_t ubmastermgt_state;
+
 enum slavemgtstate {
     DISCOVER,
+    IDENTIFY,
     CONNECTED
 };
-
-uint8_t ubmastermgt_state;
 
 void ubmastermgt_init(void)
 {
@@ -51,6 +52,8 @@ uint8_t ubmastermgt_process(struct ubpacket_t * p)
         case 'r':
             //XXX: think about implementing this again
             //why did this get removed?
+            //we don't want to get reset when the host resets
+            //the whole bus
             //while(1);
         break;
         case 'V':
@@ -62,10 +65,10 @@ uint8_t ubmastermgt_process(struct ubpacket_t * p)
             out->header.len = strlen((char*)out->data);
             ubpacket_send();
         break;
-        case 1:
+        case 'A':
             ubadr_addMulticast(data[1]);
         break;
-        case 2:
+        case 'R':
             ubadr_removeMulticast(data[1]);
         break;
     }
@@ -78,7 +81,7 @@ void ubmastermgt_tick(void)
     static uint16_t time = 0;
     static uint8_t flags = 0;
     if(!time--){
-        time = 1000;
+        time = 5000;
         switch(ubmastermgt_state){
             case DISCOVER:
                 flags |= 0x01;
