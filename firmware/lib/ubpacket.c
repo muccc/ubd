@@ -55,6 +55,7 @@ inline uint8_t ubpacket_gotPacket(void)
 
 inline void ubpacket_processed(void)
 {
+    serial_sendFrames("Dprocessed");
     packet_incomming = 0;
 }
 
@@ -162,9 +163,9 @@ static void packet_ack(struct ubpacket_t * p)
     ack.len = 0;
     if( ub_sendPacket((struct ubpacket_t *)&ack) == UB_ERROR ){
 #ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
+//if( ubconfig.master ){
         serial_sendFrames("DAsPerror");
-}
+//}
 #endif
         packet_ack_full = 1;
     }else{
@@ -178,12 +179,12 @@ if( ubconfig.master ){
 
 static void ubpacket_abort(void)
 {
+    serial_sendFrames("Dabort");
 #ifdef UB_ENABLEMASTER
 if( ubconfig.master ){
     if( outpacket.header.src == UB_ADDRESS_MASTER ){
         ubmaster_abort();
     }
-    serial_sendFrames("Dabort");
 }
 #endif
     PORTA |= 0x02;
@@ -254,6 +255,7 @@ void ubpacket_processPacket(struct ubpacket_t * in)
 serial_sendFrames("Dbridge: processing");
 if( ubconfig.master ){
     if( in->header.src == UB_ADDRESS_MASTER ){
+        serial_sendFrames("Dbridge: src=master");
         if( ubadr_isLocal(in->header.dest) ){
             serial_sendFrames("Dbridge: local");
             //this packet was only for us and needs no special care
@@ -323,7 +325,6 @@ if( ubconfig.master &&
         struct ubstat_t * flags = ubstat_getFlags(in->header.src);
         if( seq == flags->inseq ){
             //this packet was already seen
-            serial_sendFrames("Ddupe");
             in->header.flags |= 0x40;
             //return;
         }else{
@@ -354,17 +355,21 @@ if ( ubconfig.slave &&
 }
 #endif
 
-        if( !(in->header.flags & UB_PACKET_NOACK) )
+        if( !(in->header.flags & UB_PACKET_NOACK) ){
+            serial_sendFrames("Dacking");
             packet_ack(in);
+        }
         //don't forward the dupe to the app
-        if( in->header.flags & 0x40 )
+        if( in->header.flags & 0x40 ){
+            serial_sendFrames("Ddupe");
             return;
-
+        }
         //if this packet is for the master forward it to the serial line
         //else send it to the application
         if( in->header.dest == UB_ADDRESS_MASTER ){
             forward = 1;
         }else{
+            serial_sendFrames("Dincomming");
             packet_incomming = 1;
         }
     }else if( ubadr_isBroadcast(in->header.dest) ){
@@ -390,6 +395,7 @@ if ( ubconfig.slave ){
     if( packet_incomming && ubslavemgt_process(&inpacket) ){
         //this was a management packet
         packet_incomming = 0;
+        serial_sendFrames("Dwas for mgt");
     }
 }
 #endif
@@ -398,6 +404,7 @@ if ( ubconfig.slave ){
 void ubpacket_tick(void)
 {
     if(!packet_acked && packet_timeout && --packet_timeout==0){
+        serial_sendFrames("Drt");
         packet_retries++;
         if( packet_retries > UB_PACKET_RETRIES ){
             ubpacket_abort();
