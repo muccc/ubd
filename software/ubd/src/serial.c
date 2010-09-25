@@ -119,8 +119,11 @@ void serial_readMessage(struct message * msg)
         int rc = read(fd,&c,1);
         if( rc > 0){
             len = serial_in(c);
-            if( len && serial_buffer[0] != ' ' ){
-                printf("%ld.%06ld serial: new message: ->",start.tv_sec,start.tv_usec);debug_hexdump(serial_buffer, len);printf("<-\n");
+            if( len ){
+                if( serial_buffer[0] != 'P' ){
+                    printf("%ld.%04ld serial: new message: ->",start.tv_sec,start.tv_usec);
+                    debug_hexdump(serial_buffer, len);printf("<-\n");
+                }
                 msg->len = len;
                 if( sizeof(msg->data) >= len ){
                     memcpy(msg->data,serial_buffer,msg->len);
@@ -140,8 +143,8 @@ void serial_readMessage(struct message * msg)
 
 void serial_writeMessage(struct message * outmsg)
 {
-    printf("serial: write message: ->");debug_hexdump(outmsg->data, outmsg->len);
-    printf("<-\n");
+    //printf("serial: write message: ->");debug_hexdump(outmsg->data, outmsg->len);
+    //printf("<-\n");
     serial_putStart();
     serial_putenc((uint8_t*) outmsg->data, outmsg->len);
     serial_putStop();

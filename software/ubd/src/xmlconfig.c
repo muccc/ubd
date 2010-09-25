@@ -2,6 +2,7 @@
 #include <mxml.h>
 #include "groups.h"
 #include "nodes.h"
+#include "config.h"
 
 struct xml_node{
     char *id;
@@ -153,12 +154,30 @@ void xml_parseGroups(mxml_node_t *groups)
 
 void xml_parse(void)
 {
+    mxml_node_t *network = mxmlFindElement(
+        tree, tree, "network", NULL, NULL, MXML_DESCEND);
+    config.interface = xml_getAttribute(
+            network,"interface");
+    config.base = xml_getAttribute(
+            network,"base");
+    gchar *prefix = xml_getAttribute(
+            network,"prefix");
+    config.prefix = g_ascii_strtoull(prefix,NULL,10);
+
+    mxml_node_t *serial = mxmlFindElement(
+        tree, tree, "serial", NULL, NULL, MXML_DESCEND);
+    config.device = xml_getAttribute(
+                    serial, "device");
+    gchar *rate = xml_getAttribute(
+                serial, "rate");
+    config.rate = g_ascii_strtoull(rate,NULL,10);
+
     mxml_node_t *groups = mxmlFindElement(
-            tree, tree, "groups", NULL, NULL, MXML_DESCEND);
+        tree, tree, "groups", NULL, NULL, MXML_DESCEND);
     xml_parseGroups(groups);
 
     mxml_node_t *nodes = mxmlFindElement(
-            tree, tree, "nodes", NULL, NULL, MXML_DESCEND);
+        tree, tree, "nodes", NULL, NULL, MXML_DESCEND);
     xml_parseNodes(nodes);
 }
 

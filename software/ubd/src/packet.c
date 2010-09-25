@@ -24,26 +24,28 @@ gpointer packet_readerThread(gpointer data)
     printf("started packet_readerThread()\n");
     while( 1 ){
         serial_readMessage(&in);
-        printf("new message: ");
         if( in.len > 0){
             switch( in.data[0] ){
                 case PACKET_PACKET:
-                    printf("new packet\n");
+        //printf("new message: ");
+        //            printf("new packet\n");
                     //TODO: check len
                     memcpy(&p,in.data+1,in.len-1);
                     //g_async_queue_push(packet_queues.packet_in,p);
                     packet_inpacket(&p);
                 break;
                 case PACKET_DONE:
+        printf("new message: ");
                     printf("%c: packet done\n", in.data[0]);
                     g_async_queue_push(packet_status,(gpointer)PACKET_DONE);
                 break;
                 case PACKET_ABORT:
+        printf("new message: ");
                     printf("packet aborted\n");
                     g_async_queue_push(packet_status,(gpointer)PACKET_ABORT);
                 break;
                 case 'D':
-                    printf("debug\n");
+                    //printf("debug\n");
                 break;
             }
         }
@@ -56,6 +58,9 @@ gpointer packet_writerThread(gpointer data)
     while( 1 ){
         struct message * msg = (struct message *)g_async_queue_pop(packet_out);
         g_assert(msg != NULL);
+        
+        struct ubpacket * p = (struct ubpacket *)msg->data;
+        debug_packet("packet_writerThread",p);
 
         serial_writeMessage(msg);
 
@@ -70,7 +75,7 @@ gpointer packet_writerThread(gpointer data)
             //TODO: add log
             printf("PACKET WAS ABORTED\n");
         }else if( status == (gpointer)PACKET_DONE ){
-            printf("packet done\n");
+            //printf("packet done\n");
         }
     }
 }
@@ -97,6 +102,8 @@ static void packet_inpacket(struct ubpacket* p)
     }else{
         printf("There is no handler registerd for packet type %s\n",buf);
     }*/
+    debug_packet("packet_inpacket",p);
+
     if( p->flags & UB_PACKET_MGT ){
         busmgt_inpacket(p);
     }else{

@@ -19,47 +19,37 @@
 #include "cmdparser.h"
 #include "xmlconfig.h"
 #include "groups.h"
+#include "config.h"
 
 int main (int argc, char *argv[])
 {
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
     
-    printf ("This is " PACKAGE_STRING ".\n");
-
-    if( argc < 2 ){
-        printf("Please specify an interface to use.\n");
-        return 0;
-    }
-
-    if( argc < 3 ){
-        printf("Please specify a base address to use.\n");
-        return 0;
-    }
+    //printf("Please specify an interface to use.\n");
+    //printf("Please specify a base address to use.\n");
 
     nodes_init();
     groups_init();
     xml_init("ubdconfig.xml");
-    //db_init("","");
-    g_assert( net_init(argv[1], argv[2], 8) == 0);
-
+    g_assert( !net_init(config.interface, 
+                        config.base,
+                        config.prefix) );
     mgt_init();
 
-    if( argc > 3 ){
-        if( serial_open(argv[3]) == -1 ){
-            printf("Failed to open serial device %s\nAborting.\n", argv[3]);
+//    if( argc > 3 ){
+        if( serial_open(config.device) == -1 ){
+            printf("Failed to open serial device %s\n"
+                "Aborting.\n", config.device);
             return 0;
         }
         //activate bridge
         serial_switch();
         packet_init();     
         busmgt_init();
-    }else{
-        printf("Please specify a serial port to use.\n");
-
-        //mgt_createNode(TYPE_NODE, "blubb.exmaple.com");
-        //mgt_createNode(TYPE_NODE, "fnord.barrr,example.com");
-    }
+//    }else{
+//        printf("Please specify a serial port to use.\n");
+//    }
     cmdparser_init();
     GMainLoop * mainloop = g_main_loop_new(NULL,TRUE);
     g_main_loop_run(mainloop);

@@ -27,7 +27,6 @@ gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer user_dat
 
 gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
 {
-    //g_file_new_for_path("blubb");
     uint8_t buf[100];
     gsize len;
     GSocketAddress * src;
@@ -259,10 +258,10 @@ void net_createSockets(struct node *n)
     g_source_set_callback(source, (GSourceFunc)data_udp_read, n, NULL);
     g_source_attach(source, g_main_context_default ());
     //while(1);
-    printf("Creating data tcp listener on port 2323\n");
+    printf("Creating data tcp socket on port 2323\n");
     //set up data tcp listener
     GSocketService *gss = g_socket_service_new();
-    printf("still\n");
+    //printf("still\n");
     if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
         G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, /*n*/NULL, NULL, &err)
             == FALSE ){
@@ -270,7 +269,7 @@ void net_createSockets(struct node *n)
         g_error_free(err);
     }
 
-    printf("creating callback\n");
+    //printf("creating callback\n");
     g_signal_connect(gss, "incoming", G_CALLBACK(data_listener),n);
     g_socket_service_start(gss);
  

@@ -37,26 +37,7 @@ void busmgt_inpacket(struct ubpacket* p)
     gchar id[100];
     struct node * n;
     uint16_t interval;
-    gchar flags[200] = "";
-    
-    if( p->flags & 0x80 )
-        strcat(flags, "PACKET NOT ACKED | ");
-    if( p->flags & 0x40 )
-        strcat(flags, "DUPE | ");
-    if( p->flags & UB_PACKET_MGT )
-        strcat(flags, "MGT | ");
-    if( p->flags & UB_PACKET_NOACK )
-        strcat(flags, "NOACK | ");
-    if( p->flags & UB_PACKET_DONE )
-        strcat(flags, "DONE | ");
-    if( p->flags & UB_PACKET_SEQ )
-        strcat(flags, "SEQ | ");
-    if( p->flags & UB_PACKET_ACK )
-        strcat(flags, "ACK | ");
-    printf("busmgt: read packet from %u to %u flags: %x: %s len %u: ",  
-            p->src, p->dest, p->flags, flags, p->len);
-    debug_hexdump(p->data, p->len);
-    printf("\n");
+
 
     switch(p->data[0]){
         //A new node tries to get an address
@@ -168,6 +149,7 @@ static void busmgt_sendReset(uint8_t adr)
     p.dest = adr;
     p.len = 1;
     p.data[0] = 'r';
+    //don't expect an ack for a reset
     p.flags = UB_PACKET_MGT | UB_PACKET_NOACK;
     packet_outpacket(&p);}
 
@@ -197,7 +179,7 @@ static void busmgt_sendOK(uint8_t adr)
     busmgt_sendCmd(adr,'V');
 
     printf("sending multicast groups\n");
-    busmgt_sendCmdData(adr,'a',(uint8_t*)"\xFE",1);
+    busmgt_sendCmdData(adr,'A',(uint8_t*)"\xFE",1);
 }
 
 //send a command without any data
