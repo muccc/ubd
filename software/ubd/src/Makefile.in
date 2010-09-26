@@ -32,7 +32,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = ubd$(EXEEXT)
+bin_PROGRAMS = ubd$(EXEEXT) ubnetd$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -53,6 +53,9 @@ am_ubd_OBJECTS = main.$(OBJEXT) serial.$(OBJEXT) debug.$(OBJEXT) \
 	config.$(OBJEXT)
 ubd_OBJECTS = $(am_ubd_OBJECTS)
 ubd_LDADD = $(LDADD)
+am_ubnetd_OBJECTS = ubnetd.$(OBJEXT)
+ubnetd_OBJECTS = $(am_ubnetd_OBJECTS)
+ubnetd_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -61,8 +64,8 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(ubd_SOURCES)
-DIST_SOURCES = $(ubd_SOURCES)
+SOURCES = $(ubd_SOURCES) $(ubnetd_SOURCES)
+DIST_SOURCES = $(ubd_SOURCES) $(ubnetd_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -155,6 +158,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ubd_SOURCES = main.c serial.c debug.c net6.c packet.c busmgt.c ubpacket.h serial.h debug.h net6.h packet.h busmgt.h ubconfig.h message.h address6db.c address6db.h interface.c interface.h address6.h address6.c bus.c bus.h mgt.h mgt.c cmd.c cmd.h cmdparser.c cmdparser.h xmlconfig.c xmlconfig.h groups.c groups.h nodes.h nodes.c config.h config.c
+ubnetd_SOURCES = ubnetd.c ubnetd.h
 all: all-am
 
 .SUFFIXES:
@@ -229,6 +233,9 @@ clean-binPROGRAMS:
 ubd$(EXEEXT): $(ubd_OBJECTS) $(ubd_DEPENDENCIES) 
 	@rm -f ubd$(EXEEXT)
 	$(LINK) $(ubd_OBJECTS) $(ubd_LDADD) $(LIBS)
+ubnetd$(EXEEXT): $(ubnetd_OBJECTS) $(ubnetd_DEPENDENCIES) 
+	@rm -f ubnetd$(EXEEXT)
+	$(LINK) $(ubnetd_OBJECTS) $(ubnetd_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -252,6 +259,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nodes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/packet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serial.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ubnetd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmlconfig.Po@am__quote@
 
 .c.o:

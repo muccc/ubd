@@ -8,8 +8,14 @@
 GAsyncQueue * interface_donequeue;
 gchar *interface_interface;
 
-static gint interface_createInterface(GInetAddress *addr);
+static gint interface_createInterface(GInetAddress *addr,
+                                      gchar *interface);
 static gpointer interface_createThread(gpointer data);
+
+struct ifconfig {
+    GInetAddress *addr;
+    gchar *interface;
+};
 
 void interface_init(gchar *interface)
 {
@@ -19,20 +25,33 @@ void interface_init(gchar *interface)
 
 void interface_pushAddress(GInetAddress *addr)
 {
-    g_thread_create(interface_createThread,addr,FALSE,NULL);
+    struct ifconfig *ifc = g_new(struct ifconfig, 1);
+    ifc->addr = addr;
+    ifc->interface = interface_interface;
+
+    g_thread_create(interface_createThread, ifc,
+                    FALSE, NULL);
 }
 
 GInetAddress *interface_getConfiguredAddress(void)
 {
-    if( g_async_queue_length(interface_donequeue) > 0 )
-        return g_async_queue_pop(interface_donequeue);
-    return NULL;
+    GInetAddress *ret = NULL;
+    if( g_async_queue_length(interface_donequeue) > 0 ){
+        struct ifconfig *ifc = 
+            g_async_queue_pop(interface_donequeue);
+        ret = ifc->addr;
+        g_free(ifc);
+    }
+    return ret;
 }
 
-static gpointer interface_createThread(gpointer addr)
+static gpointer interface_createThread(gpointer p)
 {
-    g_assert(interface_createInterface(addr) == 0);
-    g_async_queue_push(interface_donequeue, addr);
+    struct ifconfig *ifc = p;
+    g_assert(
+        interface_createInterface(ifc->addr,
+                                  ifc->interface) == 0);
+    g_async_queue_push(interface_donequeue, p);
     return NULL;
 }
 
@@ -44,19 +63,20 @@ static gpointer interface_createThread(gpointer addr)
  * as the os needs time to bring the interface up
 */
 
-static gint interface_createInterface(GInetAddress *addr)
+static gint interface_createInterface(GInetAddress *addr,
+                                      gchar *interface)
 {
     char buf[1024];
     char *tmp = g_inet_address_to_string(addr);
     int rc;
 
     sprintf(buf,"ip addr del %s dev %s",
-                            tmp, interface_interface);
+                            tmp, interface);
     printf("shell: %s\n",buf);
     rc = system(buf);
     //usleep(1000*1000*3); 
     sprintf(buf,"ip addr add %s dev %s",
-                            tmp, interface_interface);
+                            tmp, interface);
 
     printf("shell: %s\n",buf);
     rc = system(buf);
@@ -66,6 +86,7 @@ static gint interface_createInterface(GInetAddress *addr)
         printf("%s\nerror: return value: %d\n",buf,rc);
         return -1;
     }
+    printf("New interface created. Now sleeping for 3s\n");
     usleep(1000*1000*3); 
     return 0;
 }
