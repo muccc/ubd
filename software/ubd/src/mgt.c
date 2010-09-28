@@ -12,7 +12,7 @@
 
 static void mgt_checkTimeout(void);
 static gboolean mgt_tick(gpointer data);
-static struct node *mgt_registerNode(struct node * n, char *id,
+static struct node *mgt_registerNode(char *id,
                              uint8_t type, uint8_t busadr);
 
 void mgt_init(void)
@@ -23,30 +23,32 @@ void mgt_init(void)
 static gboolean mgt_tick(gpointer data)
 {
     data = NULL;
-    GInetAddress *addr;
-    struct node *n;
     mgt_checkTimeout();
-    while( (addr = interface_getConfiguredAddress()) != NULL ){
-        g_assert( (n = nodes_getNodeByNetAdr(addr)) != NULL );
-        net_createSockets(n);
+    
+    gint count = nodes_getNodeCount();
+    gint i;
+    for(i=0; i<count; i++){
+        struct node *n = nodes_getNode(i);
+        if( interface_getConfiguredAddress(n) != NULL )
+            net_createSockets(n);
     }
     return TRUE;
 }
 
 struct node *mgt_createNode(gint type, gchar *id)
 {
-    return mgt_registerNode(NULL, id, type, 0);
+    return mgt_registerNode(id, type, 0);
 }
 
 struct node *mgt_createBridge(gchar *id)
 {
-    return mgt_registerNode(NULL, id, TYPE_BRIDGE, 2);
+    return mgt_registerNode(id, TYPE_BRIDGE, 2);
 }
 
-static struct node *mgt_registerNode(struct node * n, char *id, uint8_t type, uint8_t busadr)
+static struct node *mgt_registerNode(char *id, uint8_t type, uint8_t busadr)
 {
     struct node *dbn = nodes_getNodeById(id);
-
+    
     if( dbn != NULL){
         printf("node known\n");
     }else{

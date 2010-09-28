@@ -4,106 +4,106 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include "interface.h"
-//this hold done requests for interfaces
-GAsyncQueue * interface_donequeue;
-gchar *interface_interface;
 
-static gint interface_createInterface(GInetAddress *addr,
-                                      gchar *interface);
-static gpointer interface_createThread(gpointer data);
-
-struct ifconfig {
-    GInetAddress *addr;
-    gchar *interface;
-};
-
-void interface_init(gchar *interface)
+void interface_init()
 {
-    interface_donequeue = g_async_queue_new();
-    interface_interface = interface;
 }
 
-void interface_pushAddress(GInetAddress *addr)
+gint interface_createAddress(struct node *n) //GInetAddress *addr)
 {
-    struct ifconfig *ifc = g_new(struct ifconfig, 1);
-    ifc->addr = addr;
-    ifc->interface = interface_interface;
+    GError * e = NULL;
+    
+    GInetAddress *lo = g_inet_address_new_loopback(
+                            G_SOCKET_FAMILY_IPV6);
+    GSocketAddress *sa = g_inet_socket_address_new(
+                            lo,
+                            42);
+    
+    GSocket *s = n->ubnetd;
+    if( s != NULL ){
+        g_socket_close(s,NULL);
+        g_object_unref(s);
+    }
 
-    g_thread_create(interface_createThread, ifc,
-                    FALSE, NULL);
+    s = g_socket_new(G_SOCKET_FAMILY_IPV6,
+                            G_SOCKET_TYPE_STREAM,
+                            G_SOCKET_PROTOCOL_TCP,
+                            &e);
+    if( e != NULL ){
+        fprintf(stderr,"interface_pushAddress: Error while creating socket: %s\n", e->message);
+        g_error_free(e);
+        return -1;
+    }
+
+    g_socket_connect(s, sa, NULL, &e);
+    if( e != NULL ){
+        fprintf(stderr,"interface_pushAddress: Error while connecting: %s\n", e->message);
+        g_error_free(e);
+        return -1;
+    }
+    
+    g_socket_send(s,"A",1,NULL,NULL);
+    gchar *bytes = (gchar*)g_inet_address_to_bytes(n->netadr);
+    g_socket_send(s,bytes,16,NULL,NULL);
+    n->ubnetd = s;
+    //gchar buf[1];
+    //g_socket_receive(s,buf,1,NULL,NULL);
+    return 0;
 }
 
-GInetAddress *interface_getConfiguredAddress(void)
+gint interface_removeAddress(struct node *n)
+{
+    GError * e = NULL;
+    
+    GInetAddress *lo = g_inet_address_new_loopback(
+                            G_SOCKET_FAMILY_IPV6);
+    GSocketAddress *sa = g_inet_socket_address_new(
+                            lo,
+                            42);
+    
+    GSocket *s = g_socket_new(G_SOCKET_FAMILY_IPV6,
+                            G_SOCKET_TYPE_STREAM,
+                            G_SOCKET_PROTOCOL_TCP,
+                            &e);
+    if( e != NULL ){
+        fprintf(stderr,"interface_popAddress: error while creating socket: %s\n", e->message);
+        g_error_free(e);
+        return -1;
+    }
+
+    g_socket_connect(s, sa, NULL, &e);
+    if( e != NULL ){
+        fprintf(stderr,"interface_popAddress: error while connecting: %s\n", e->message);
+        g_error_free(e);
+        return -1;
+    }
+    
+    g_socket_send(s,"D",1,NULL,NULL);
+    gchar *bytes = (gchar*)g_inet_address_to_bytes(n->netadr);
+    g_socket_send(s,bytes,16,NULL,NULL);
+    gchar buf[1];
+    g_socket_receive(s,buf,1,NULL,NULL);
+    g_socket_close(s,NULL);
+    g_object_unref(s);
+    return 0;
+}
+
+GInetAddress *interface_getConfiguredAddress(struct node *n)
 {
     GInetAddress *ret = NULL;
-    if( g_async_queue_length(interface_donequeue) > 0 ){
-        struct ifconfig *ifc = 
-            g_async_queue_pop(interface_donequeue);
-        ret = ifc->addr;
-        g_free(ifc);
+    GSocket *s = n->ubnetd;
+
+    if( s != NULL ){
+        if( g_socket_condition_check(s, G_IO_IN) & G_IO_IN ){
+            gchar buf[1];
+            g_socket_receive(s,buf,1,NULL,NULL);
+            if( buf[0] == 'A' )
+                ret = n->netadr;
+            g_socket_close(s, NULL);
+            g_object_unref(s);
+            s = NULL;
+        }
     }
     return ret;
 }
 
-static gpointer interface_createThread(gpointer p)
-{
-    struct ifconfig *ifc = p;
-    g_assert(
-        interface_createInterface(ifc->addr,
-                                  ifc->interface) == 0);
-    g_async_queue_push(interface_donequeue, p);
-    return NULL;
-}
-
-
-/*
- * creates an interface for the specified address.
- * return 0 on success.
- * This routine may block for a significant amount of time
- * as the os needs time to bring the interface up
-*/
-
-static gint interface_createInterface(GInetAddress *addr,
-                                      gchar *interface)
-{
-    char buf[1024];
-    char *tmp = g_inet_address_to_string(addr);
-    int rc;
-
-    sprintf(buf,"ip addr del %s dev %s",
-                            tmp, interface);
-    printf("shell: %s\n",buf);
-    rc = system(buf);
-    //usleep(1000*1000*3); 
-    sprintf(buf,"ip addr add %s dev %s",
-                            tmp, interface);
-
-    printf("shell: %s\n",buf);
-    rc = system(buf);
-
-    g_free(tmp);
-    if( rc ){
-        printf("%s\nerror: return value: %d\n",buf,rc);
-        return -1;
-    }
-    printf("New interface created. Now sleeping for 3s\n");
-    usleep(1000*1000*3); 
-    return 0;
-}
-
-//TODO: push into thread
-void interface_removeAddress(GInetAddress *addr)
-{
-    char buf[1024];
-    char *tmp = g_inet_address_to_string(addr);
-    int rc;
-    sprintf(buf,"ip addr del %s dev %s",
-                            tmp, interface_interface);
-    printf("shell: %s\n",buf);
-    rc = system(buf);
-    if( rc ){
-        printf("%s\nerror: return value: %d\n",buf,rc);
-    }
-    g_free(tmp);
-    return;
-}

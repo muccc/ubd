@@ -27,11 +27,11 @@ void address6_createAddress(struct node *n)
     if( n->netadr == NULL ){
         n->netadr = address6db_getFreeAddr(n->id);
     }
-    interface_pushAddress(n->netadr);
+    interface_createAddress(n);
 }
 
 void address6_removeAddress(struct node *n)
 {
-   interface_removeAddress(n->netadr);
+   interface_removeAddress(n);
 }
 

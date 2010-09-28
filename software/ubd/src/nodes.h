@@ -30,9 +30,10 @@ struct node{
     gboolean    busup;
 
     GInetAddress *netadr;
+    GSocket     *ubnetd;
     gboolean    netup;
-    GSocket*    udp;
-    GSocket*    mgtudp;
+    GSocket     *udp;
+    GSocket     *mgtudp;
 };
 
 void nodes_init(void);

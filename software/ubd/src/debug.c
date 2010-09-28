@@ -1,6 +1,8 @@
+#include <stdio.h>
+#include <string.h>
+
 #include "debug.h"
 #include "packet.h"
-#include <stdio.h>
 
 void debug_hexdump(uint8_t * data, uint16_t len)
 {

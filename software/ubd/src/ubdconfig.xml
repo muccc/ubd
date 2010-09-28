@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding='UTF-8'?>
 <ubdconfig version="1">
-    <network interface="wlan0"
+    <network interface="eth0"
              base="2001:a60:e801:1001::1"
              prefix="64" />
     <serial device="/dev/ttyUSB0" rate="115200" />

@@ -21,7 +21,7 @@
 #include "groups.h"
 #include "config.h"
 
-int main (int argc, char *argv[])
+int main (void)
 {
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();

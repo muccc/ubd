@@ -185,7 +185,6 @@ gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
     }
     
     address6_init(net_base);
-    interface_init(interface);
 
     GSocketAddress * sa = g_inet_socket_address_new(net_base,2323);
     udpsocket = g_socket_new(G_SOCKET_FAMILY_IPV6,
