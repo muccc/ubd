@@ -12,8 +12,8 @@
 #include "interface.h"
 #include "bus.h"
 #include "cmdparser.h"
-
 #include "nodes.h"
+#include "net_tcp.h"
 
 GInetAddress    *net_base;
 GSocket         *udpsocket;
@@ -22,23 +22,22 @@ gint            net_prefix;
 static gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
 static gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
 static gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
-static void data_listener_read(GInputStream *in, GAsyncResult *res, struct nodebuffer *buf);
-static gboolean data_listener(GSocketService *service, GSocketConnection *connection,
-                                            GObject *source_object, gpointer user_data);
 
 static gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
 {
     uint8_t buf[100];
-    gsize len;
+    gssize len;
     GSocketAddress * src;
     condition = 0;
     user_data = NULL;
-    len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
-    if( len ){
-        printf("udp: received:");debug_hexdump(buf,len);printf("\n");
-        g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
+    len = g_socket_receive_from(socket,&src,(gchar*)buf,sizeof(buf),NULL,NULL);
+
+    if( len > 0 ){
+        printf("udp: Received:");debug_hexdump(buf,len);printf("\n");
+        //TODO: well what shall we do with this data?
+        //g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
     }else{
-        printf("udp: received empty msg\n");
+        printf("udp: Error while receiving msg\n");
     }
     return TRUE;
 }
@@ -53,9 +52,9 @@ static gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer 
         len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
         if( len > 0){
             printf("data_udp_read: Received:");debug_hexdump(buf,len);printf("\n");
-            bus_sendToID(n->id, buf, len, TRUE);
-            //TODO: somehow check if the message really gets to the node
-            g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
+            bus_sendToID(n->id, buf, len, FALSE);
+            //maybe check if the message really gets sent?
+            //g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
         }else{
             printf("data_udp_read: Error while receiving: len=%d\n",len);
         }
@@ -79,63 +78,6 @@ static gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer 
     return TRUE;
 }
 
-static void data_listener_read(GInputStream *in, GAsyncResult *res,
-                            struct nodebuffer *buf)
-{
-    GError * e = NULL;
-    gssize n = g_input_stream_read_finish(in, res, &e);
-    if( n > 0 ){
-        printf("data_listener_read: Received %d data bytes\n", n);
-        if( buf->n == NULL ){
-            printf("ata_listener_read: node == NULL -> control data\n");
-            gchar* result = NULL;
-            n = cmdparser_cmd(buf->buf, n, &result);
-            if( n > 0 ){        //got something to reply
-                g_output_stream_write(buf->out, result, n, NULL, NULL);
-                g_free(result);
-            }if( n < 0 ){       //close this session
-                g_output_stream_write(buf->out, result, strlen(result), NULL, NULL);
-                g_free(result);
-                //not sure if this is a clean way to close the tcp session
-                g_object_unref(buf->connection);
-                return;
-            }
-        }
-        g_input_stream_read_async(in, buf->buf, MAX_BUF, G_PRIORITY_DEFAULT,
-        NULL, (GAsyncReadyCallback) data_listener_read, buf); 
-    }else if( n == 0){
-        printf("data_listener_read: connection closed\n");
-        g_object_unref(buf->connection);
-    }else{
-        printf("data_listener_read received an error\n");
-    }
-}
-
-static gboolean data_listener(GSocketService    *service,
-                        GSocketConnection *connection,
-                        GObject           *source_object,
-                        gpointer           user_data){
-    service = NULL;
-    source_object = NULL;
-
-    struct nodebuffer *buf = g_new0(struct nodebuffer,1);
-    g_assert(buf != NULL);
-
-    buf->n = (struct node*)user_data;
-    buf->connection = connection; 
-    buf->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
-    buf->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
-
-    if( user_data == NULL){
-        char *msg = "Welcome to the data interface\n>";
-        g_output_stream_write(buf->out, msg,strlen(msg),NULL,NULL);
-    }
-    g_input_stream_read_async(buf->in, buf->buf, MAX_BUF,
-        G_PRIORITY_DEFAULT, NULL, (GAsyncReadyCallback)data_listener_read,
-        buf);
-    g_object_ref(connection);
-    return FALSE;
-}
 
 static gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
 {
@@ -149,9 +91,8 @@ static gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer u
         if( len > 0){
             printf("mgt_udp_read: Received:");debug_hexdump(buf,len);printf("\n");
             busmgt_sendData(n->busadr, buf, len);
-            //TODO: somehow check if the message really gets to the node
-            //disable this callback and set n->lastconnection
-            //then wait for ACK/NACK/RESULT, send it and reenable this callback?
+            //TODO: why is this udp? mgt should always be tcp!
+            //maybe check if the message really gets sent?
             //g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
         }else{
             printf("mgt_udp_read: Error while receiving datagramm\n");
@@ -215,14 +156,15 @@ gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
     //set up data tcp listener
     printf("net_init: Creating tcp socket on port 2323\n");
     GSocketService *gss = g_socket_service_new();
+    //TODO: save a reference to the gss somewhere
     if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
         G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &e)
             == FALSE ){
-        fprintf(stderr, "error while creaeting socket listener: %s\n",
+        fprintf(stderr, "net_init: error while creating socket listener: %s\n",
                 e->message);
         g_error_free(e);
     }
-    g_signal_connect(gss, "incoming", G_CALLBACK(data_listener),NULL);
+    g_signal_connect(gss, "incoming", G_CALLBACK(tcp_listener),NULL);
     g_socket_service_start(gss);
  
     g_object_unref(sa);
@@ -271,7 +213,7 @@ void net_createSockets(struct node *n)
         g_error_free(err);
         return;
     }
-    g_signal_connect(gss, "incoming", G_CALLBACK(data_listener), n);
+    g_signal_connect(gss, "incoming", G_CALLBACK(tcp_listener), n);
     g_socket_service_start(gss);
  
     //set up mgt udp socket

@@ -75,7 +75,6 @@ static struct node *mgt_registerNode(char *id, uint8_t type, uint8_t busadr)
 
 static void mgt_checkTimeout(void)
 {
-    //TODO: redo timeout check with nodes.c
     gint count = nodes_getNodeCount();
     gint i;
     for(i=0; i<count; i++){
@@ -85,7 +84,6 @@ static void mgt_checkTimeout(void)
                 printf("removing %s\n",n->id);
                 net_removeSockets(n);
                 address6_removeAddress(n);
-                //TODO: remove sockets too
                 n->type = TYPE_NONE;
                 nodes_deactivateNode(n);
             }

@@ -27,20 +27,22 @@ gpointer packet_readerThread(gpointer data)
         if( in.len > 0){
             switch( in.data[0] ){
                 case PACKET_PACKET:
-        //printf("new message: ");
-        //            printf("new packet\n");
-                    //TODO: check len
-                    memcpy(&p,in.data+1,in.len-1);
-                    //g_async_queue_push(packet_queues.packet_in,p);
-                    packet_inpacket(&p);
+                    //printf("new packet\n");
+                    if( sizeof(p) >= in.len ){
+                        memcpy(&p,in.data+1,in.len-1);
+                        //g_async_queue_push(packet_queues.packet_in,p);
+                        packet_inpacket(&p);
+                    }else{
+                        //TODO: log this error
+                    }
                 break;
                 case PACKET_DONE:
-        printf("new message: ");
+                    printf("new message: ");
                     printf("%c: packet done\n", in.data[0]);
                     g_async_queue_push(packet_status,(gpointer)PACKET_DONE);
                 break;
                 case PACKET_ABORT:
-        printf("new message: ");
+                    printf("new message: ");
                     printf("packet aborted\n");
                     g_async_queue_push(packet_status,(gpointer)PACKET_ABORT);
                 break;

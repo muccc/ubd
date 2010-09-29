@@ -196,11 +196,10 @@ void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
     p.dest = adr;
     p.len = len+1;
     p.data[0] = cmd;
-    //g_assert(p.len <= UB_PACKET_DATA);
+
     if( p.len > sizeof(p.data)){
         printf("busmgt_sendCmdData(): packet to big!\n");
-        //TODO: log this error
-        //TODO: fragment packet?
+        //TODO: log and report this error.
         return;
     }
 
