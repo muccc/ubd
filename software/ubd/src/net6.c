@@ -180,6 +180,7 @@ gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
     
     address6_init(net_base);
 
+    printf("net_init: Creating udp socket on port 2323\n");
     GSocketAddress * sa = g_inet_socket_address_new(net_base,2323);
     udpsocket = g_socket_new(G_SOCKET_FAMILY_IPV6,
                         G_SOCKET_TYPE_DATAGRAM,
@@ -199,8 +200,12 @@ gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
         g_error_free(e);
         e = NULL;
     }
+    GSource *source = g_socket_create_source(udpsocket, G_IO_IN, NULL);
+    g_source_set_callback(source, (GSourceFunc)udp_read, NULL, NULL);
+    g_source_attach(source, g_main_context_default());
 
     //set up data tcp listener
+    printf("net_init: Creating tcp socket on port 2323\n");
     GSocketService *gss = g_socket_service_new();
     if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
         G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &e)
@@ -214,9 +219,6 @@ gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
  
     g_object_unref(sa);
 
-    GSource *source = g_socket_create_source(udpsocket, G_IO_IN, NULL);
-    g_source_set_callback(source, (GSourceFunc)udp_read, NULL, NULL);
-    g_source_attach(source, g_main_context_default());
 
     return 0;
 }
@@ -228,11 +230,11 @@ void net_createSockets(struct node *n)
     GSource *source;
 
     gchar *tmp = g_inet_address_to_string(addr);
-    printf("creating udp sockets on ip: %s\n",tmp);
+    printf("net_createSockets: Creating sockets on ip: %s\n",tmp);
     g_free(tmp);
 
     //set up data udp socket
-    printf("Creating data udp socket on port 2323\n");
+    printf("net_createSockets: Creating udp socket on port 2323\n");
     GSocketAddress * sa = g_inet_socket_address_new(addr,2323);
     n->udp = g_socket_new(G_SOCKET_FAMILY_IPV6,
                         G_SOCKET_TYPE_DATAGRAM,
@@ -241,33 +243,31 @@ void net_createSockets(struct node *n)
 
     g_assert(n->udp != NULL);
 
-    if( g_socket_bind(n->udp,sa,TRUE,&err) == FALSE ){
-        fprintf(stderr, "error while binding socket: %s\n", err->message);
+    if( g_socket_bind(n->udp, sa, TRUE, &err) == FALSE ){
+        fprintf(stderr, "net_createSockets: Error while binding udp socket: %s\n", err->message);
         g_error_free(err);
+        return;
     }
 
     source = g_socket_create_source(n->udp, G_IO_IN, NULL);
     g_assert(source != NULL);
     g_source_set_callback(source, (GSourceFunc)data_udp_read, n, NULL);
-    g_source_attach(source, g_main_context_default ());
-    //while(1);
-    printf("Creating data tcp socket on port 2323\n");
-    //set up data tcp listener
-    GSocketService *gss = g_socket_service_new();
-    //printf("still\n");
-    if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
-        G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, /*n*/NULL, NULL, &err)
-            == FALSE ){
-        fprintf(stderr, "error while creaeting socket listener: %s\n", err->message);
-        g_error_free(err);
-    }
+    g_source_attach(source, g_main_context_default());
 
-    //printf("creating callback\n");
-    g_signal_connect(gss, "incoming", G_CALLBACK(data_listener),n);
+    printf("net_createSockets: Creating tcp socket on port 2323\n");
+    GSocketService *gss = g_socket_service_new();
+    if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
+        G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &err)
+            == FALSE ){
+        fprintf(stderr, "net_createSockets: Error while creating socket listener: %s\n", err->message);
+        g_error_free(err);
+        return;
+    }
+    g_signal_connect(gss, "incoming", G_CALLBACK(data_listener), n);
     g_socket_service_start(gss);
  
     //set up mgt udp socket
-    printf("Creating mgt udp socket on port 2324\n");
+    printf("net_createSockets: Creating management udp socket on port 2324\n");
     sa = g_inet_socket_address_new(addr,2324);
     n->mgtudp = g_socket_new(G_SOCKET_FAMILY_IPV6,
                         G_SOCKET_TYPE_DATAGRAM,
@@ -277,8 +277,9 @@ void net_createSockets(struct node *n)
     g_assert(n->mgtudp != NULL);
 
     if( g_socket_bind(n->mgtudp,sa,TRUE,&err) == FALSE ){
-        fprintf(stderr, "error while binding socket: %s\n", err->message);
+        fprintf(stderr, "net_createSockets: Error while binding socket: %s\n", err->message);
         g_error_free(err);
+        return;
     }
 
     source = g_socket_create_source(n->mgtudp, G_IO_IN, NULL);
@@ -286,51 +287,39 @@ void net_createSockets(struct node *n)
     g_source_set_callback(source, (GSourceFunc)mgt_udp_read, n, NULL);
     g_source_attach(source, g_main_context_default ());
 
+    printf("net_createSockets: activating network for this node\n");
     n->netup = TRUE;
     //FIXME: unref address results in segfault?
-    //g_object_unref(sa);
-    
+    //g_object_unref(sa); 
 }
 
 void net_removeSockets(struct node *n)
 {
     GError *err = NULL;
-    printf("removing sockets of id %s\n",n->id);
+    printf("net_removeSockets: Closing sockets of node %s\n",n->id);
     //remove data udp socket
     //gboolean rc = g_socket_shutdown(n->udp, FALSE, FALSE, &err);
+    printf("net_removeSockets: Closing udp socket\n");
     gboolean rc = g_socket_close(n->udp, &err);
     if( rc  == TRUE ){
         printf("success\n");
     }else{
-        fprintf(stderr, "error in g_socket_shutdown: %s\n", err->message);
+        fprintf(stderr, "error in g_socket_close: %s\n", err->message);
         g_error_free(err);
     }
     g_object_unref(n->udp);
     //FIXME: unref GSource also
     
     //remove mgt udp socket
+    printf("net_removeSockets: Closing management udp socket\n");
     rc = g_socket_close(n->mgtudp, &err);
     if( rc  == TRUE ){
         printf("success\n");
     }else{
-        fprintf(stderr, "error in g_socket_shutdown: %s\n", err->message);
+        fprintf(stderr, "net_removeSockets: Error in g_socket_close: %s\n", err->message);
         g_error_free(err);
     }
     g_object_unref(n->mgtudp);
 
 }
-
-/*struct entry * net_getEntryById(gchar * id)
-{
-    GSequenceIter * i;
-    for( i=g_sequence_get_begin_iter(entries);
-            i!=g_sequence_get_end_iter(entries); 
-            i=g_sequence_iter_next(i) ){
-        struct entry *e = g_sequence_get(i);
-        if( e->id != NULL && strcmp(id, e->id) == 0 ){
-            return e;
-        }
-    }
-    return NULL;
-}*/
 
