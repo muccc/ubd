@@ -19,11 +19,14 @@ GInetAddress    *net_base;
 GSocket         *udpsocket;
 gint            net_prefix;
 
-gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
-gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
-gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
+static gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
+static gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
+static gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
+static void data_listener_read(GInputStream *in, GAsyncResult *res, struct nodebuffer *buf);
+static gboolean data_listener(GSocketService *service, GSocketConnection *connection,
+                                            GObject *source_object, gpointer user_data);
 
-gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
+static gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
 {
     uint8_t buf[100];
     gsize len;
@@ -40,57 +43,60 @@ gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
     return TRUE;
 }
 
-gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
+static gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
 {
     uint8_t buf[100];
     GSocketAddress * src;
     struct node *n = user_data;
-    gsize len;
+    gssize len;
     if( condition == G_IO_IN ){
         len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
-        if( len ){
-            printf("data udp: received:");debug_hexdump(buf,len);printf("\n");
+        if( len > 0){
+            printf("data_udp_read: Received:");debug_hexdump(buf,len);printf("\n");
             bus_sendToID(n->id, buf, len, TRUE);
             //TODO: somehow check if the message really gets to the node
             g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
         }else{
-            printf("data udp: received empty msg\n");
+            printf("data_udp_read: Error while receiving: len=%d\n",len);
         }
-    }else if( condition == G_IO_ERR ){
-        printf("data udp: error\n");
-    }else if( condition == G_IO_HUP ){ 
-        printf("data udp: hang up\n");
-    }else if( condition == G_IO_OUT ){ 
-        printf("data udp: out\n");
-    }else if( condition == G_IO_PRI ){ 
-        printf("date udp: pri\n");
-    }else if( condition == G_IO_NVAL ){ 
-        printf("data udp: nval\ndropping source\n");
-        //drop this source
-        return FALSE;
     }else{
-        printf("data udp: unkown condition = %d\n",condition);
+        printf("data_udp_read: Received ");
+        if( condition == G_IO_ERR ){
+            printf("G_IO_ERR\n");
+        }else if( condition == G_IO_HUP ){ 
+            printf("G_IO_HUP\n");
+        }else if( condition == G_IO_OUT ){ 
+            printf("G_IO_OUT\n");
+        }else if( condition == G_IO_PRI ){ 
+            printf("G_IO_PRI\n");
+        }else if( condition == G_IO_NVAL ){ 
+            printf("G_IO_NVAL\ndropping source\n");
+            return FALSE;
+        }else{
+            printf("unkown condition = %d\n",condition);
+        }
     }
     return TRUE;
 }
 
-void data_listener_read(GInputStream *in, GAsyncResult *res,
+static void data_listener_read(GInputStream *in, GAsyncResult *res,
                             struct nodebuffer *buf)
 {
     GError * e = NULL;
     gssize n = g_input_stream_read_finish(in, res, &e);
     if( n > 0 ){
-        printf("data_listener_read received %d data bytes\n", n);
+        printf("data_listener_read: Received %d data bytes\n", n);
         if( buf->n == NULL ){
-            printf("node is null -> control data\n");
+            printf("ata_listener_read: node == NULL -> control data\n");
             gchar* result = NULL;
             n = cmdparser_cmd(buf->buf, n, &result);
-            if( n > 0 ){
+            if( n > 0 ){        //got something to reply
                 g_output_stream_write(buf->out, result, n, NULL, NULL);
                 g_free(result);
-            }if( n < 0 ){
+            }if( n < 0 ){       //close this session
                 g_output_stream_write(buf->out, result, strlen(result), NULL, NULL);
                 g_free(result);
+                //not sure if this is a clean way to close the tcp session
                 g_object_unref(buf->connection);
                 return;
             }
@@ -105,7 +111,7 @@ void data_listener_read(GInputStream *in, GAsyncResult *res,
     }
 }
 
-gboolean data_listener(GSocketService    *service,
+static gboolean data_listener(GSocketService    *service,
                         GSocketConnection *connection,
                         GObject           *source_object,
                         gpointer           user_data){
@@ -131,33 +137,35 @@ gboolean data_listener(GSocketService    *service,
     return FALSE;
 }
 
-gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
+static gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
 {
     uint8_t buf[100];
     GSocketAddress * src;
     struct node *n = user_data;
-    gsize len;
+    gssize len;
+
     if( condition == G_IO_IN ){
-        len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
-        if( len ){
-            printf("mgt udp: received:");debug_hexdump(buf,len);printf("\n");
+        len = g_socket_receive_from(socket, &src, (gchar*)buf, sizeof(buf), NULL, NULL);
+        if( len > 0){
+            printf("mgt_udp_read: Received:");debug_hexdump(buf,len);printf("\n");
             busmgt_sendData(n->busadr, buf, len);
             //TODO: somehow check if the message really gets to the node
-            g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
+            //disable this callback and set n->lastconnection
+            //then wait for ACK/NACK/RESULT, send it and reenable this callback?
+            //g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
         }else{
-            printf("mgt udp: received empty msg\n");
+            printf("mgt_udp_read: Error while receiving datagramm\n");
         }
     }else if( condition == G_IO_ERR ){
-        printf("mgt udp: error\n");
+        printf("mgt_udp_read: G_IO_ERR\n");
     }else if( condition == G_IO_HUP ){ 
-        printf("mgt udp: hang up\n");
+        printf("mgt_udp_read: G_IO_HUP\n");
     }else if( condition == G_IO_OUT ){ 
-        printf("mgt udp: out\n");
+        printf("mgt_udp_read: G_IO_OUT\n");
     }else if( condition == G_IO_PRI ){ 
-        printf("mgt udp: pri\n");
+        printf("mgt_udp_read: G_IO_PRI\n");
     }else if( condition == G_IO_NVAL ){ 
-        printf("mgt udp: nval\ndropping source\n");
-        //drop this source
+        printf("mgt_udp_read: G_IO_NVAL\ndropping source\n");
         return FALSE;
     }else{
         printf("mgt udp: unkown condition = %d\n",condition);
