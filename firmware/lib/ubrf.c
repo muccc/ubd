@@ -69,14 +69,16 @@ UBSTATUS ubrf_sendPacket(struct ubpacket_t * packet)
         packetdata[len++] = crc>>8;
         packetdata[len++] = crc&0xFF;
         packetlen = len;
+        return UB_OK;
     }
-    return UB_OK;
+    return UB_ERROR;
 }
 
 //1ms
 inline void ubrf_tick(void)
 {
     static uint8_t wait;
+    ubrf12_rxstart();
     switch(ubrf_state){
         case UBRF_IDLE:
         break;
@@ -109,6 +111,7 @@ inline void ubrf_tick(void)
     }
 }
 
+//can we accept a packet?
 UBSTATUS ubrf_free(void)
 {
     if( ubrf_state == UBRF_IDLE )

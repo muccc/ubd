@@ -199,7 +199,7 @@ void rs485master_querynodes(void)
         struct ubstat_t * flags = ubstat_getFlags(queryindex++);
         if( queryindex == UB_NODEMAX )
             queryindex = 0;
-        //TODO: maybe this uses to much cpu time
+        //TODO: maybe this uses too much cpu time
         if( flags->known && flags->counter == 0){
             if( rs485master_query(adr) == UB_OK ){
                 flags->counter = flags->interval;

@@ -49,6 +49,7 @@ volatile uint8_t rs485s_configured;
 volatile uint8_t rs485s_aquired;
 volatile uint8_t rs485s_packetdata[UB_PACKETLEN+2];    //+ 2 byte crc
 volatile uint8_t rs485s_incomming = 0;
+
 void rs485slave_init(void)
 {
     ubtimer_init();
@@ -58,6 +59,12 @@ void rs485slave_init(void)
     rs485s_rand = 0;
     rs485s_configured = 0;
     rs485s_aquired = 0;
+}
+
+void rs485slave_stop(void)
+{
+    rs485uart_disable();
+    rs485uart_edgeDisable();
 }
 
 inline void rs485slave_setConfigured(uint8_t configured)

@@ -16,19 +16,29 @@
 
 struct ub_config ubconfig;
 uint8_t ub_address = 0;
-
+uint8_t ub_interfaces;
 void ub_init(uint8_t ubmode, int8_t interfaces)
 {
     cli();
     if( interfaces == -1 ){
-        if( ubconfig.rs485slave || ubconfig.rs485master )
-            interfaces = UB_RS485;
-#ifdef UB_ENABLERF
-        if( ubconfig.rf )
-            interfaces |= UB_RF;
+        interfaces = ub_interfaces;
+/*
+#ifdef UB_ENABLERS485
+        sei();
+        serial_sendFrames("DCheck old rs485");
+        if( ubconfig.rs485slave || ubconfig.rs485master ){
+            serial_sendFrames("DOld rs485 enabled");
+            interfaces |= UB_RS485;
+        }
 #endif
+#ifdef UB_ENABLERF
+        if( ubconfig.rf ){
+            interfaces |= UB_RF;
+        }
+#endif
+*/
     }
-
+    ub_interfaces = interfaces;
     ubconfig.master = 0;
     ubconfig.slave = 0;   
     ubconfig.rs485slave = 0;
@@ -40,8 +50,10 @@ void ub_init(uint8_t ubmode, int8_t interfaces)
     random_init(ubadr_getID(),ubadr_getIDLen());
 #ifdef UB_ENABLEMASTER
     if( ubmode == UB_MASTER ){
+#ifdef UB_ENABLERS485
         if( interfaces & UB_RS485 )
             ubconfig.rs485master = 1;
+#endif
 #ifdef UB_ENABLERF
         if( interfaces & UB_RF )
             ubconfig.rf = 1;
@@ -61,8 +73,13 @@ void ub_init(uint8_t ubmode, int8_t interfaces)
 #endif
 #ifdef UB_ENABLESLAVE
     if ( ubmode == UB_SLAVE ){
-        if( interfaces & UB_RS485 )
+#ifdef UB_ENABLERS485
+        if( interfaces & UB_RS485 ){
             ubconfig.rs485slave = 1;
+            //sei();
+            //serial_sendFrames("Dslavers485 enabled");
+        }
+#endif
 #ifdef UB_ENABLERF
         if( interfaces & UB_RF )
             ubconfig.rf = 1;
@@ -75,9 +92,9 @@ void ub_init(uint8_t ubmode, int8_t interfaces)
         ubslavemgt_init();
         //wait until we get an address assigned to an interface
         ubconfig.configured = 0;
+        sei();
     }
 #endif
-    sei();
 }
 
 void ub_process(void)

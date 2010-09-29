@@ -29,6 +29,7 @@
 #define UB_ENABLEMASTER 1
 #define UB_ENABLESLAVE  1
 #define UB_ENABLERF     1
+#define UB_ENABLERS485  1
 
 #define UB_HOSTADR      1
 #define UB_MASTERADR    2
@@ -36,7 +37,7 @@
 #define UB_QUERYMAX     30
 #define UB_MAXMULTICAST 8
 
-#define UB_PACKET_TIMEOUT   2500
+#define UB_PACKET_TIMEOUT   100
 #define UB_PACKET_RETRIES   5
 
 typedef uint8_t ubaddress_t;

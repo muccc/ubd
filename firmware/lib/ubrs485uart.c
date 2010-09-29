@@ -378,7 +378,6 @@ inline uint16_t rs485uart_getc(void)
 }
 
 
-
 inline void rs485uart_enableReceive(void)
 {
     rs485uart_mode = RS485UART_MODE_RECEIVE;
@@ -432,9 +431,9 @@ ISR(RS485_ISR_EDGE, ISR_NOBLOCK)
 inline void rs485uart_edgeDisable(void)
 {
     PCMSK3 &= ~(1<<PCINT24);
-    //PORTA &= ~(1<<PA0);
     //there might be a flag allready set
     PCIFR |= (1<<PCIF3);
+    //PORTA &= ~(1<<PA0);
 }
 
 inline void rs485uart_edgeEnable(void)

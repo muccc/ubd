@@ -58,10 +58,10 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
             out->header.len = strlen((char*)out->data);
             ubpacket_send();
         break;
-        case 1:
+        case 'A':
             ubadr_addMulticast(data[1]);
         break;
-        case 2:
+        case 'R':
             ubadr_removeMulticast(data[1]);
         break;
         /*case 'g':
@@ -115,6 +115,7 @@ void ubslavemgt_tick(void)
                     p->header.len = 1;
                     ubpacket_send();
                 }
+                time = 15000;
            break;
         }
     }

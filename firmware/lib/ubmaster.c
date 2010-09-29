@@ -6,59 +6,88 @@
 #include "ubaddress.h"
 #include "ubrf.h"
 #include "leds.h"
+#include "ubstat.h"
 
 #include <avr/io.h>
 uint16_t            ubm_ticks = 0;
 
 void ubmaster_init(void)
 {
-    rs485master_init();
-
-    if( ubconfig.rf )
-        ubrf_init();
     serial_sendFrames("DInit Master");
+#ifdef UB_ENABLERS485
+    if( ubconfig.rs485master ){
+        //serial_sendFrames("DInit RS485");
+        rs485master_init();
+    }
+#endif
+#ifdef UB_ENABLERF
+    if( ubconfig.rf ){
+        //serial_sendFrames("DInit RF");
+        ubrf_init();
+    }
+#endif
 }
 
 //1ms
 inline void ubmaster_tick(void)
 {
     ubm_ticks++;
-    rs485master_tick();
+#ifdef UB_ENABLERS485
+    if( ubconfig.rs485master )
+        rs485master_tick();
+#endif
 #ifdef UB_ENABLERF
     if( ubconfig.rf )
-    ubrf_tick();
+        ubrf_tick();
 #endif
 }
 
 inline void ubmaster_process(void)
 {
-    rs485master_process();
+#ifdef UB_ENABLERS485
+    if( ubconfig.rs485master )
+        rs485master_process();
+#endif
 #ifdef UB_ENABLERF
     if( ubconfig.rf )
-    ubrf_process();
+        ubrf_process();
 #endif
 }
 
 inline UBSTATUS ubmaster_sendPacket(struct ubpacket_t * packet)
 {
-    //TDOD: use the correct interface
-    if( packet->header.dest == UB_ADDRESS_MASTER ){
+    uint8_t dest = packet->header.dest;
+    
+    if( dest == UB_ADDRESS_MASTER ){
         ubmaster_forward(packet);
         return UB_OK;
     }
 
-    if( ubadr_isBroadcast(packet->header.dest) ){
-        rs485master_sendPacket(packet);
+    if( ubadr_isBroadcast(dest) || ubadr_isMulticast(dest) ){
+#ifdef UB_ENABLERS485
+        if( ubconfig.rs485master )
+            rs485master_sendPacket(packet);
+#endif
+#ifdef UB_ENABLERF
+        if( ubconfig.rf )
+            ubrf_sendPacket(packet);
+#endif
         if( packet->header.src != UB_ADDRESS_MASTER ){
             ubmaster_forward(packet);
         }
-#ifdef UB_ENABLERF
-        ubrf_sendPacket(packet);
-#endif
+
     }else{
-        //TODO: decide on which interface the dest is reachable
-        return ubrf_sendPacket(packet);
-        return rs485master_sendPacket(packet);
+        //decide on which interface the dest is reachable
+        struct ubstat_t * flags = ubstat_getFlags(dest);
+#ifdef UB_ENABLERS485
+        if( ubconfig.rs485master && flags->rs485 )
+                return rs485master_sendPacket(packet);
+#endif
+#ifdef UB_ENABLERF
+        else if( flags->rf && ubconfig.rf )
+            return ubrf_sendPacket(packet);
+#endif
+        return UB_ERROR;
     }
 
     return UB_OK; 
@@ -69,9 +98,13 @@ inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
     uint8_t len = 0;
     //leds_rx();
     //are we free to send?
-    if(  ubpacket_free() && (rs485master_free() == UB_OK) ){
+    //make sure that a packet from the master can be sent on the interfaces
+    if( ubpacket_free() ){
+#ifdef UB_ENABLERS485
+    if( !ubconfig.rs485master || rs485master_free() == UB_OK ){
+#endif
 #ifdef UB_ENABLERF
-    if( ubrf_free() == UB_OK ){
+    if( !ubconfig.rf || ubrf_free() == UB_OK ){
 #endif
         if( (len = serial_readline((uint8_t *)packet,
                                     sizeof(struct ubpacket_t))) ){
@@ -82,27 +115,34 @@ inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
                 return UB_OK;
             }
             //FIXME: that was this for again?
+            //seems like every command with len=1
+            //just resets the master?
             serial_sendFrames("D1");
             ub_init(UB_MASTER, -1);
         }
 #ifdef UB_ENABLERF
     }
 #endif
-    }
-    PORTC ^= (1<<PC0);
-    //if( (len = rs485master_getPacket(packet)) )
-    //    return len;
-    //return 0;
-    uint8_t ret;
-    ret = rs485master_getPacket(packet);
-#ifdef UB_ENABLERF
-    //if( ret == UB_ERROR )
-    if( ubconfig.rf ){
-        ret = ubrf_getPacket(packet);
-        PORTC ^= (1<<PC1);
+#ifdef UB_ENABLERS485
     }
 #endif
-    return ret;
+    }
+
+#ifdef UB_ENABLERS485
+    if( ubconfig.rs485master && rs485master_getPacket(packet) == UB_OK ){
+        ubstat_getFlags(packet->header.src)->rs485 = 1;
+        ubstat_getFlags(packet->header.src)->rf = 0;
+        return UB_OK;
+    }
+#endif
+#ifdef UB_ENABLERF
+    else if( ubconfig.rf && ubrf_getPacket(packet) == UB_OK){
+        ubstat_getFlags(packet->header.src)->rf = 1;
+        ubstat_getFlags(packet->header.src)->rs485 = 0;
+        return UB_OK;
+    }
+#endif 
+    return UB_ERROR;
 }
 
 
@@ -123,3 +163,4 @@ void ubmaster_abort(void)
 {
     serial_sendFramec('A');
 }
+

@@ -258,6 +258,7 @@ void update_brightness(void)
 /*{{{*/ {
     uint8_t i;
 
+    //PORTC ^= (1<<PC1);
     /* iterate over the channels */
     for (i=0; i<PWM_CHANNELS; i++) {
         uint8_t old_brightness;
@@ -333,6 +334,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
     //static uint8_t timebase = 0;
    // PORTD |= (1<<PD3);
     /* decide if this interrupt is the beginning of a pwm cycle */
+    //PORTC ^= (1<<PC0);
     if (pwm.next_bitmask == 0) {
         /* output initial values */
 #if LED_PORT_INVERT
@@ -350,6 +352,7 @@ ISR(SIG_OUTPUT_COMPARE1A)
             /* spin until timer interrupt is near enough */
             while (pwm.slots[pwm.index].top > TCNT1);
 
+            //PORTC ^= (1<<PC2);
             /* output value */
 #if LED_PORT_INVERT
             LED_PORT |= pwm.slots[pwm.index].mask & 0x07;
@@ -372,11 +375,13 @@ ISR(SIG_OUTPUT_COMPARE1A)
     prepare_next_timeslot();
     //PORTD &= ~(1<<PD3);
 
+    //PORTC ^= (1<<PC0);
 } /*}}}*/
 
 /** timer1 output compare b interrupt */
 ISR(SIG_OUTPUT_COMPARE1B)
 /*{{{*/ {
+    //PORTC ^= (1<<PC1);
     /* normal interrupt, output pre-calculated bitmask */
     //PORTD |= (1<<PD4);
 #if LED_PORT_INVERT

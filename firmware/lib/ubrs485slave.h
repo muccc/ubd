@@ -10,6 +10,7 @@ inline void rs485slave_edge(void);
 inline void rs485slave_timer(void);
 inline void rs485slave_txend(void);
 void rs485slave_init(void);
+void rs485slave_stop(void);
 inline void rs485slave_tick(void);
 inline void rs485slave_process(void);
 UBSTATUS rs485slave_sendPacket(struct ubpacket_t * packet);

@@ -36,11 +36,13 @@ uint8_t ubmastermgt_process(struct ubpacket_t * p)
         return 0;
     switch(data[0]){
         case 'q':
+            //TODO: check if it's on the rf
             flags = ubstat_getFlags(data[1]);
-            rs485master_setQueryInterval(data[1], (data[2] << 8) + data[3]);
-            flags->known = 1;
-            //TODO: check if it'ss on the rf
-            flags->rs485 = 1;
+            if( flags->rs485 ){
+                rs485master_setQueryInterval(data[1], (data[2] << 8) + data[3]);
+                flags->known = 1;
+            }
+            //flags->rs485 = 1;
         break;
         case 'O':
             ubconfig.configured = 1;
