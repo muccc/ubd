@@ -26,11 +26,11 @@ gssize cmdparser_cmd(gchar* cmd, gsize n, gchar** result)
     g_scanner_input_text(scanner, cmd, n);
     g_scanner_get_next_token(scanner);
     *result = NULL;
-    if( SYMBOL(scanner,3) ){
+    if( SYMBOL(scanner,3) ){ //list
         g_scanner_get_next_token(scanner);
-        if( SYMBOL(scanner,7) )
+        if( SYMBOL(scanner,7) ) //nodes
             *result = cmd_list_nodes();
-        else if( SYMBOL(scanner,6) )
+        else if( SYMBOL(scanner,6) ) //groups
             *result = cmd_list_groups();
         /*g_scanner_get_next_token(scanner);
         printf("token=%d\n",scanner->token);

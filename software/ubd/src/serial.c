@@ -171,7 +171,7 @@ int serial_open (char * device)
     fd = open(device, O_RDWR|O_NOCTTY);// |O_SYNC);//|O_NONBLOCK);
     if( fd == -1 ){
 //        printf("Failed to open serial device %s\n", argv[1]);
-        return fd;
+        return -1;
     }
     struct termios tio;
     bzero(&tio, sizeof(tio));
@@ -184,6 +184,6 @@ int serial_open (char * device)
     tcsetattr (fd, TCSANOW, &tio);
     tcflush (fd, TCIFLUSH);
     tcflush (fd, TCOFLUSH); 
-    return fd;
+    return 0;
 }
 
