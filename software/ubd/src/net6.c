@@ -14,12 +14,10 @@
 #include "cmdparser.h"
 
 #include "nodes.h"
-//GSequence * entries;
 
-GInetAddress*  net_base;
-GSocket*  udpsocket;
-gint        net_prefix;
-char        net_interface[1024];
+GInetAddress    *net_base;
+GSocket         *udpsocket;
+gint            net_prefix;
 
 gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
 gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
@@ -170,17 +168,13 @@ gboolean mgt_udp_read(GSocket *socket, GIOCondition condition, gpointer user_dat
 
 gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
 {
-    //entries = g_sequence_new(g_free);
     GError * e = NULL;
+    interface = NULL;   //prevent warning
 
     net_prefix = prefix;
-
-    g_assert(strlen(interface) < sizeof(net_interface));
-    strcpy(net_interface, interface);
-
     net_base = g_inet_address_new_from_string(baseaddress);
     if( net_base == NULL ){
-        printf("could not parse base address");
+        fprintf(stderr, "net_init: Could not parse base address");
         return -1;
     }
     
@@ -192,18 +186,18 @@ gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
                         G_SOCKET_PROTOCOL_UDP,
                         &e);
     if( udpsocket == NULL && e != NULL ){
-        fprintf(stderr, "error while creating socket: %s\n", e->message);
+        fprintf(stderr, "net_init: Error while creating udp socket: %s\n", e->message);
         g_error_free(e);
+        e = NULL;
     }
-
     if( udpsocket == NULL ){
-        printf("g_socket_new failed\n");
+        fprintf(stderr, "net_init: g_socket_new failed\n");
         return -1;
     }
-
     if( g_socket_bind(udpsocket,sa,TRUE,&e) == FALSE ){
-        fprintf(stderr, "error while binding socket: %s\n", e->message);
+        fprintf(stderr, "net_init: Error while binding udp socket: %s\n", e->message);
         g_error_free(e);
+        e = NULL;
     }
 
     //set up data tcp listener

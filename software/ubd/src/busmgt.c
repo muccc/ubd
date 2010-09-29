@@ -143,7 +143,7 @@ void busmgt_setName(uint8_t adr, char *name)
 
 static void busmgt_sendReset(uint8_t adr)
 {
-    printf("Setting reset to %u\n", adr);
+    printf("Sending reset to %u\n", adr);
     //busmgt_sendCmd(adr,'r');
     struct ubpacket p;
     p.dest = adr;

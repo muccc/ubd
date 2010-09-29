@@ -26,34 +26,46 @@ int main (void)
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
     
-    //printf("Please specify an interface to use.\n");
-    //printf("Please specify a base address to use.\n");
 
     nodes_init();
     groups_init();
     xml_init("ubdconfig.xml");
-    g_assert( !net_init(config.interface, 
+    if( config.interface == NULL ){
+        fprintf(stderr, "Please specify an interface to use.\n");
+        return -1;
+    }
+
+    if( config.base == NULL ){
+        fprintf(stderr, "Please specify a base address to use.\n");
+        return -1;
+    }
+
+    if( net_init(config.interface, 
                         config.base,
-                        config.prefix) );
+                        config.prefix) ){
+        fprintf(stderr, "Failed to set up network.\n"
+                "Interface=%s\nBaseaddress=%s\n"
+                "Prefix=%d\nAborting.\n",
+                config.interface, config.base, config.prefix);
+        return -1;
+    }
+
     mgt_init();
 
-//    if( argc > 3 ){
-        if( serial_open(config.device) == -1 ){
-            printf("Failed to open serial device %s\n"
+    if( serial_open(config.device) ){
+        printf( "Failed to open serial device %s\n"
                 "Aborting.\n", config.device);
-            return 0;
-        }
-        //activate bridge
-        serial_switch();
-        packet_init();     
-        busmgt_init();
-//    }else{
-//        printf("Please specify a serial port to use.\n");
-//    }
+        return -1;
+    }
+
+    //activate bridge
+    serial_switch();
+    packet_init();     
+    busmgt_init();
     cmdparser_init();
+
     GMainLoop * mainloop = g_main_loop_new(NULL,TRUE);
     g_main_loop_run(mainloop);
-
     return 0;
 }
 
