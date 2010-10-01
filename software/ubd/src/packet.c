@@ -9,17 +9,18 @@
 #include "serial.h"
 #include "busmgt.h"
 
-static void packet_inpacket(struct ubpacket* p);
+//static void packet_inpacket(struct ubpacket* p);
+static gboolean packet_inpacket(gpointer);
 //GHashTable* packet_callbacks;
 
 GAsyncQueue * packet_status;
 GAsyncQueue * packet_out;
+GAsyncQueue * packet_in;
 
 gpointer packet_readerThread(gpointer data)
 {
     data = NULL;
     struct message in;
-    struct ubpacket p;
 
     printf("started packet_readerThread()\n");
     while( 1 ){
@@ -28,10 +29,12 @@ gpointer packet_readerThread(gpointer data)
             switch( in.data[0] ){
                 case PACKET_PACKET:
                     //printf("new packet\n");
-                    if( sizeof(p) >= in.len ){
-                        memcpy(&p,in.data+1,in.len-1);
-                        //g_async_queue_push(packet_queues.packet_in,p);
-                        packet_inpacket(&p);
+                    if( sizeof(struct ubpacket) >= in.len ){
+                        struct ubpacket *p = g_new(struct ubpacket,1);
+                        memcpy(p,in.data+1,in.len-1);
+                        g_async_queue_push(packet_in,p);
+                        //packet_inpacket(&p);
+                        g_idle_add(packet_inpacket,NULL);
                     }else{
                         //TODO: log this error
                     }
@@ -89,8 +92,9 @@ gpointer packet_writerThread(gpointer data)
     printf(key);
 }*/
 
-static void packet_inpacket(struct ubpacket* p)
+static gboolean packet_inpacket(gpointer data)
 {
+    data = NULL;
     /*void(*cb)(struct ubpacket*);
     gchar buf[2];
     buf[0] = p->data[0];
@@ -104,6 +108,10 @@ static void packet_inpacket(struct ubpacket* p)
     }else{
         printf("There is no handler registerd for packet type %s\n",buf);
     }*/
+    //if( g_async_queue_is_empty(packet_in) )
+    //    return FALSE;
+
+    struct ubpacket *p = g_async_queue_pop(packet_in);
     debug_packet("packet_inpacket",p);
 
     if( p->flags & UB_PACKET_MGT ){
@@ -112,6 +120,9 @@ static void packet_inpacket(struct ubpacket* p)
         //TODO: add packet forwarding
         printf("forwarding packet");
     }
+    g_free(p);
+    //return !g_async_queue_is_empty(packet_in);
+    return FALSE;
 }
 
 void packet_init(void)
@@ -120,6 +131,7 @@ void packet_init(void)
     //packet_queues.packet_in = g_async_queue_new(); 
     packet_status = g_async_queue_new();
     packet_out = g_async_queue_new();
+    packet_in = g_async_queue_new();
     //GThread * readerthread =
     g_thread_create(packet_readerThread,NULL,FALSE,NULL);
     g_thread_create(packet_writerThread,NULL,FALSE,NULL);

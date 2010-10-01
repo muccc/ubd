@@ -24,22 +24,17 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
         printf("tcp_listener_read: Received %d data bytes\n", len);
         if( buf->n == NULL ){
             printf("tcp_listener_read: node == NULL -> control data\n");
-            gchar* result = NULL;
-            len = cmdparser_cmd(buf->buf, len, &result);
-            if( len > 0 ){        //got something to reply
-                g_output_stream_write(buf->out, result, len, NULL, NULL);
-                g_free(result);
-            }if( len < 0 ){       //close this session
-                g_output_stream_write(buf->out, result, strlen(result), NULL, NULL);
-                g_free(result);
+            if( !cmdparser_cmdtostream(buf->buf, len, buf->out) ){
                 //not sure if this is a clean way to close the tcp session
                 g_object_unref(buf->connection);
                 return;
             }
         }else{
-           bus_sendToID(buf->n->id, (guchar*)buf->buf, len, FALSE);
-           //disable this callback and set n->lastconnection
-           //then wait for ACK/NACK/RESULT, send it and reenable this callback?
+            //gchar *msg = g_new(gchar,len);
+            //memcpy(msg, buf->buf, len);
+            //g_queue_push_tail(buf->n->tcpqueue, msg);
+            //g_idle_add(tcp_in,buf->n);
+            //bus_sendToID(buf->n->id, (guchar*)buf->buf, len, FALSE);
         }
 
         g_input_stream_read_async(in, buf->buf, MAX_BUF, G_PRIORITY_DEFAULT,
@@ -59,21 +54,21 @@ gboolean tcp_listener(GSocketService    *service,
     service = NULL;
     source_object = NULL;
 
-    struct nodebuffer *buf = g_new0(struct nodebuffer,1);
-    g_assert(buf != NULL);
+    struct nodebuffer *nodebuf = g_new0(struct nodebuffer,1);
+    g_assert(nodebuf != NULL);
 
-    buf->n = (struct node*)user_data;
-    buf->connection = connection; 
-    buf->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
-    buf->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
+    nodebuf->n = (struct node*)user_data;
+    nodebuf->connection = connection; 
+    nodebuf->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
+    nodebuf->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
 
-    if( user_data == NULL){
-        char *msg = "Welcome to the data interface\n>";
-        g_output_stream_write(buf->out, msg,strlen(msg),NULL,NULL);
+    if( user_data == NULL ){
+        char *msg = "Welcome to the control interface\n>";
+        g_output_stream_write(nodebuf->out, msg, strlen(msg), NULL, NULL);
     }
-    g_input_stream_read_async(buf->in, buf->buf, MAX_BUF,
+    g_input_stream_read_async(nodebuf->in, nodebuf->buf, sizeof(nodebuf->buf),
         G_PRIORITY_DEFAULT, NULL, (GAsyncReadyCallback)tcp_listener_read,
-        buf);
+        nodebuf);
     g_object_ref(connection);
     return FALSE;
 }

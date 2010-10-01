@@ -22,6 +22,7 @@ enum type{
 struct nodebuffer {
     struct node * n;
     char buf[MAX_BUF];
+    char cmd[MAX_BUF];
     GSocketConnection *connection;
     GOutputStream *out;
     GInputStream *in;

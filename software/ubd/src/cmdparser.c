@@ -1,4 +1,5 @@
 #include <glib.h>
+#include <gio/gio.h>
 #include <string.h>
 #include <stdio.h>
 #include "cmdparser.h"
@@ -52,5 +53,20 @@ gssize cmdparser_cmd(gchar* cmd, gsize n, gchar** result)
     }
     strcat(*result,">");
     return strlen(*result);
+}
+
+gboolean cmdparser_cmdtostream(gchar *cmd, gint len, GOutputStream *out)
+{
+    gchar* result = NULL;
+    len = cmdparser_cmd(cmd, len, &result);
+    if( len > 0 ){        //got something to reply
+        g_output_stream_write(out, result, len, NULL, NULL);
+    }else if( len < 0 ){       //close this session
+        g_output_stream_write(out, result, strlen(result), NULL, NULL);
+    }
+    g_free(result);
+    if( len < 0 )
+        return FALSE;       //drop this connection
+    return TRUE;
 }
 
