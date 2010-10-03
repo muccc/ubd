@@ -84,7 +84,7 @@ inline UBSTATUS ubmaster_sendPacket(struct ubpacket_t * packet)
                 return rs485master_sendPacket(packet);
 #endif
 #ifdef UB_ENABLERF
-        else if( flags->rf && ubconfig.rf )
+        if( flags->rf && ubconfig.rf )
             return ubrf_sendPacket(packet);
 #endif
         return UB_ERROR;
