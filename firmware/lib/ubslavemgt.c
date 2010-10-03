@@ -72,7 +72,7 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
             p->data[1] = 'N';
             settings_readid(p->data+2);
             p->len = strlen((char*)p->data);
-            packet_send();
+            ubpacket_send();
        break;*/
     }
     return 1;
