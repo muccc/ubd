@@ -25,6 +25,7 @@ struct ubpacket_t{
 #define UB_PACKET_DONE          (1<<2)
 #define UB_PACKET_NOACK         (1<<3)
 #define UB_PACKET_MGT           (1<<4)
+#define UB_PACKET_NOREPLY       (1<<4)  //when the node starts talking
 
 #define UB_PACKET_IDLE          0
 #define UB_PACKET_BUSY          1
