@@ -101,7 +101,7 @@ GInetAddress *interface_getConfiguredAddress(struct node *n)
                 ret = n->netadr;
             g_socket_close(s, NULL);
             g_object_unref(s);
-            s = NULL;
+            n->ubnetd = NULL;
         }
     }
     return ret;
