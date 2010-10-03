@@ -186,6 +186,9 @@ void ubrf12_setpower(unsigned char power, unsigned char mod)
 
 unsigned char ubrf12_rxstart(void)
 {
+    PORTC ^= (1<<PC0);
+    //if( RF12_status.New || RF12_status.Tx || RF12_status.Rx )
+    //    PORTC ^= (1<<PC2);
     if(RF12_status.New)
         return(1);			//buffer not yet empty
     if(RF12_status.Tx)
@@ -206,8 +209,9 @@ unsigned char ubrf12_rxfinish(unsigned char *data)
 {
     unsigned char i;
     //not finished yet or old buffer
-    if( RF12_status.Rx || !RF12_status.New )
-        return 0;
+    if( RF12_status.Rx || !RF12_status.New ){
+        return 255;
+    }
     RF12_status.New = 0;
     
     for(i=0; i<(RF12_Data[0]); i++)
@@ -266,6 +270,7 @@ unsigned char ubrf12_txfinished(void)
 #endif
         return 0;        //not yet finished
     }
+ 
     return 1;
 }
 

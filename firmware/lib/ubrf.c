@@ -40,9 +40,15 @@ UBSTATUS ubrf_getPacket(struct ubpacket_t * packet)
 {
     uint8_t *buf = (uint8_t*)packet;
     uint8_t len = ubrf12_rxfinish(buf);
-    if( len == 0){
+    //PORTC ^= (1<<PC1);
+    if( len == 255){
         return UB_ERROR;
     }
+    if( len < 3 ){
+        ubrf12_rxstart();
+        return UB_ERROR;
+    }
+    //PORTC ^= (1<<PC2);
     uint16_t crc = ubcrc16_data(buf, len-2);
     if( (crc>>8) == buf[len-2] &&
         (crc&0xFF) == buf[len-1] ){
