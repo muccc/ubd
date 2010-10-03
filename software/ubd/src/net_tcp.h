@@ -24,4 +24,5 @@ gboolean tcp_listener(GSocketService    *service,
                         GObject           *source_object,
                         gpointer           user_data);
 
+void tcp_init(void);
 #endif

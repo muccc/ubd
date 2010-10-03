@@ -128,6 +128,7 @@ gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
     }
     
     address6_init(net_base);
+    tcp_init();
 
     printf("net_init: Creating udp socket on port 2323\n");
     GSocketAddress * sa = g_inet_socket_address_new(net_base,2323);
