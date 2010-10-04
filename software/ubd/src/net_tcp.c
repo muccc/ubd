@@ -38,12 +38,27 @@ static void tcp_newcommand(struct node*n, gchar *buf, gint len,
     g_idle_add(tcp_cmd,NULL);
 }
 
+void tcp_reply(gpointer data)
+{
+    struct packetstream *ps = (struct packetstream *)data;
+    if( ps->type == PACKET_DONE ){
+        g_output_stream_write(ps->data, "A", 1, NULL, NULL);
+    }
+    if( ps->type == PACKET_ABORT ){
+        g_output_stream_write(ps->data, "N", 1, NULL, NULL);
+    }
+    if( ps->type == PACKET_PACKET ){
+        g_output_stream_write(ps->data, ps->p.data, ps->p.len, NULL, NULL);
+    }
+}
+
 static gboolean tcp_cmd(gpointer data)
 {
     data = NULL;
     struct tcpcmd *cmd = (struct tcpcmd *)g_queue_pop_head(gq_tcpcommands);
     g_assert(cmd != NULL);
     printf("tcp_cmd: new command for node %d\n", cmd->n->busadr);
+    bus_streamToID(cmd->n->id, (guchar*)cmd->cmd, cmd->len, tcp_reply, cmd->source);
     g_free(cmd);
     return FALSE;
 }

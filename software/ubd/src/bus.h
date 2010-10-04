@@ -10,5 +10,7 @@
 
 
 gint bus_sendToID(gchar *id, guchar *buf, gint len, gboolean reply);
+gint bus_streamToID(gchar *id, guchar *buf, gint len,
+                UBSTREAM_CALLBACK callback, gpointer data);
 
 #endif

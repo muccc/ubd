@@ -151,7 +151,8 @@ static void busmgt_sendReset(uint8_t adr)
     p.data[0] = 'r';
     //don't expect an ack for a reset
     p.flags = UB_PACKET_MGT | UB_PACKET_NOACK;
-    packet_outpacket(&p);}
+    packet_outpacket(&p);
+}
 
 static void busmgt_setQueryInterval(uint8_t adr, uint16_t interval)
 {

@@ -5,6 +5,7 @@
 #include <gio/gio.h>
 #include <stdio.h>
 #include <string.h>
+#include <packet.h>
 
 #define MAX_NODE    256
 #define MAX_ID      100
@@ -34,6 +35,12 @@ struct node{
     gboolean    netup;
     GSocket     *udp;
     GSocket     *mgtudp;
+
+    UBSTREAM_CALLBACK   currentcallback;
+    gpointer            currentdata;
+
+    UBSTREAM_CALLBACK   nextcallback;
+    gpointer            nextdata;
 };
 
 void nodes_init(void);

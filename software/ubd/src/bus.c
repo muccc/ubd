@@ -22,3 +22,20 @@ gint bus_sendToID(gchar *id, guchar *buf, gint len, gboolean reply)
     packet_outpacket(&packet);
     return 0;
 }
+
+gint bus_streamToID(gchar *id, guchar *buf, gint len,
+                UBSTREAM_CALLBACK callback, gpointer data)
+{
+    struct ubpacket packet;
+    struct node* n = nodes_getNodeById(id);
+    g_assert(n != NULL);
+
+    packet.dest = n->busadr;
+    packet.len = len;
+    packet.flags = 0;
+    memcpy(packet.data, buf, len);
+    packet_streamPacket(n, &packet, callback, data);
+
+    return 0;
+}
+
