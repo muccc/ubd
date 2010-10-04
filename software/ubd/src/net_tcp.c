@@ -21,12 +21,11 @@ struct tcpcmd{
     gchar           cmd[MAX_BUF];
     gint            len;
 };
-static void tcp_newcommand(struct node*n, gchar *buf, gint len,
+static void tcp_newdata(struct node*n, gchar *buf, gint len,
                             GOutputStream *source);
 static gboolean tcp_cmd(gpointer data);
 
-GQueue  *gq_tcpcommands;
-static void tcp_newcommand(struct node*n, gchar *buf, gint len,
+static void tcp_newdata(struct node*n, gchar *buf, gint len,
                             GOutputStream *source)
 {
     struct tcpcmd *cmd = g_new(struct tcpcmd,1);
@@ -34,8 +33,7 @@ static void tcp_newcommand(struct node*n, gchar *buf, gint len,
     cmd->len = len;
     cmd->n = n;
     cmd->source = source;
-    g_queue_push_tail(gq_tcpcommands, cmd);
-    g_idle_add(tcp_cmd,NULL);
+    g_idle_add(tcp_cmd,cmd);
 }
 
 void tcp_reply(gpointer data)
@@ -54,11 +52,11 @@ void tcp_reply(gpointer data)
 
 static gboolean tcp_cmd(gpointer data)
 {
-    data = NULL;
-    struct tcpcmd *cmd = (struct tcpcmd *)g_queue_pop_head(gq_tcpcommands);
+    struct tcpcmd *cmd = data;
     g_assert(cmd != NULL);
     printf("tcp_cmd: new command for node %d\n", cmd->n->busadr);
-    bus_streamToID(cmd->n->id, (guchar*)cmd->cmd, cmd->len, tcp_reply, cmd->source);
+    bus_streamToID(cmd->n->id, (guchar*)cmd->cmd, cmd->len,
+                                tcp_reply, cmd->source);
     g_free(cmd);
     return FALSE;
 }
@@ -78,7 +76,7 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
                 return;
             }
         }else{
-            tcp_newcommand(buf->n, buf->buf, len, buf->out);
+            tcp_newdata(buf->n, buf->buf, len, buf->out);
         }
         //We keep the stream open
         g_input_stream_read_async(in, buf->buf, MAX_BUF,
@@ -120,6 +118,5 @@ gboolean tcp_listener(GSocketService    *service,
 
 void tcp_init(void)
 {
-    gq_tcpcommands = g_queue_new();
 }
 
