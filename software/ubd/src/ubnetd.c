@@ -67,12 +67,25 @@ static gint ubnetd_removeAddress(GInetAddress *addr,
     return rc;
 }
 
+static gsize receive(GSocket *s, gchar *buf, gsize len)
+{
+    gsize in = 0;
+    while( in < len ){
+        gint rc = g_socket_receive
+                    (s,buf+in,len-in,NULL,NULL);
+        if( rc < 1 )
+            return 0;
+        in+=rc;
+    }
+    return in;
+}
+
 static gpointer connection_handler(gpointer p)
 {
     gchar buf[17];
     GSocket *s = (GSocket*)p;
-    //g_socket_send(s, "C", 1, NULL, NULL);
-    gint len = g_socket_receive(s,buf,17,NULL,NULL);
+    g_socket_set_blocking(s, TRUE);
+    gint len = receive(s, buf, 17);
     printf("ubnetd: connection_handler: Received %d bytes\n", len);
     if( len != 17 || (buf[0] != 'A' && buf[0] != 'D') ){
         g_socket_close(s, NULL);
