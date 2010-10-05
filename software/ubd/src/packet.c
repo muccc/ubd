@@ -16,8 +16,6 @@ static gboolean packet_inpacket(gpointer);
 
 GAsyncQueue * packet_status;
 GAsyncQueue * packet_out;
-GAsyncQueue * packet_in;
-
 struct node *nextnode;
 
 gpointer packet_readerThread(gpointer data)
@@ -153,12 +151,7 @@ static gboolean packet_inpacket(gpointer data)
     }else{
         printf("There is no handler registerd for packet type %s\n",buf);
     }*/
-    //if( g_async_queue_is_empty(packet_in) )
-    //    return FALSE;
 
-    //struct ubpacket *p = g_async_queue_pop(packet_in);
-    //UBSTREAM_CALLBACK callback = g_async_queue_pop(packet_in);
-    //data = g_async_queue_pop(packet_in);
     struct packetstream *ps = (struct packetstream *)data;
     if( ps->type == PACKET_PACKET )
         debug_packet("packet_inpacket",&ps->p);
@@ -172,18 +165,13 @@ static gboolean packet_inpacket(gpointer data)
         }
     }
     g_free(ps);
-    //return !g_async_queue_is_empty(packet_in);
     return FALSE;
 }
 
 void packet_init(void)
 {
-    //packet_callbacks = g_hash_table_new(g_str_hash, g_str_equal); 
-    //packet_queues.packet_in = g_async_queue_new(); 
     packet_status = g_async_queue_new();
     packet_out = g_async_queue_new();
-    packet_in = g_async_queue_new();
-    //GThread * readerthread =
     g_thread_create(packet_readerThread,NULL,FALSE,NULL);
     g_thread_create(packet_writerThread,NULL,FALSE,NULL);
 }
@@ -198,10 +186,6 @@ void packet_init(void)
 
     printf("Added callback for message type %c to 0x%x\n",key,(unsigned int)cb);
 }*/
-
-
-
-
 
 void packet_streamPacket(struct node * n, struct ubpacket *p,
                             UBSTREAM_CALLBACK callback, gpointer data)
