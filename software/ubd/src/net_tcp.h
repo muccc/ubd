@@ -17,6 +17,18 @@
 #include "cmdparser.h"
 #include "nodes.h"
 
+struct nodebuffer {
+    struct node * n;
+    char buf[MAX_BUF];
+    char cmd[MAX_BUF];
+    gint cmdlen;
+    gint state;
+    gint cmdbinlen;
+    GSocketConnection *connection;
+    GOutputStream *out;
+    GInputStream *in;
+};
+
 void tcp_listener_read(GInputStream *in, GAsyncResult *res,
                             struct nodebuffer *buf);
 gboolean tcp_listener(GSocketService    *service,

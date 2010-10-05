@@ -19,15 +19,6 @@ enum type{
     TYPE_NODE
 };
 #define MAX_BUF     100
-struct nodebuffer {
-    struct node * n;
-    char buf[MAX_BUF];
-    char cmd[MAX_BUF];
-    GSocketConnection *connection;
-    GOutputStream *out;
-    GInputStream *in;
-};
-
 
 void mgt_init(void);
 
