@@ -21,7 +21,6 @@ struct tcpcmd{
 };
 static void tcp_queueNewCommand(struct node *n, gchar *buf, gint len,
                             GOutputStream *source);
-static gboolean tcp_cmd(gpointer data);
 static void tcp_reply(gpointer data);
 
 void tcp_init(void)
@@ -32,22 +31,15 @@ static void tcp_queueNewCommand(struct node *n, gchar *buf, gint len,
                             GOutputStream *source)
 {
     struct tcpcmd *cmd = g_new(struct tcpcmd,1);
+    g_assert(cmd != NULL);
     memcpy(cmd->cmd, buf, len);
     cmd->len = len;
     cmd->n = n;
     cmd->source = source;
-    g_idle_add(tcp_cmd,cmd);
-}
-
-static gboolean tcp_cmd(gpointer data)
-{
-    struct tcpcmd *cmd = data;
-    g_assert(cmd != NULL);
     printf("tcp_cmd: new command for node %d\n", cmd->n->busadr);
     bus_streamToID(cmd->n->id, (guchar*)cmd->cmd, cmd->len,
                                 tcp_reply, cmd->source);
     g_free(cmd);
-    return FALSE;
 }
 
 static void tcp_reply(gpointer data)
