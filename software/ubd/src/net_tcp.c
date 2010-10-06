@@ -13,33 +13,18 @@
 #include "cmdparser.h"
 #include "nodes.h"
 
-struct tcpcmd{
-    GOutputStream   *source;
-    struct node     *n;
-    gchar           cmd[MAX_BUF];
-    gint            len;
-};
-static void tcp_queueNewCommand(struct node *n, gchar *buf, gint len,
-                            GOutputStream *source);
+static void tcp_queueNewCommand(struct nodebuffer *nb);
 static void tcp_reply(gpointer data);
 
 void tcp_init(void)
 {
 }
 
-static void tcp_queueNewCommand(struct node *n, gchar *buf, gint len,
-                            GOutputStream *source)
+static void tcp_queueNewCommand(struct nodebuffer *nb)
 {
-    struct tcpcmd *cmd = g_new(struct tcpcmd,1);
-    g_assert(cmd != NULL);
-    memcpy(cmd->cmd, buf, len);
-    cmd->len = len;
-    cmd->n = n;
-    cmd->source = source;
-    printf("tcp_cmd: new command for node %d\n", cmd->n->busadr);
-    bus_streamToID(cmd->n->id, (guchar*)cmd->cmd, cmd->len,
-                                tcp_reply, cmd->source);
-    g_free(cmd);
+    printf("tcp_cmd: new command for node %d\n", nb->n->busadr);
+    bus_streamToID(nb->n->id, (guchar*)nb->cmd, nb->cmdlen,
+                                tcp_reply, nb->out);
 }
 
 static void tcp_reply(gpointer data)
@@ -75,7 +60,7 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
         break;
         case 1:
             if( data == '\n' || data == '\r' ){
-                tcp_queueNewCommand(nb->n, nb->cmd, nb->cmdlen, nb->out);
+                tcp_queueNewCommand(nb);
                 nb->state = 0;
             }else if( data < 0x20 ){
                 nb->state = 4;
@@ -97,7 +82,7 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
         case 3:
             nb->cmd[nb->cmdlen++] = data;
             if( --nb->cmdbinlen == 0 ){
-                tcp_queueNewCommand(nb->n, nb->cmd, nb->cmdlen, nb->out);
+                tcp_queueNewCommand(nb);
                 nb->state = 0;
             }
         break;
