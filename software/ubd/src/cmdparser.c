@@ -55,6 +55,7 @@ gssize cmdparser_cmd(gchar* cmd, gsize n, gchar** result)
     strcat(*result,">");
     return strlen(*result);
 }
+
 gboolean cmdparser_parse(struct nodebuffer *nb, gchar data)
 {
     switch(nb->state){

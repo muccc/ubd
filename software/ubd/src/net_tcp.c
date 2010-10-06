@@ -125,7 +125,8 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
             printf("tcp_listener_read: node == NULL -> control data\n");
             for( i=0; i<len; i++ ){
                 if( !cmdparser_parse(nb, nb->buf[i]) ){
-                //not sure if this is a clean way to close the tcp session
+                    //not sure if this is a clean way to close
+                    //the tcp session
                     g_object_unref(nb->connection);
                     g_free(nb);
                     return;
