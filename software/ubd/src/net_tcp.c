@@ -66,18 +66,6 @@ static void tcp_reply(gpointer data)
     }
 }
 
-static gint searchbuffer(gchar *buf, gint size, gchar *s)
-{
-    int len = strlen(s);
-    int i;
-    for(i=0; i<size-len+1; i++){
-        if( memcmp(buf+i,s,len) == 0 ){
-            return i;
-        }
-    }
-    return -1;
-}
-
 static void tcp_parse(struct nodebuffer *nb, guchar data)
 {
     printf("state=%d\n",nb->state);

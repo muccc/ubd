@@ -10,7 +10,7 @@
 #include "ubpacket.h"
 #include "serial.h"
 #include "debug.h"
-#include "net6.h"
+#include "net.h"
 #include "packet.h"
 #include "ubpacket.h"
 #include "busmgt.h"

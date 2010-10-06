@@ -4,7 +4,7 @@
 
 #include "address6.h"
 #include "address6db.h"
-#include "net6.h"
+#include "net.h"
 #include "interface.h"
 #include "mgt.h"
 

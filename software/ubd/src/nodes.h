@@ -30,11 +30,10 @@ struct node{
     gint        busadr;
     gboolean    busup;
 
-    GInetAddress *netadr;
-    GSocket     *ubnetd;
-    gboolean    netup;
-    GSocket     *udp;
-    GSocket     *mgtudp;
+    GInetAddress    *netadr;
+    GSocket         *ubnetd;
+    gboolean        netup;
+    GSocket         *udp;
 
     UBSTREAM_CALLBACK   currentcallback;
     gpointer            currentdata;
