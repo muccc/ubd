@@ -14,7 +14,7 @@
 #include "address6.h"
 #include "interface.h"
 #include "bus.h"
-#include "cmdparser.h"
+//#include "cmdparser.h"
 #include "nodes.h"
 
 struct nodebuffer {

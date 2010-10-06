@@ -2,7 +2,8 @@
 #define _CMDPARSER_H_
 #include <glib.h>
 #include <gio/gio.h>
+#include "net_tcp.h"
 void cmdparser_init(void);
 gssize cmdparser_cmd(gchar* cmd, gsize n, gchar** result);
-gboolean cmdparser_cmdtostream(gchar *cmd, gint len, GOutputStream *out);
+gboolean cmdparser_parse(struct nodebuffer *nb, gchar data);
 #endif

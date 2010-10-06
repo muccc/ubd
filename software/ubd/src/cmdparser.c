@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "cmdparser.h"
 #include "cmd.h"
+#include "net_tcp.h"
 
 GScanner* scanner;
 #define SYMBOL(s,x) (s->token ==  G_TOKEN_SYMBOL && s->value.v_int == x)
@@ -54,19 +55,46 @@ gssize cmdparser_cmd(gchar* cmd, gsize n, gchar** result)
     strcat(*result,">");
     return strlen(*result);
 }
-
-gboolean cmdparser_cmdtostream(gchar *cmd, gint len, GOutputStream *out)
+gboolean cmdparser_parse(struct nodebuffer *nb, gchar data)
 {
-    gchar* result = NULL;
-    len = cmdparser_cmd(cmd, len, &result);
-    if( len > 0 ){        //got something to reply
-        g_output_stream_write(out, result, len, NULL, NULL);
-    }else if( len < 0 ){       //close this session
-        g_output_stream_write(out, result, strlen(result), NULL, NULL);
+    switch(nb->state){
+        case 0:
+            if( data >= 0x20 ){
+                nb->state=1;
+                nb->cmdlen=0;
+             }else{
+                break;
+             }
+        //break;
+        case 1:
+            if( data == '\n' || data == '\r' ){
+                nb->state = 0;
+                gchar* result = NULL;
+                gint len = cmdparser_cmd(nb->cmd, nb->cmdlen, &result);
+                if( len > 0 ){        //got something to reply
+                    g_output_stream_write(nb->out, result, len,
+                                                            NULL, NULL);
+                }else if( len < 0 ){       //close this session
+                    g_output_stream_write(nb->out, result, strlen(result),
+                                                            NULL, NULL);
+                }
+                g_free(result);
+                if( len < 0 )
+                    return FALSE;       //drop this connection
+            }else if( data < 0x20 ){
+                nb->state = 2;
+            }else{
+                nb->cmd[nb->cmdlen++] = data;
+                if( nb->cmdlen == sizeof(nb->cmd) ){
+                    nb->state = 2;
+                }
+            }
+        break;
+        case 2:
+            if( data == '\n' || data == '\r' )
+                nb->state = 0;
+        break;
     }
-    g_free(result);
-    if( len < 0 )
-        return FALSE;       //drop this connection
     return TRUE;
 }
 

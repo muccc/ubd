@@ -9,8 +9,6 @@
 #include "debug.h"
 #include "busmgt.h"
 #include "mgt.h"
-#include "address6.h"
-#include "interface.h"
 #include "bus.h"
 #include "cmdparser.h"
 #include "nodes.h"
@@ -68,8 +66,6 @@ static void tcp_reply(gpointer data)
 
 static void tcp_parse(struct nodebuffer *nb, guchar data)
 {
-    printf("state=%d\n",nb->state);
-    printf("data=%X\n",data);
     switch(nb->state){
         case 0:
             if( data == 'C' ){
@@ -122,18 +118,20 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
 {
     GError * e = NULL;
     gssize len = g_input_stream_read_finish(in, res, &e);
+    int i;
     if( len > 0 ){
         printf("tcp_listener_read: Received %d data bytes\n", len);
         if( nb->n == NULL ){
             printf("tcp_listener_read: node == NULL -> control data\n");
-            if( !cmdparser_cmdtostream(nb->buf, len, nb->out) ){
+            for( i=0; i<len; i++ ){
+                if( !cmdparser_parse(nb, nb->buf[i]) ){
                 //not sure if this is a clean way to close the tcp session
-                g_object_unref(nb->connection);
-                g_free(nb);
-                return;
-            }
+                    g_object_unref(nb->connection);
+                    g_free(nb);
+                    return;
+                }
+            }   
         }else{
-            int i;
             for( i=0; i<len; i++ ){
                 tcp_parse(nb, nb->buf[i]);
             }
@@ -147,7 +145,7 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
         g_object_unref(nb->connection);
         g_free(nb);
     }else{
-        printf("tcp_listener_read received an error\n");
+        printf("tcp_listener_read: received an error\n");
     }
 }
 
