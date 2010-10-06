@@ -12,69 +12,11 @@
 #include "cmdparser.h"
 #include "nodes.h"
 #include "net_tcp.h"
+#include "net_udp.h"
 
 GInetAddress    *net_base;
 GSocket         *udpsocket;
 gint            net_prefix;
-
-static gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
-static gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data);
-
-static gboolean udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
-{
-    uint8_t buf[100];
-    gssize len;
-    GSocketAddress * src;
-    condition = 0;
-    user_data = NULL;
-    len = g_socket_receive_from(socket,&src,(gchar*)buf,sizeof(buf),NULL,NULL);
-
-    if( len > 0 ){
-        printf("udp: Received:");debug_hexdump(buf,len);printf("\n");
-        //TODO: well what shall we do with this data?
-        //g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
-    }else{
-        printf("udp: Error while receiving msg\n");
-    }
-    return TRUE;
-}
-
-static gboolean data_udp_read(GSocket *socket, GIOCondition condition, gpointer user_data)
-{
-    uint8_t buf[100];
-    GSocketAddress * src;
-    struct node *n = user_data;
-    gssize len;
-    if( condition == G_IO_IN ){
-        len = g_socket_receive_from(socket,&src,(gchar*)buf,100,NULL,NULL);
-        if( len > 0){
-            printf("data_udp_read: Received:");debug_hexdump(buf,len);printf("\n");
-            bus_sendToID(n->id, buf, len, FALSE);
-            //maybe check if the message really gets sent?
-            //g_socket_send_to(socket,src,"ACK",3,NULL,NULL);
-        }else{
-            printf("data_udp_read: Error while receiving: len=%d\n",len);
-        }
-    }else{
-        printf("data_udp_read: Received ");
-        if( condition == G_IO_ERR ){
-            printf("G_IO_ERR\n");
-        }else if( condition == G_IO_HUP ){ 
-            printf("G_IO_HUP\n");
-        }else if( condition == G_IO_OUT ){ 
-            printf("G_IO_OUT\n");
-        }else if( condition == G_IO_PRI ){ 
-            printf("G_IO_PRI\n");
-        }else if( condition == G_IO_NVAL ){ 
-            printf("G_IO_NVAL\ndropping source\n");
-            return FALSE;
-        }else{
-            printf("unkown condition = %d\n",condition);
-        }
-    }
-    return TRUE;
-}
-
 
 gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
 {
@@ -163,7 +105,7 @@ void net_createSockets(struct node *n)
 
     source = g_socket_create_source(n->udp, G_IO_IN, NULL);
     g_assert(source != NULL);
-    g_source_set_callback(source, (GSourceFunc)data_udp_read, n, NULL);
+    g_source_set_callback(source, (GSourceFunc)udp_read, n, NULL);
     g_source_attach(source, g_main_context_default());
 
     printf("net_createSockets: Creating tcp socket on port 2323\n");

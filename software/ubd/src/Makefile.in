@@ -50,7 +50,7 @@ am_ubd_OBJECTS = main.$(OBJEXT) serial.$(OBJEXT) debug.$(OBJEXT) \
 	address6db.$(OBJEXT) interface.$(OBJEXT) address6.$(OBJEXT) \
 	bus.$(OBJEXT) mgt.$(OBJEXT) cmd.$(OBJEXT) cmdparser.$(OBJEXT) \
 	xmlconfig.$(OBJEXT) groups.$(OBJEXT) nodes.$(OBJEXT) \
-	config.$(OBJEXT) net_tcp.$(OBJEXT)
+	config.$(OBJEXT) net_tcp.$(OBJEXT) net_udp.$(OBJEXT)
 ubd_OBJECTS = $(am_ubd_OBJECTS)
 ubd_LDADD = $(LDADD)
 am_ubnetd_OBJECTS = ubnetd.$(OBJEXT) interface.$(OBJEXT)
@@ -157,7 +157,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ubd_SOURCES = main.c serial.c debug.c net.c packet.c busmgt.c ubpacket.h serial.h debug.h net.h packet.h busmgt.h ubconfig.h message.h address6db.c address6db.h interface.c interface.h address6.h address6.c bus.c bus.h mgt.h mgt.c cmd.c cmd.h cmdparser.c cmdparser.h xmlconfig.c xmlconfig.h groups.c groups.h nodes.h nodes.c config.h config.c net_tcp.c net_tcp.h
+ubd_SOURCES = main.c serial.c debug.c net.c packet.c busmgt.c ubpacket.h serial.h debug.h net.h packet.h busmgt.h ubconfig.h message.h address6db.c address6db.h interface.c interface.h address6.h address6.c bus.c bus.h mgt.h mgt.c cmd.c cmd.h cmdparser.c cmdparser.h xmlconfig.c xmlconfig.h groups.c groups.h nodes.h nodes.c config.h config.c net_tcp.c net_tcp.h net_udp.c net_udp.h
 ubnetd_SOURCES = ubnetd.c ubnetd.h interface.c interface.h
 all: all-am
 
@@ -257,6 +257,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mgt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net_tcp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net_udp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nodes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/packet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serial.Po@am__quote@
