@@ -90,6 +90,7 @@ void net_createSockets(struct node *n)
     //set up data udp socket
     printf("net_createSockets: Creating udp socket on port 2323\n");
     GSocketAddress * sa = g_inet_socket_address_new(addr,2323);
+
     n->udp = g_socket_new(G_SOCKET_FAMILY_IPV6,
                         G_SOCKET_TYPE_DATAGRAM,
                         G_SOCKET_PROTOCOL_UDP,
@@ -108,8 +109,9 @@ void net_createSockets(struct node *n)
     g_source_set_callback(source, (GSourceFunc)udp_read, n, NULL);
     g_source_attach(source, g_main_context_default());
 
-    printf("net_createSockets: Creating tcp socket on port 2323\n");
+    printf("net_createSockets: Creating tcp data socket listener on port 2323\n");
     GSocketService *gss = g_socket_service_new();
+    n->dataservice = gss;
     if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
         G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &err)
             == FALSE ){
@@ -119,7 +121,21 @@ void net_createSockets(struct node *n)
     }
     g_signal_connect(gss, "incoming", G_CALLBACK(tcp_listener), n);
     g_socket_service_start(gss);
- 
+
+    printf("net_createSockets: Creating tcp management socket listener on port 2324\n");
+    GSocketAddress * samgt = g_inet_socket_address_new(addr,2324);
+    gss = g_socket_service_new();
+    n->mgtservice = gss;
+    if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), samgt,
+        G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &err)
+            == FALSE ){
+        fprintf(stderr, "net_createSockets: Error while creating socket listener: %s\n", err->message);
+        g_error_free(err);
+        return;
+    }
+    g_signal_connect(gss, "incoming", G_CALLBACK(tcp_listener), n);
+    g_socket_service_start(gss);
+
     printf("net_createSockets: activating network for this node\n");
     n->netup = TRUE;
     //FIXME: unref address results in segfault?
@@ -142,6 +158,4 @@ void net_removeSockets(struct node *n)
     }
     g_object_unref(n->udp);
     //FIXME: unref GSource also
-
 }
-

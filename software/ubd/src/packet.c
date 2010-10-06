@@ -159,6 +159,7 @@ static gboolean packet_inpacket(gpointer data)
     if( ps->type == PACKET_PACKET && ps->p.flags & UB_PACKET_MGT ){
         busmgt_inpacket(&ps->p);
     }else{
+        //TODO: Check if the packet was sent unsolicited
         if( ps->callback != NULL ){
             printf("forwarding packet");
             ps->callback(ps);

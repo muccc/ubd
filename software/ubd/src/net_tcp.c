@@ -24,6 +24,10 @@ static void tcp_queueNewCommand(struct node *n, gchar *buf, gint len,
 static gboolean tcp_cmd(gpointer data);
 static void tcp_reply(gpointer data);
 
+void tcp_init(void)
+{
+}
+
 static void tcp_queueNewCommand(struct node *n, gchar *buf, gint len,
                             GOutputStream *source)
 {
@@ -110,7 +114,6 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
                 nb->state = 0;
         break;
     }
-    printf("newstate=%d\n",nb->state);
 }
 
 void tcp_listener_read(GInputStream *in, GAsyncResult *res,
@@ -137,7 +140,7 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
                 tcp_parse(nb, nb->buf[i]);
             }
         }
-        //We keep the stream open
+        //keep the stream open
         g_input_stream_read_async(in, nb->buf, MAX_BUF,
             G_PRIORITY_DEFAULT, NULL,
             (GAsyncReadyCallback) tcp_listener_read, nb); 
@@ -154,7 +157,6 @@ gboolean tcp_listener(GSocketService    *service,
                         GSocketConnection *connection,
                         GObject           *source_object,
                         gpointer           user_data){
-    service = NULL;
     source_object = NULL;
 
     struct nodebuffer *nodebuf = g_new0(struct nodebuffer,1);
@@ -165,19 +167,21 @@ gboolean tcp_listener(GSocketService    *service,
     nodebuf->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
     nodebuf->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
     nodebuf->cmdlen = 0;
-
-    if( user_data == NULL ){
-        char *msg = "Welcome to the control interface\n>";
-        g_output_stream_write(nodebuf->out, msg, strlen(msg), NULL, NULL);
+    if( nodebuf->n == NULL || service == nodebuf->n->dataservice ){
+        if( nodebuf->n == NULL ){
+            char *msg = "Welcome to the control interface\n>";
+            g_output_stream_write(nodebuf->out, msg, strlen(msg),
+                        NULL, NULL);
+        }
+        //nodebuf->tcpcallback = 
+        g_input_stream_read_async(nodebuf->in, nodebuf->buf,
+                        sizeof(nodebuf->buf), G_PRIORITY_DEFAULT, NULL,
+                        (GAsyncReadyCallback)tcp_listener_read, nodebuf);
+        g_object_ref(connection);
+    }else if( service == nodebuf->n->mgtservice ){
+        
     }
-    g_input_stream_read_async(nodebuf->in, nodebuf->buf, sizeof(nodebuf->buf),
-        G_PRIORITY_DEFAULT, NULL, (GAsyncReadyCallback)tcp_listener_read,
-        nodebuf);
-    g_object_ref(connection);
     return FALSE;
 }
 
-void tcp_init(void)
-{
-}
 

@@ -40,6 +40,10 @@ struct node{
 
     UBSTREAM_CALLBACK   nextcallback;
     gpointer            nextdata;
+
+    GSocketService * dataservice;
+    GSocketService * mgtservice;
+
 };
 
 void nodes_init(void);
