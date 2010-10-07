@@ -156,15 +156,24 @@ static gboolean packet_inpacket(gpointer data)
     if( ps->type == PACKET_PACKET )
         debug_packet("packet_inpacket",&ps->p);
 
-    if( ps->type == PACKET_PACKET && ps->p.flags & UB_PACKET_MGT ){
+    //TODO: Check if the packet was sent unsolicited
+    if( ps->callback != NULL &&
+                    (ps->type != PACKET_PACKET ||
+                            !(ps->p.flags & UB_PACKET_UNSOLICITED)) ){
+        printf("forwarding packet\n");
+        ps->callback(ps);
+    }else if( ps->type == PACKET_PACKET && ps->p.flags & UB_PACKET_MGT ){
+        printf("for bus mgt\n");
         busmgt_inpacket(&ps->p);
+    }else if( ps->type == PACKET_PACKET ){
+        printf("unsolicited data. not yet processed.\n");
+    }else if( ps->type != PACKET_PACKET ){
+        printf("unsolicited status information. not processed.\n");
     }else{
-        //TODO: Check if the packet was sent unsolicited
-        if( ps->callback != NULL ){
-            printf("forwarding packet");
-            ps->callback(ps);
-        }
+        printf("should not happen\n");
+        while(1);
     }
+
     g_free(ps);
     return FALSE;
 }

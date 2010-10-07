@@ -20,6 +20,7 @@ struct ubpacket{
 #define UB_PACKET_DONE          (1<<2)
 #define UB_PACKET_NOACK         (1<<3)
 #define UB_PACKET_MGT           (1<<4)
+#define UB_PACKET_UNSOLICITED   (1<<5)  //when the node starts talking
 
 #define UB_ADDRESS_MULTICAST     (1<<(sizeof(address_t)*8-1)) //first bit is one
 #define UB_ADDRESS_BROADCAST     ((1<<sizeof(address_t)*8)-1)  //all ones

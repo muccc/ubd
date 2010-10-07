@@ -13,17 +13,26 @@
 #include "cmdparser.h"
 #include "nodes.h"
 
-static void tcp_queueNewCommand(struct nodebuffer *nb);
 static void tcp_reply(gpointer data);
-
+static void tcp_queueNewCommand(gpointer data);
+static void tcp_queueNewMgt(gpointer data);
 void tcp_init(void)
 {
 }
 
-static void tcp_queueNewCommand(struct nodebuffer *nb)
+static void tcp_queueNewCommand(gpointer data)
 {
+    struct nodebuffer *nb = data;
     printf("tcp_cmd: new command for node %d\n", nb->n->busadr);
     bus_streamToID(nb->n->id, (guchar*)nb->cmd, nb->cmdlen,
+                                tcp_reply, nb->out);
+}
+
+static void tcp_queueNewMgt(gpointer data)
+{
+    struct nodebuffer *nb = data;
+    printf("tcp_cmd: new mgt for node %d\n", nb->n->busadr);
+    busmgt_streamData(nb->n, (guchar*)nb->cmd, nb->cmdlen,
                                 tcp_reply, nb->out);
 }
 
@@ -35,18 +44,22 @@ static void tcp_reply(gpointer data)
     //in this case the outputstream is invalid
     //and a error message is displayed
     if( ps->type == PACKET_DONE ){
+        printf("tcp_reply: PACKET_DONE\n");
         g_output_stream_write(ps->data, "A", 1, NULL, NULL);
     }
     if( ps->type == PACKET_ABORT ){
+        printf("tcp_reply: PACKET_ABORT\n");
         g_output_stream_write(ps->data, "N", 1, NULL, NULL);
     }
     if( ps->type == PACKET_PACKET ){
+        printf("tcp_reply: PACKET_PACKET len=%d\n", ps->p.len);
         g_output_stream_write(ps->data, ps->p.data, ps->p.len, NULL, NULL);
     }
 }
 
 static void tcp_parse(struct nodebuffer *nb, guchar data)
 {
+    printf("state = %d data = %d\n",nb->state,data);
     switch(nb->state){
         case 0:
             if( data == 'C' ){
@@ -60,7 +73,7 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
         break;
         case 1:
             if( data == '\n' || data == '\r' ){
-                tcp_queueNewCommand(nb);
+                nb->callback(nb);
                 nb->state = 0;
             }else if( data < 0x20 ){
                 nb->state = 4;
@@ -82,7 +95,7 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
         case 3:
             nb->cmd[nb->cmdlen++] = data;
             if( --nb->cmdbinlen == 0 ){
-                tcp_queueNewCommand(nb);
+                nb->callback(nb);
                 nb->state = 0;
             }
         break;
@@ -144,20 +157,22 @@ gboolean tcp_listener(GSocketService    *service,
     nodebuf->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
     nodebuf->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
     nodebuf->cmdlen = 0;
-    if( nodebuf->n == NULL || service == nodebuf->n->dataservice ){
+    if( nodebuf->n == NULL ){
         if( nodebuf->n == NULL ){
             char *msg = "Welcome to the control interface\n>";
             g_output_stream_write(nodebuf->out, msg, strlen(msg),
                         NULL, NULL);
         }
-        //nodebuf->tcpcallback = 
-        g_input_stream_read_async(nodebuf->in, nodebuf->buf,
+    }else if( service == nodebuf->n->dataservice ){
+        nodebuf->callback = tcp_queueNewCommand; 
+    }else if( service == nodebuf->n->mgtservice ){
+        nodebuf->callback = tcp_queueNewMgt;
+    }
+    g_input_stream_read_async(nodebuf->in, nodebuf->buf,
                         sizeof(nodebuf->buf), G_PRIORITY_DEFAULT, NULL,
                         (GAsyncReadyCallback)tcp_listener_read, nodebuf);
-        g_object_ref(connection);
-    }else if( service == nodebuf->n->mgtservice ){
-        
-    }
+    g_object_ref(connection);
+
     return FALSE;
 }
 

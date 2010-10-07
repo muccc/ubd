@@ -37,7 +37,9 @@ void debug_packet(gchar *reporter, struct ubpacket* p)
         strcat(flags, "SEQ | ");
     if( p->flags & UB_PACKET_ACK )
         strcat(flags, "ACK | ");
-    
+    if( p->flags & UB_PACKET_UNSOLICITED )
+        strcat(flags, "UNSOLICITED | ");
+   
     g_get_current_time(&t);
     printf("%ld.%04ld ",t.tv_sec,t.tv_usec);
     printf("%s: packet from %u to %u flags: %x: %s len %u: ",  

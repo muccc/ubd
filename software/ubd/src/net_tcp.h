@@ -17,6 +17,7 @@
 //#include "cmdparser.h"
 #include "nodes.h"
 
+typedef void (*UBNODEBUF_CALLBACK)(gpointer);
 struct nodebuffer {
     struct node * n;
     char buf[MAX_BUF];
@@ -27,6 +28,7 @@ struct nodebuffer {
     GSocketConnection *connection;
     GOutputStream *out;
     GInputStream *in;
+    UBNODEBUF_CALLBACK callback;
 };
 
 void tcp_listener_read(GInputStream *in, GAsyncResult *res,

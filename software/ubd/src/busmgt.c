@@ -233,3 +233,19 @@ void busmgt_sendData(uint8_t adr, uint8_t *data, uint8_t len)
     packet_outpacket(&p);
 }
 
+void busmgt_streamData(struct node *n, guchar *buf, gint len,
+                UBSTREAM_CALLBACK callback, gpointer data)
+{
+    struct ubpacket packet;
+    packet.dest = n->busadr;
+    packet.len = len;
+    if( packet.len > sizeof(packet.data)){
+        printf("busmgt_sendCmdData(): packet to big!\n");
+        //TODO: log this error
+        //TODO: fragment packet?
+        return;
+    }
+    packet.flags = UB_PACKET_MGT;
+    memcpy(packet.data, buf, len);
+    packet_streamPacket(n, &packet, callback, data);
+}
