@@ -89,7 +89,7 @@ void ubslavemgt_tick(void)
     if(time == 0){
         p = ubpacket_getSendBuffer();
         p->header.src = ubadr_getAddress();
-        p->header.flags = UB_PACKET_MGT;
+        p->header.flags = UB_PACKET_MGT | UB_PACKET_UNSOLICITED;
 
         switch(ubslavemgt_state){
             case DISCOVER:

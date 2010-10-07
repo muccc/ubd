@@ -99,7 +99,7 @@ if ( ubconfig.slave ){
 #endif
     }
     //the application can set some own flags
-    outpacket.header.flags &= (UB_PACKET_DONE | UB_PACKET_NOACK | UB_PACKET_MGT | UB_PACKET_NOREPLY );
+    outpacket.header.flags &= (UB_PACKET_DONE | UB_PACKET_NOACK | UB_PACKET_MGT | UB_PACKET_UNSOLICITED );
 
     if( !packet_acked)
         outpacket.header.flags |= 0x80;

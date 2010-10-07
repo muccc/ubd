@@ -101,13 +101,13 @@ void ubmastermgt_tick(void)
 
         if( flags & 0x01 ){
             flags ^= 0x01;
-            p->header.flags = UB_PACKET_MGT | UB_PACKET_NOACK;
+            p->header.flags = UB_PACKET_MGT | UB_PACKET_NOACK | UB_PACKET_UNSOLICITED;
             p->data[0] = MGT_BRIDGEDISCOVER;
             strcpy((char*)p->data+1,(char*)ubadr_getID());
             p->header.len = strlen((char*)p->data);
         }else if( flags & 0x02 ){
             flags ^= 0x02;
-            p->header.flags = UB_PACKET_MGT;
+            p->header.flags = UB_PACKET_MGT | UB_PACKET_UNSOLICITED;
             p->data[0] = MGT_MASTERALIVE;
             p->header.len = 1;
         }
