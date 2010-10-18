@@ -12,7 +12,6 @@ PKG_CHECK_MODULES(GIO, gio-2.0 > 2.0.0,
 
 
 AC_CHECK_LIB(gthread-2.0, g_thread_init)
-AC_CHECK_LIB(gdbm, gdbm_open)
 AC_CHECK_LIB(mxml, mxmlLoadFile)
 #PKG_CHECK_MODULES(XML, mxml)
 #CFLAGS = "$CFLAGS $(XML_CFLAGS)"
