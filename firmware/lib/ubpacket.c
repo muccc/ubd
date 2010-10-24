@@ -18,17 +18,18 @@
 typedef uint16_t    time_t;
 
 struct ubpacket_t outpacket;
-struct ubpacket_t inpacket;
-
 uint8_t packet_out_full = 0;
 uint8_t packet_fired = 0;
 uint8_t packet_acked = 1;
-uint8_t packet_ack_full = 0;
-struct ubheader_t ack;
-
 uint8_t packet_retries;
-uint8_t packet_incomming;
 time_t  packet_timeout;
+
+struct ubheader_t ack;
+uint8_t packet_ack_full = 0;
+
+struct ubpacket_t inpacket;
+uint8_t packet_incomming;
+
 uint8_t packet_sniff = 0;
 
 uint8_t packet_outseq = 0;
@@ -68,49 +69,64 @@ void ubpacket_send(void)
 {
     //don't do anything until we are configured
     //the busmgt is allowed to send
-    if( !(outpacket.header.flags & UB_PACKET_MGT) && ubconfig.configured == 0){
+    if( !(outpacket.header.flags & UB_PACKET_MGT) &&
+                        ubconfig.configured == 0){
         return;
     }
+    //if( outpacket.header.len == 0 &&
+    //    !(outpacket.header.flags & UB_PACKET_ACK) ){
+    //    return;
+    //}
 
     packet_timeout = UB_PACKET_TIMEOUT;
 
-    //TODO: comment on this? dont't understand it anymore
+    //Don't request an ack from the host computer
     if( outpacket.header.dest == UB_ADDRESS_MASTER && ubconfig.master )
-    //                                                  ^^ maybe needed for the master?
         outpacket.header.flags |= UB_PACKET_NOACK;
 
     //packet_acked won't be set if this is a retransmit
     if(ubadr_isUnicast(outpacket.header.dest) &&
-        packet_acked &&
-        !(outpacket.header.flags & UB_PACKET_NOACK)){
+            packet_acked &&
+            !(outpacket.header.flags & UB_PACKET_NOACK)){
         packet_retries = 0;
+        //don't modify the sequence number if this is an ack
+        //if( !(outpacket.header.flags & UB_PACKET_ACK) ){
 #ifdef UB_ENABLEMASTER
 if( ubconfig.master ){
-        struct ubstat_t * flags = ubstat_getFlags(outpacket.header.dest);
-        //toggle the seq bit
-        packet_outseq = flags->outseq?0:1;
-        flags->outseq = packet_outseq;
+            struct ubstat_t *flags=ubstat_getFlags(outpacket.header.dest);
+            packet_outseq = flags->outseq;
 }
 #endif
 #ifdef UB_ENABLESLAVE
 if ( ubconfig.slave ){
-        packet_outseq = packet_outseq?0:1;
+            //packet_outseq = packet_outseq?0:1;
 }
 #endif
+        //}
     }
     //the application can set some own flags
-    outpacket.header.flags &= (UB_PACKET_DONE | UB_PACKET_NOACK | UB_PACKET_MGT | UB_PACKET_UNSOLICITED );
+    outpacket.header.flags &= (UB_PACKET_ACK | UB_PACKET_ACKSEQ |
+                                UB_PACKET_NOACK | UB_PACKET_MGT | 
+                                UB_PACKET_UNSOLICITED );
 
-    if( !packet_acked)
+    //mark this packet as a retransmit
+    //this is only used to debug the system.
+    if( !packet_acked && !(outpacket.header.flags & UB_PACKET_ACK) )
         outpacket.header.flags |= 0x80;
 
-    if( packet_outseq )
+    //set the sequence number
+    if( packet_outseq ){
+        serial_sendFrames("Dsetseq");
         outpacket.header.flags |= UB_PACKET_SEQ;
+    }else{
+        serial_sendFrames("Dunsetseq");
+    }
 
     //outpacket.header.src = ubadr_getAddress();
 
     if(ubadr_isUnicast(outpacket.header.dest) &&
-        !(outpacket.header.flags & UB_PACKET_NOACK)){
+        !(outpacket.header.flags & UB_PACKET_NOACK) &&
+        !(outpacket.header.len == 0) ){
         packet_acked = 0;
     }else{
         //don't wait for an ack
@@ -122,7 +138,8 @@ if ( ubconfig.slave ){
     //PORTA ^= (1<<4);
     if( ub_sendPacket(&outpacket) == UB_OK ){
         packet_fired = 1;
-        if( outpacket.header.flags & UB_PACKET_NOACK )
+        if( outpacket.header.flags & UB_PACKET_NOACK ||
+            outpacket.header.len == 0 )
             packet_out_full = 0;
 #ifdef UB_ENABLEMASTER
 if( ubconfig.master ){
@@ -154,27 +171,18 @@ uint8_t ubpacket_free(void)
     return 0;
 }*/
 
-static void packet_ack(struct ubpacket_t * p)
+static void packet_prepareack(struct ubpacket_t * p)
 {
-    ack.src = p->header.dest;
     ack.dest = p->header.src;
-    ack.flags = p->header.flags & (UB_PACKET_SEQ | 0x40);
-    ack.flags |= UB_PACKET_ACK;
-    ack.len = 0;
-    if( ub_sendPacket((struct ubpacket_t *)&ack) == UB_ERROR ){
-#ifdef UB_ENABLEMASTER
-//if( ubconfig.master ){
-        serial_sendFrames("DAsPerror");
-//}
-#endif
-        packet_ack_full = 1;
-    }else{
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
-        serial_sendFrames("DAsPOK");
-}
-#endif
+    ack.src = p->header.dest;
+    ack.flags = UB_PACKET_ACK;
+
+    //seq+1
+    if( !(p->header.flags & UB_PACKET_SEQ) ){
+        ack.flags |= UB_PACKET_ACKSEQ;
     }
+    ack.len = 0;
+    //packet_ack_full = 1;
 }
 
 static void ubpacket_abort(void)
@@ -192,23 +200,21 @@ if( ubconfig.master ){
     packet_out_full = 0;
 }
 
+static void ubpacket_sendack(void)
+{        
+    if( ub_sendPacket((struct ubpacket_t *)&ack)
+                                    == UB_OK ){
+        packet_ack_full = 0;
+        serial_sendFrames("DAsPok");
+    }else{
+        serial_sendFrames("DAsPerror");
+    }
+}
+
 void ubpacket_process(void)
 {
     if( packet_ack_full ){
-        if( ub_sendPacket((struct ubpacket_t *)&ack) == UB_OK ){
-            packet_ack_full = 0;
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
-            serial_sendFrames("DAsPok");
-}
-#endif
-        }else{
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
-            serial_sendFrames("DAsPerror");
-}
-#endif
-        }
+        ubpacket_sendack();
         return;
     }
     if( packet_out_full && !packet_fired ){
@@ -217,15 +223,13 @@ if( ubconfig.master ){
             packet_fired = 1;
             if( outpacket.header.flags & UB_PACKET_NOACK )
                 packet_out_full = 0;
-
 #ifdef UB_ENABLEMASTER
 if( ubconfig.master ){
             serial_sendFrames("DsPok");
 }
 #endif
         }else{
-
-        //PORTA ^= (1<<7);
+            //PORTA ^= (1<<7);
 #ifdef UB_ENABLEMASTER
 if( ubconfig.master ){
             serial_sendFrames("DsPerror");
@@ -246,13 +250,12 @@ if( ubconfig.master ){
 void ubpacket_processPacket(struct ubpacket_t * in)
 {
     uint8_t seq = (in->header.flags & UB_PACKET_SEQ)?1:0;
+    uint8_t ackseq = (in->header.flags & UB_PACKET_ACKSEQ)?1:0;
     //do we have to forward that packet to the serial interface?
     uint8_t forward = 0;
-        //if( in->header.flags & UB_PACKET_NOACK )
-        //    PORTA ^= (1<<7);
-
+    uint8_t dupe    = 1;
 #ifdef UB_ENABLEMASTER
-serial_sendFrames("Dbridge: processing");
+    serial_sendFrames("Dbridge: processing");
 if( ubconfig.master ){
     if( in->header.src == UB_ADDRESS_MASTER ){
         serial_sendFrames("Dbridge: src=master");
@@ -287,7 +290,8 @@ if( ubconfig.master ){
                 ubmaster_done();
             }
         }
-        if(packet_incomming && ubmastermgt_process(&inpacket)){
+        if( packet_incomming && in->header.flags & UB_PACKET_MGT ){
+            ubmastermgt_process(&inpacket);
             //this was a management packet
             packet_incomming = 0;
         }
@@ -295,47 +299,70 @@ if( ubconfig.master ){
     }
 }
 #endif
-    if( in->header.flags & UB_PACKET_ACK ){
-        //todo check also src and last dest
-        if( ubadr_isLocal(in->header.dest) ||
-            //if we are the master we have to check for packets to the master
-            (ubconfig.master && (in->header.dest == UB_ADDRESS_MASTER)) ){
-            if( seq == packet_outseq ){
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
-                if( outpacket.header.src == UB_ADDRESS_MASTER ){
-                    ubmaster_done();
-                }
-}
-#endif
-                packet_acked = 1;
-                packet_out_full = 0;
-            }
-        }
-        //acks contain no data
+    //ignore empty packets
+    if( in->header.len == 0 && !(in->header.flags & UB_PACKET_ACK) )
         return;
-    }
-
+    //is this packet addressed to us?
     if( ubadr_isLocal(in->header.dest) ||
         (ubconfig.master && (in->header.dest == UB_ADDRESS_MASTER)) ){
+
+        if( in->header.flags & UB_PACKET_ACK ){
+            uint8_t ackok = 0;
+#ifdef UB_ENABLEMASTER
+if( ubconfig.master ){
+            //the master has to track seq for all slaves
+            struct ubstat_t * flags = ubstat_getFlags(in->header.src);
+            if( ackseq != flags->outseq ){
+                flags->outseq = ackseq;
+                ackok = 1;
+            }
+
+            if( ackok && packet_out_full && 
+                    outpacket.header.src == UB_ADDRESS_MASTER ){
+                ubmaster_done();
+            }
+}
+#endif
+#ifdef UB_ENABLESLAVE
+if( ubconfig.slave ){
+            //a slave only gets packets from the master
+            if( ackseq != packet_outseq ){
+                packet_outseq = ackseq;
+                ackok = 1;
+            }
+}
+#endif
+            if( ackok ){
+                serial_sendFrames("Dackseqok");
+                packet_acked = 1;
+                packet_out_full = 0;
+            }else{
+                serial_sendFrames("DackseqNok");
+            }
+
+            //Ignore empty packets
+            if( in->header.len == 0 )
+                return;
+            //acks can contain data
+            in->header.flags ^= UB_PACKET_ACK;
+        }
+
 #ifdef UB_ENABLEMASTER
 if( ubconfig.master &&
         !(in->header.flags & UB_PACKET_NOACK)){
         //the master has to track seq for all slaves
         struct ubstat_t * flags = ubstat_getFlags(in->header.src);
         if( seq == flags->inseq ){
-            //this packet was already seen
-            in->header.flags |= 0x40;
-            //return;
-        }else{
-            flags->inseq = seq;
-                       
+            flags->inseq = seq?0:1;
+            dupe = 0;
         }
+}else{
+        dupe = 0;
 }
 #endif
 #ifdef UB_ENABLESLAVE
-if ( ubconfig.slave &&
-        !(in->header.flags & UB_PACKET_NOACK)){
+if( ubconfig.slave &&
+        !(in->header.flags & UB_PACKET_NOACK) ){
         //if we still have something to send let the master retry
         if( !ubpacket_free() ){
             //the packet might have been lost
@@ -345,29 +372,40 @@ if ( ubconfig.slave &&
             return;
         }
         //a slave only gets packets from the master
-        static uint8_t inseq = 0xFF;
+        static uint8_t inseq = 0;
         if( seq == inseq ){
-            in->header.flags |= 0x40;
-            //return;
-        }else{
-            inseq = seq;
+            inseq = seq?0:1;
+            dupe = 0;
         }
+}else{
+        dupe = 0;
 }
 #endif
-
+        if( dupe ){
+            serial_sendFrames("DseqNok");
+        }else{
+            serial_sendFrames("Dseqok");
+        }
         if( !(in->header.flags & UB_PACKET_NOACK) ){
             serial_sendFrames("Dacking");
-            packet_ack(in);
+            packet_prepareack(in);
         }
-        //don't forward the dupe to the app
-        if( in->header.flags & 0x40 ){
+        //don't forward a dupe to the app
+        //if( in->header.flags & UB_PACKET_DUPE ){
+        if( dupe ){
             serial_sendFrames("Ddupe");
+            //but still send the ack
+            if( !(in->header.flags & UB_PACKET_NOACK) )
+                ubpacket_sendack();
             return;
         }
         //if this packet is for the master forward it to the serial line
         //else send it to the application
         if( in->header.dest == UB_ADDRESS_MASTER ){
             forward = 1;
+            //we still have to send the ack
+            if( !(in->header.flags & UB_PACKET_NOACK) )
+                ubpacket_sendack();
         }else{
             serial_sendFrames("Dincomming");
             packet_incomming = 1;
@@ -379,6 +417,12 @@ if ( ubconfig.slave &&
     }else if(  ubadr_isLocalMulticast(in->header.dest) ){
         //this multicast is for us
         packet_incomming = 1;
+    }
+    if( packet_incomming ){
+        outpacket.header.dest = ack.dest;
+        outpacket.header.src = ack.src;
+        outpacket.header.flags = ack.flags;
+        outpacket.header.len = ack.len;
     }
 #ifdef UB_ENABLEMASTER
 if ( ubconfig.master ){
@@ -396,6 +440,8 @@ if ( ubconfig.slave ){
         //this was a management packet
         packet_incomming = 0;
         serial_sendFrames("Dwas for mgt");
+        if( outpacket.header.flags & UB_PACKET_ACK )
+            ubpacket_send();
     }
 }
 #endif

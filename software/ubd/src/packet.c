@@ -62,7 +62,8 @@ gpointer packet_readerThread(gpointer data)
                         ps->type = PACKET_DONE;
                         g_idle_add(packet_inpacket, ps);
                     }
-                    g_async_queue_push(packet_status,(gpointer)PACKET_DONE);
+                    g_async_queue_push(packet_status,
+                                (gpointer)PACKET_DONE);
                 break;
                 case PACKET_ABORT:
                     printf("new message: ");
@@ -79,7 +80,8 @@ gpointer packet_readerThread(gpointer data)
                             nextnode->nextcallback = NULL;
                     }
 
-                    g_async_queue_push(packet_status,(gpointer)PACKET_ABORT);
+                    g_async_queue_push(packet_status,
+                                (gpointer)PACKET_ABORT);
                 break;
                 case 'D':
                     //printf("debug\n");
@@ -113,7 +115,7 @@ gpointer packet_writerThread(gpointer data)
         
         GTimeVal timeout;
         g_get_current_time(&timeout);
-        g_time_val_add(&timeout,10 * 1000 * 1000);
+        g_time_val_add(&timeout,2 * 1000 * 1000);
 
         gpointer status = g_async_queue_timed_pop(packet_status,&timeout);
         //TODO: this assert is bad as this could happen

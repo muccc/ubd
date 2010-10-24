@@ -13,6 +13,7 @@
 #include "ubaddress.h"
 #include "ubrf12.h"
 #include "random.h"
+#include "serial_handler.h"
 
 enum UBRF_STATE {   UBRF_IDLE,
                     UBRF_WAITFREE,

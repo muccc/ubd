@@ -9,6 +9,7 @@ void ubstat_init(void)
     uint8_t i;
     for(i=0; i<UB_NODEMAX; i++){
         ubstat[i].known = 0;              //reset all nodes
+        ubstat[i].outseq = 0;              //reset all nodes
     }
 }
 

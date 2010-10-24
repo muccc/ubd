@@ -3,9 +3,6 @@
 #include <stdint.h>
 #include "ubconfig.h"
 
-//typedef uint8_t    address_t;
-//typedef uint8_t     seq_t;
-
 struct ubheader_t{
     ubaddress_t src;
     ubaddress_t dest;
@@ -22,10 +19,11 @@ struct ubpacket_t{
 
 #define UB_PACKET_ACK           (1<<0)
 #define UB_PACKET_SEQ           (1<<1)
-#define UB_PACKET_DONE          (1<<2)
 #define UB_PACKET_NOACK         (1<<3)
 #define UB_PACKET_MGT           (1<<4)
 #define UB_PACKET_UNSOLICITED   (1<<5)  //when the node starts talking
+//#define UB_PACKET_DUPE          (1<<6)
+#define UB_PACKET_ACKSEQ        (1<<6)
 
 #define UB_PACKET_IDLE          0
 #define UB_PACKET_BUSY          1
@@ -44,5 +42,4 @@ inline uint8_t ubpacket_gotPacket(void);
 inline struct ubpacket_t * ubpacket_getIncomming(void);
 inline void ubpacket_processed(void);
 
-//uint8_t packet_done(void);
 #endif

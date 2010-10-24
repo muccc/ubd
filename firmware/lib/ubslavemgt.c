@@ -53,10 +53,10 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
             out = ubpacket_getSendBuffer();
             out->header.dest = UB_ADDRESS_MASTER;
             out->header.src = ubadr_getAddress();
-            out->header.flags = UB_PACKET_MGT;
+            //out->header.flags = UB_PACKET_MGT;
             sprintf((char *)out->data,"V="__DATE__);
             out->header.len = strlen((char*)out->data);
-            ubpacket_send();
+            //ubpacket_send();
         break;
         case 'A':
             ubadr_addMulticast(data[1]);

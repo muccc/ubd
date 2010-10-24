@@ -1,6 +1,7 @@
+#include <avr/io.h>
 #include <stdint.h>
 #include <string.h>
-#include "usart.h"
+#include "uart.h"
 #include "serial_handler.h"
 
 uint8_t buffer[SERIAL_BUFFERLEN];
@@ -44,14 +45,12 @@ inline void serial_putStop(void)
     uart1_putc(SERIAL_END);
 }
 
-#ifdef USEDEBUG
 void serial_sendFrames(char * s)
 {
     serial_putStart();
     serial_putsenc(s);
     serial_putStop();
 }
-#endif
 
 void serial_sendFramec(uint8_t s)
 {
@@ -60,7 +59,7 @@ void serial_sendFramec(uint8_t s)
     serial_putStop();
 }
 
-uint16_t serial_readline(uint8_t * buf, uint8_t max)
+uint16_t serial_readline(uint8_t * buf, uint16_t max)
 {
     uint16_t l;
 

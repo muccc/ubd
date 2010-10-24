@@ -73,7 +73,7 @@ FORMAT = ihex
 
 
 # Target file name (without extension).
-TARGET = fnordlicht
+TARGET = rf12gateway
 
 
 # Object files directory
@@ -84,34 +84,13 @@ OBJDIR = .
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = $(TARGET).c \
-	pwm.c \
-	static_scripts.c \
-	rc5.c rc5_handler.c \
-	settings.c \
-	cmd_handler.c \
-	control.c \
-	adc.c \
+	ubrf12.c \
 	leds.c \
-	../lib/ub.c \
-	../lib/ubaddress.c \
-	../lib/ubtimer.c \
-	../lib/ubrs485uart.c \
-	../lib/ubrs485message.c \
-	../lib/ubcrc.c \
-	../lib/usart.c \
-	../lib/serial_handler.c \
-	../lib/udebug.c \
-	../lib/random.c \
-	../lib/ubpacket.c \
-	../lib/ubrs485slave.c \
-	../lib/ubslave.c \
-	../lib/ubslavemgt.c \
-	../lib/ubrf12.c \
-	../lib/ubrf.c \
-	../lib/ubmastermgt.c \
-	../lib/ubmaster.c \
-	../lib/ubrs485master.c \
-	../lib/ubstat.c
+	uart.c \
+	serial_handler.c
+#fifo.c uart.c
+
+
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
 
@@ -129,7 +108,7 @@ ASRC =
 # Optimization level, can be [0, 1, 2, 3, s]. 
 #     0 = turn off optimization. s = optimize for size.
 #     (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
-OPT = 2
+OPT = s
 
 
 # Debugging format.
@@ -143,7 +122,7 @@ DEBUG = stabs
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = ../lib 
+EXTRAINCDIRS = 
 
 
 # Compiler flag to set the C Standard level.
@@ -188,7 +167,7 @@ CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
-CFLAGS += -ffunction-sections
+#CFLAGS += -ffunction-sections
 
 
 #---------------- Compiler Options C++ ----------------
@@ -289,7 +268,7 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
-LDFLAGS += -ffunction-sections -Wl,--gc-sections
+#LDFLAGS += -ffunction-sections -Wl,--gc-sections
 
 
 #---------------- Programming Options (avrdude) ----------------
@@ -303,9 +282,9 @@ LDFLAGS += -ffunction-sections -Wl,--gc-sections
 #AVRDUDE_PROGRAMMER = usbasp 
 #AVRDUDE_PROGRAMMER = avr910
 # com1 = serial port. Use lpt1 to connect to parallel port.
-#AVRDUDE_PORT = usb
+#AVRDUDE_PORT = /dev/ttyUSB0
 
-AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
+AVRDUDE_WRITE_FLASH = -B 1 -U flash:w:$(TARGET).hex
 AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 
 
@@ -323,7 +302,7 @@ AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 # reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
 # to submit bug reports.
 #AVRDUDE_VERBOSE = -v -v
-AVRDUDE_FLAGS = -p $(MCU) -B 1
+AVRDUDE_FLAGS = -p $(MCU)
 
 ifdef AVRDUDE_PROGRAMMER
 AVRDUDE_FLAGS += -c $(AVRDUDE_PROGRAMMER)
@@ -334,11 +313,11 @@ AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 
 #Full swing crystal oscillator
-AVRDUDE_LFUSE_FLAGS = -B 10 -U lfuse:w:0xe7:m
+AVRDUDE_LFUSE_FLAGS = -B 100 -U lfuse:w:0xe7:m
 #preserve eeprom, max boot section
-AVRDUDE_HFUSE_FLAGS = -B 10 -U hfuse:w:0xd0:m
+AVRDUDE_HFUSE_FLAGS = -B 100 -U hfuse:w:0xd0:m
 #2.7v brown out
-AVRDUDE_EFUSE_FLAGS = -B 10 -U efuse:w:0xfd:m
+AVRDUDE_EFUSE_FLAGS = -B 100 -U efuse:w:0xfd:m
 
 #---------------- Debugging Options ----------------
 

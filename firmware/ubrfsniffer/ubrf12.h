@@ -16,7 +16,7 @@
 #define __RFM12_H
 
 /* config */
-#define RF12_DataLength	64		//RF12 Buffer length
+#define RF12_DataLength	100		//RF12 Buffer length
 					//max length 244
 
 /* ------ */

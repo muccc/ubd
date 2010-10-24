@@ -161,9 +161,6 @@ int main(void) {
                 ubpacket_processed();   //has to be after the if
             }else{
                 ubpacket_processed();
-                out->header.dest = UB_ADDRESS_MASTER;
-                //mark this packet as the last one
-                out->header.flags = UB_PACKET_DONE;
                 ubpacket_send();
             }
         }
