@@ -383,23 +383,20 @@ if( ubconfig.slave &&
         dupe = 0;
 }
 #endif
-        if( dupe ){
-            serial_sendFrames("DseqNok");
-        }else{
-            serial_sendFrames("Dseqok");
-        }
         if( !(in->header.flags & UB_PACKET_NOACK) ){
             serial_sendFrames("Dacking");
             packet_prepareack(in);
         }
         //don't forward a dupe to the app
-        //if( in->header.flags & UB_PACKET_DUPE ){
         if( dupe ){
+            serial_sendFrames("DseqNok");
             serial_sendFrames("Ddupe");
             //but still send the ack
             if( !(in->header.flags & UB_PACKET_NOACK) )
                 ubpacket_sendack();
             return;
+        }else{
+            serial_sendFrames("Dseqok");
         }
         //if this packet is for the master forward it to the serial line
         //else send it to the application
