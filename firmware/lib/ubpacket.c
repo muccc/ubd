@@ -253,6 +253,8 @@ void ubpacket_processPacket(struct ubpacket_t * in)
     uint8_t ackseq = (in->header.flags & UB_PACKET_ACKSEQ)?1:0;
     //do we have to forward that packet to the serial interface?
     uint8_t forward = 0;
+    //did we see this packet bevore? gets reset when the se is correct
+    //or the noack flag is set
     uint8_t dupe    = 1;
 #ifdef UB_ENABLEMASTER
     serial_sendFrames("Dbridge: processing");
