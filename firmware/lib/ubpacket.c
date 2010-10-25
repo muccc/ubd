@@ -418,10 +418,7 @@ if( ubconfig.slave &&
         packet_incomming = 1;
     }
     if( packet_incomming ){
-        outpacket.header.dest = ack.dest;
-        outpacket.header.src = ack.src;
-        outpacket.header.flags = ack.flags;
-        outpacket.header.len = ack.len;
+        outpacket.header = ack;
     }
 #ifdef UB_ENABLEMASTER
 if ( ubconfig.master ){
