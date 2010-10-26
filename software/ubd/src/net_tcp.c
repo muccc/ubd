@@ -22,6 +22,7 @@ void tcp_init(void)
 
 static void tcp_queueNewCommand(gpointer data)
 {
+    g_assert(data != NULL);
     struct nodebuffer *nb = data;
     printf("tcp_cmd: new command for node %d\n", nb->n->busadr);
     bus_streamToID(nb->n->id, (guchar*)nb->cmd, nb->cmdlen,
@@ -30,6 +31,7 @@ static void tcp_queueNewCommand(gpointer data)
 
 static void tcp_queueNewMgt(gpointer data)
 {
+    g_assert(data != NULL);
     struct nodebuffer *nb = data;
     printf("tcp_cmd: new mgt for node %d\n", nb->n->busadr);
     busmgt_streamData(nb->n, (guchar*)nb->cmd, nb->cmdlen,
@@ -38,6 +40,7 @@ static void tcp_queueNewMgt(gpointer data)
 
 static void tcp_reply(gpointer data)
 {
+    g_assert(data != NULL);
     struct packetstream *ps = (struct packetstream *)data;
     //well these calls wil fail if the remote closed
     //the connection before we could answer
@@ -59,6 +62,7 @@ static void tcp_reply(gpointer data)
 
 static void tcp_parse(struct nodebuffer *nb, guchar data)
 {
+    g_assert(data != nb);
     printf("state = %d data = %d\n",nb->state,data);
     switch(nb->state){
         case 0:

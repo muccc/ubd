@@ -153,7 +153,7 @@ static gboolean packet_inpacket(gpointer data)
     }else{
         printf("There is no handler registerd for packet type %s\n",buf);
     }*/
-
+    g_assert(data != NULL);
     struct packetstream *ps = (struct packetstream *)data;
     if( ps->type == PACKET_PACKET )
         debug_packet("packet_inpacket",&ps->p);
