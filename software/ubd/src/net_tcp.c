@@ -62,7 +62,7 @@ static void tcp_reply(gpointer data)
 
 static void tcp_parse(struct nodebuffer *nb, guchar data)
 {
-    g_assert(data != nb);
+    g_assert(nb != NULL);
     printf("state = %d data = %d\n",nb->state,data);
     switch(nb->state){
         case 0:
