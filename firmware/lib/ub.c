@@ -16,29 +16,18 @@
 
 struct ub_config ubconfig;
 uint8_t ub_address = 0;
-uint8_t ub_interfaces;
-void ub_init(uint8_t ubmode, int8_t interfaces)
+uint8_t ub_slaveinterfaces = 0;
+uint8_t ub_masterinterfaces = 0;
+
+void ub_init(uint8_t ubmode, int8_t slaveinterfaces, int8_t masterinterfaces)
 {
     cli();
-    if( interfaces == -1 ){
-        interfaces = ub_interfaces;
-/*
-#ifdef UB_ENABLERS485
-        sei();
-        serial_sendFrames("DCheck old rs485");
-        if( ubconfig.rs485slave || ubconfig.rs485master ){
-            serial_sendFrames("DOld rs485 enabled");
-            interfaces |= UB_RS485;
-        }
-#endif
-#ifdef UB_ENABLERF
-        if( ubconfig.rf ){
-            interfaces |= UB_RF;
-        }
-#endif
-*/
+    if( slaveinterfaces != -1 ){
+        ub_slaveinterfaces = slaveinterfaces;
     }
-    ub_interfaces = interfaces;
+    if( masterinterfaces != -1 ){
+        ub_masterinterfaces = masterinterfaces;
+    }
     ubconfig.master = 0;
     ubconfig.slave = 0;   
     ubconfig.rs485slave = 0;
@@ -51,11 +40,11 @@ void ub_init(uint8_t ubmode, int8_t interfaces)
 #ifdef UB_ENABLEMASTER
     if( ubmode == UB_MASTER ){
 #ifdef UB_ENABLERS485
-        if( interfaces & UB_RS485 )
+        if( ub_masterinterfaces & UB_RS485 )
             ubconfig.rs485master = 1;
 #endif
 #ifdef UB_ENABLERF
-        if( interfaces & UB_RF )
+        if( ub_masterinterfaces & UB_RF )
             ubconfig.rf = 1;
 #endif
         ubconfig.master = 1;
@@ -74,14 +63,14 @@ void ub_init(uint8_t ubmode, int8_t interfaces)
 #ifdef UB_ENABLESLAVE
     if ( ubmode == UB_SLAVE ){
 #ifdef UB_ENABLERS485
-        if( interfaces & UB_RS485 ){
+        if( ub_slaveinterfaces & UB_RS485 ){
             ubconfig.rs485slave = 1;
             //sei();
             //serial_sendFrames("Dslavers485 enabled");
         }
 #endif
 #ifdef UB_ENABLERF
-        if( interfaces & UB_RF )
+        if( ub_slaveinterfaces & UB_RF )
             ubconfig.rf = 1;
 #endif
         ubconfig.slave = 1;
@@ -107,7 +96,7 @@ void ub_process(void)
         uint8_t buf[16];
         uint8_t l = serial_readline(buf, sizeof(buf));
         if( l == 1 && buf[0] == 'B'){
-            ub_init(UB_MASTER,-1);
+            ub_init(UB_MASTER,-1,-1);
             return;
         }
     }

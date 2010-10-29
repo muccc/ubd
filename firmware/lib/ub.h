@@ -22,7 +22,7 @@ struct ub_config {
 };
 
 extern struct ub_config ubconfig;
-void ub_init(uint8_t ubmode, int8_t interfaces);
+void ub_init(uint8_t ubmode, int8_t slaveinterfaces, int8_t masterinterfaces);
 void ub_process(void);
 void ub_tick(void);
 inline uint8_t ub_getAddress(void);

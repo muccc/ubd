@@ -118,7 +118,7 @@ inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
             //seems like every command with len=1
             //just resets the master?
             serial_sendFrames("D1");
-            ub_init(UB_MASTER, -1);
+            ub_init(UB_MASTER, -1, -1);
         }
 #ifdef UB_ENABLERF
     }
