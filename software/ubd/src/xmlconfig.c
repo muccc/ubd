@@ -110,7 +110,7 @@ void xml_parseNode(mxml_node_t *node)
     gchar *id = xml_getAttribute(node,"id");
     gchar *address = xml_getAttribute(node,"address");
 
-    printf("parsing node %s address %s\n", id, address);
+    //printf("parsing node %s address %s\n", id, address);
 
     struct node *n = nodes_getFreeNode();
     strncpy(n->id, id, MAX_ID);
@@ -127,8 +127,8 @@ void xml_parseNode(mxml_node_t *node)
     xml_iterate(node, group, "group"){
         n->groups[i] = groups_getGroupNumber(
                             xml_getAttribute(group,"name"));
-        printf("found new group name=%s id=%d\n",
-               xml_getAttribute(group,"name"), n->groups[i]);
+        //printf("found new group name=%s id=%d\n",
+        //       xml_getAttribute(group,"name"), n->groups[i]);
         i++;
     }
     nodes_addNode(n);
@@ -172,6 +172,13 @@ void xml_parse(void)
                 serial, "rate");
     config.rate = g_ascii_strtoull(rate,NULL,10);
 
+    mxml_node_t *bus = mxmlFindElement(
+        tree, tree, "bus", NULL, NULL, MXML_DESCEND);
+
+    gchar *timeout = xml_getAttribute(
+                bus, "timeout");
+    config.nodetimeout = g_ascii_strtoull(timeout,NULL,10);
+
     mxml_node_t *groups = mxmlFindElement(
         tree, tree, "groups", NULL, NULL, MXML_DESCEND);
     xml_parseGroups(groups);
@@ -184,6 +191,6 @@ void xml_parse(void)
 void xml_init(char *filename)
 {
     xml_load(filename);
-    xml_print(tree);
+    //xml_print(tree);
     xml_parse();
 }

@@ -8,6 +8,7 @@ struct ubconfig {
     gint prefix;
     gchar *device;
     gint rate;
+    gint nodetimeout;
 };
 
 extern struct ubconfig config;

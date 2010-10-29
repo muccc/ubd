@@ -15,7 +15,6 @@ void busmgt_init(void);
 gint busmgt_getFreeBusAdr(); 
 void busmgt_setName(uint8_t adr, char *name);
 void busmgt_sendCmdData(uint8_t adr, uint8_t cmd, uint8_t *data, uint8_t len);
-void busmgt_sendData(uint8_t adr, uint8_t *data, uint8_t len);
 void busmgt_streamData(struct node *n, guchar *buf, gint len,
                 UBSTREAM_CALLBACK callback, gpointer data);
 

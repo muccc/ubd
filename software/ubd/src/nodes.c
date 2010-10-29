@@ -123,18 +123,16 @@ struct node *nodes_getNodeByNetAdr(GInetAddress *addr)
 
 void nodes_activateNode(struct node *node)
 {
-    if( node->free == TRUE ){
-        printf("nodes.c: warning: trying to activate a free node!\n");
-    }
+    g_assert(node->free == FALSE);
+    //printf("nodes.c: warning: trying to activate a free node!\n");
     node->active = TRUE;
 }
 
 void nodes_deactivateNode(struct node *node)
 {
-    if( node->free == TRUE ){
-        printf("nodes.c: warning: trying to" \
-                "deactivate a free node!\n");
-    }
+    g_assert(node->free == FALSE);
+    //    printf("nodes.c: warning: trying to" \
+    //            "deactivate a free node!\n");
     node->active = FALSE;
 }
 
@@ -150,11 +148,12 @@ void nodes_setNameFromID(struct node *n)
 
     if( s != NULL){
         *s = 0;
-        //TODO: make sure n->domain is large enough
         g_assert(sizeof(n->domain) >= sizeof(n->id));
         strcpy(n->domain,++s);
     }else{
         //there was no domain in the id
         printf("ill formated id for this node: %s\n",n->id);
+        n->domain[0] = 0;
     }
 }
+

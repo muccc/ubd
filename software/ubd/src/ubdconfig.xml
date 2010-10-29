@@ -4,6 +4,7 @@
              base="2001:a60:e801:1001::1"
              prefix="64" />
     <serial device="/dev/ttyUSB0" rate="115200" />
+    <bus timeout="60" />
     <nodes>
         <node id="bridge5,local" address="dfs">
             <group name="usb"/>
