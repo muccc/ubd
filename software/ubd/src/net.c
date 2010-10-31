@@ -111,28 +111,30 @@ void net_createSockets(struct node *n)
 
     printf("net_createSockets: Creating tcp data socket listener on port 2323\n");
     GSocketService *gss = g_socket_service_new();
-    n->dataservice = gss;
     if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
         G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &err)
             == FALSE ){
         fprintf(stderr, "net_createSockets: Error while creating socket listener: %s\n", err->message);
         g_error_free(err);
+        g_object_unref(gss);
         return;
     }
+    n->dataservice = gss;
     g_signal_connect(gss, "incoming", G_CALLBACK(tcp_listener), n);
     g_socket_service_start(gss);
 
     printf("net_createSockets: Creating tcp management socket listener on port 2324\n");
     GSocketAddress * samgt = g_inet_socket_address_new(addr,2324);
     gss = g_socket_service_new();
-    n->mgtservice = gss;
     if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), samgt,
         G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &err)
             == FALSE ){
         fprintf(stderr, "net_createSockets: Error while creating socket listener: %s\n", err->message);
         g_error_free(err);
+        g_object_unref(gss);
         return;
     }
+    n->mgtservice = gss;
     g_signal_connect(gss, "incoming", G_CALLBACK(tcp_listener), n);
     g_socket_service_start(gss);
 
