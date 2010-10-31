@@ -99,6 +99,7 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
         case 3:
             nb->cmd[nb->cmdlen++] = data;
             if( --nb->cmdbinlen == 0 ){
+                g_assert(nb->callback != NULL);
                 nb->callback(nb);
                 nb->state = 0;
             }
