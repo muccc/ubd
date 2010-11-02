@@ -22,7 +22,7 @@ uint8_t packet_out_full = 0;
 uint8_t packet_fired = 0;
 uint8_t packet_acked = 1;
 uint8_t packet_retries;
-time_t  packet_timeout;
+time_t  packet_timeout = 0;
 
 struct ubheader_t ack;
 uint8_t packet_ack_full = 0;
@@ -77,7 +77,7 @@ void ubpacket_send(void)
     //    !(outpacket.header.flags & UB_PACKET_ACK) ){
     //    return;
     //}
-
+    serial_sendFrames("Dresettimeout");
     packet_timeout = UB_PACKET_TIMEOUT;
 
     //Don't request an ack from the host computer
@@ -88,21 +88,14 @@ void ubpacket_send(void)
     if(ubadr_isUnicast(outpacket.header.dest) &&
             packet_acked &&
             !(outpacket.header.flags & UB_PACKET_NOACK)){
+        serial_sendFrames("Dresetretries");
         packet_retries = 0;
-        //don't modify the sequence number if this is an ack
-        //if( !(outpacket.header.flags & UB_PACKET_ACK) ){
 #ifdef UB_ENABLEMASTER
 if( ubconfig.master ){
-            struct ubstat_t *flags=ubstat_getFlags(outpacket.header.dest);
-            packet_outseq = flags->outseq;
+        struct ubstat_t *flags=ubstat_getFlags(outpacket.header.dest);
+        packet_outseq = flags->outseq;
 }
 #endif
-#ifdef UB_ENABLESLAVE
-if ( ubconfig.slave ){
-            //packet_outseq = packet_outseq?0:1;
-}
-#endif
-        //}
     }
     //the application can set some own flags
     outpacket.header.flags &= (UB_PACKET_ACK | UB_PACKET_ACKSEQ |
@@ -127,10 +120,12 @@ if ( ubconfig.slave ){
     if(ubadr_isUnicast(outpacket.header.dest) &&
         !(outpacket.header.flags & UB_PACKET_NOACK) &&
         !(outpacket.header.len == 0) ){
+        serial_sendFrames("Dresetpacketacked");
         packet_acked = 0;
     }else{
         //don't wait for an ack
         packet_acked = 1;
+        serial_sendFrames("Dsetpacketacked");
     }
 
     packet_out_full = 1;
@@ -196,6 +191,7 @@ if( ubconfig.master ){
 }
 #endif
     PORTA |= 0x02;
+    serial_sendFrames("Dsetpacketacked");
     packet_acked = 1;
     packet_out_full = 0;
 }
@@ -336,6 +332,7 @@ if( ubconfig.slave ){
 #endif
             if( ackok ){
                 serial_sendFrames("Dackseqok");
+                serial_sendFrames("Dsetpacketacked");
                 packet_acked = 1;
                 packet_out_full = 0;
             }else{
@@ -408,6 +405,7 @@ if( ubconfig.slave &&
         }else{
             serial_sendFrames("Dincomming");
             packet_incomming = 1;
+            outpacket.header = ack;
         }
     }else if( ubadr_isBroadcast(in->header.dest) ){
         //broadcasts go to both
@@ -416,9 +414,6 @@ if( ubconfig.slave &&
     }else if(  ubadr_isLocalMulticast(in->header.dest) ){
         //this multicast is for us
         packet_incomming = 1;
-    }
-    if( packet_incomming ){
-        outpacket.header = ack;
     }
 #ifdef UB_ENABLEMASTER
 if ( ubconfig.master ){
