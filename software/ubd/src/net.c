@@ -155,9 +155,18 @@ void net_removeSockets(struct node *n)
     if( rc  == TRUE ){
         printf("success\n");
     }else{
+        //TODO: log error
         fprintf(stderr, "error in g_socket_close: %s\n", err->message);
         g_error_free(err);
     }
     g_object_unref(n->udp);
-    //FIXME: unref GSource also
+    //TODO: unref GSource also
+    
+    g_socket_service_stop(n->dataservice);
+    g_socket_listener_close(G_SOCKET_LISTENER(n->dataservice));
+    g_object_unref(n->dataservice);
+
+    g_socket_service_stop(n->mgtservice);
+    g_socket_listener_close(G_SOCKET_LISTENER(n->mgtservice));
+    g_object_unref(n->mgtservice);
 }
