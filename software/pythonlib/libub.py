@@ -24,6 +24,7 @@ class UBNode:
             if rc == 'A':
                 return True
             elif rc == 'N':
+                print "error while sending command", list(command)
                 return False
 
     def sendMgtCommand(self, command):
@@ -33,6 +34,7 @@ class UBNode:
             if rc == 'A':
                 return True
             elif rc == 'N':
+                print "error while sending mgt command", list(command)
                 return False
 
     def openMgtSocket(self):
