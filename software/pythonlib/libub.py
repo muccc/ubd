@@ -6,12 +6,15 @@ class UBNode:
         self.address = address
 
     def connect(self):
-        return True
+        self.openSocket()
+
+    def disconnect(self):
+        self.closeSocket()
 
     def setID(self, id):
-        self.openSocket()
-        ret = self.sendCommand('s%s\x00'%id)
-        self.closeSocket()
+        self.openMgtSocket()
+        ret = self.sendMgtCommand('s%s\x00'%id)
+        self.closeMgtSocket()
         print "setID returns", ret
 
     def sendCommand(self, command):
@@ -23,8 +26,24 @@ class UBNode:
             elif rc == 'N':
                 return False
 
+    def sendMgtCommand(self, command):
+        self.mgtsocket.send("B%c%s"%(len(command),command))
+        while True:
+            rc = self.mgtsocket.recv(1)
+            if rc == 'A':
+                return True
+            elif rc == 'N':
+                return False
+
+    def openMgtSocket(self):
+        self.mgtsocket = socket.create_connection(
+                (self.address,2324))
+    def closeMgtSocket(self):
+        self.mgtsocket.close();
+
     def openSocket(self):
         self.socket = socket.create_connection(
-                (self.address,2324))
+                (self.address,2323))
     def closeSocket(self):
         self.socket.close();
+
