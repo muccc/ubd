@@ -347,37 +347,39 @@ if( ubconfig.slave ){
         }
 
 #ifdef UB_ENABLEMASTER
-if( ubconfig.master &&
-        !(in->header.flags & UB_PACKET_NOACK)){
-        //the master has to track seq for all slaves
-        struct ubstat_t * flags = ubstat_getFlags(in->header.src);
-        if( seq == flags->inseq ){
-            flags->inseq = seq?0:1;
+if( ubconfig.master ){
+        if( !(in->header.flags & UB_PACKET_NOACK) ){
+            //the master has to track seq for all slaves
+            struct ubstat_t * flags = ubstat_getFlags(in->header.src);
+            if( seq == flags->inseq ){
+                flags->inseq = seq?0:1;
+                dupe = 0;
+            }
+        }else{
             dupe = 0;
         }
-}else{
-        dupe = 0;
 }
 #endif
 #ifdef UB_ENABLESLAVE
-if( ubconfig.slave &&
-        !(in->header.flags & UB_PACKET_NOACK) ){
-        //if we still have something to send let the master retry
-        if( !ubpacket_free() ){
-            //the packet might have been lost
-            //force a retransmit
-            packet_fired = 0;
-            //the master will retry
-            return;
-        }
-        //a slave only gets packets from the master
-        static uint8_t inseq = 0;
-        if( seq == inseq ){
-            inseq = seq?0:1;
+if( ubconfig.slave ){
+        if( !(in->header.flags & UB_PACKET_NOACK) ){
+            //if we still have something to send let the master retry
+            if( !ubpacket_free() ){
+                //the packet might have been lost
+                //force a retransmit
+                packet_fired = 0;
+                //the master will retry
+                return;
+            }
+            //a slave only gets packets from the master
+            static uint8_t inseq = 0;
+            if( seq == inseq ){
+                inseq = seq?0:1;
+                dupe = 0;
+            }
+        }else{
             dupe = 0;
         }
-}else{
-        dupe = 0;
 }
 #endif
         if( !(in->header.flags & UB_PACKET_NOACK) ){
