@@ -223,8 +223,10 @@ UBSTATUS rs485master_sendPacket(struct ubpacket_t * packet)
     //    return UB_ERROR;
 
     //use the free packet slot
-    if( rs485m_slots[RS485M_PACKETSLOT].full )
+    if( rs485m_slots[RS485M_PACKETSLOT].full ){
+        serial_sendFrames("Drs485merror");
         return UB_ERROR;
+    }
 
     //TODO: check for overflow!
     memcpy((char*)rs485m_packetdata, packet, len);

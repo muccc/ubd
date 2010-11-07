@@ -87,6 +87,7 @@ inline UBSTATUS ubmaster_sendPacket(struct ubpacket_t * packet)
         if( flags->rf && ubconfig.rf )
             return ubrf_sendPacket(packet);
 #endif
+        serial_sendFrames("Dinterface not found");
         return UB_ERROR;
     }
 

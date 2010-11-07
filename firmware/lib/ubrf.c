@@ -78,6 +78,7 @@ UBSTATUS ubrf_sendPacket(struct ubpacket_t * packet)
         packetlen = len;
         return UB_OK;
     }
+    serial_sendFrames("Drferror");
     return UB_ERROR;
 }
 
