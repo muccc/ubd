@@ -157,15 +157,6 @@ uint8_t ubpacket_free(void)
     return !packet_out_full;
 }
 
-/*uint8_t ubpacket_done(void)
-{
-    if(packet_out_full && packet_acked){
-        packet_out_full = 0;
-        return 1;
-    }
-    return 0;
-}*/
-
 static void packet_prepareack(struct ubpacket_t * p)
 {
     ack.dest = p->header.src;
@@ -289,9 +280,12 @@ if( ubconfig.master ){
             }
         }
         if( packet_incomming && in->header.flags & UB_PACKET_MGT ){
-            ubmastermgt_process(&inpacket);
-            //this was a management packet
+            //this is a management packet
             packet_incomming = 0;
+            outpacket.header.flags = 0;
+            if( ubmastermgt_process(&inpacket) ){
+                ubpacket_send();
+            }
         }
         return;
     }
@@ -422,6 +416,7 @@ if ( ubconfig.master ){
     if( forward ){
         ubmaster_forward(in);
     }
+    //management packets should have already been processed
     if( packet_incomming && in->header.flags & UB_PACKET_MGT ){
         packet_incomming = 0;
     }
@@ -431,10 +426,10 @@ if ( ubconfig.master ){
 if ( ubconfig.slave ){
     if( packet_incomming && ubslavemgt_process(&inpacket) ){
         //this was a management packet
-        packet_incomming = 0;
         serial_sendFrames("Dwas for mgt");
-        if( outpacket.header.flags & UB_PACKET_ACK )
-            ubpacket_send();
+        packet_incomming = 0;
+        //management packets always need an ack, so send one
+        ubpacket_send();
     }
 }
 #endif

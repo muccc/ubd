@@ -56,7 +56,6 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
             out->header.flags |= UB_PACKET_MGT;
             sprintf((char *)out->data,"V="__DATE__);
             out->header.len = strlen((char*)out->data);
-            //ubpacket_send();
         break;
         case 'A':
             ubadr_addMulticast(data[1]);

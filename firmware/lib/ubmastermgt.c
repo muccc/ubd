@@ -65,7 +65,7 @@ uint8_t ubmastermgt_process(struct ubpacket_t * p)
             out->header.flags = UB_PACKET_MGT;
             sprintf((char *)out->data,"V="__DATE__);
             out->header.len = strlen((char*)out->data);
-            ubpacket_send();
+            return 1;
         break;
         case 'A':
             ubadr_addMulticast(data[1]);
@@ -74,7 +74,7 @@ uint8_t ubmastermgt_process(struct ubpacket_t * p)
             ubadr_removeMulticast(data[1]);
         break;
     }
-    return 1;
+    return 0;
 }
 
 void ubmastermgt_tick(void)
