@@ -284,7 +284,14 @@ if( ubconfig.master ){
             packet_incomming = 0;
             outpacket.header.flags = 0;
             if( ubmastermgt_process(&inpacket) ){
-                ubpacket_send();
+                //Well this should always be true.
+                //But the master could send a multicast
+                //management packet and we might have our
+                //buffer already full. This comes with
+                //little memory on the chip and
+                //no packet queues...
+                if( ubpacket_free() )
+                    ubpacket_send();
             }
         }
         return;
