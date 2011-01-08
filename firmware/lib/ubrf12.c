@@ -2,7 +2,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
-#include "rf12config.h"
+#include "ubconfig.h"
 #include "ubrf12.h"
 //#include "uart.h"
 #include "leds.h"

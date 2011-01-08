@@ -28,8 +28,6 @@
 #ifndef _FNORDLICHT_CONFIG_H
 #define _FNORDLICHT_CONFIG_H
 
-#define BOARD_0_1       0       //old moodlamp design
-#define BOARD_RF_0_1    1       //proto rf board
 #define BOARD_RF_0_2    2       //current rf board
 
 #ifndef BOARD
@@ -54,12 +52,8 @@
 #define CHANNEL_BLUE    2
 
 #define RC5_DECODER 1
-#define RS485_CTRL  1
 #define SCRIPT_SPEED_CONTROL 1
 #define STATIC_SCRIPTS 1
-#define USB_CTRL 1
-#define UART_BAUDRATE 230400
-#define SERIAL_UART 1
 
 #define CONFIG1_PIN     PB0
 #define CONFIG1_PORT     B
@@ -99,17 +93,6 @@
 #define STATIC_SCRIPTS 1
 #endif
 
-/* include uart support per default */
-#ifndef SERIAL_UART
-#define SERIAL_UART 0
-#endif
-
-/* disable at keyboard decoder per default (EXPERIMENTAL) */
-/* ATTENTION: THIS IS EXPERIMENTAL AND DOES NOT WORK ATM! */
-#ifndef AT_KEYBOARD
-#define AT_KEYBOARD 0
-#endif
-
 /* disable rc5-decoder per default */
 #ifndef RC5_DECODER
 #define RC5_DECODER 1
@@ -120,42 +103,9 @@
 #define SCRIPT_SPEED_CONTROL 1
 #endif
 
-/* fifo size must be a power of 2 and below 128 */
-//#define UART_FIFO_SIZE 32
-#ifndef UART_BAUDRATE
-#define UART_BAUDRATE 19200
-#endif
-
 #ifndef PWM_USESCALE
 #define PWM_USESCALE
 #endif
-
-/* enable this if you want to control a fnordlicht via RS485 */
-#if RS485_CTRL
-
-#define TEENSY_SUPPORT
-
-#define RS485_TX_PIN_PORT   C
-#define RS485_TX_PIN_PIN    PC4
-
-#define RS485_NRX_PIN_PORT  C
-#define RS485_NRX_PIN_PIN   PC5
-
-#define ZBUS_BAUDRATE 115200
-/*#define RS485_TX_DDR    DDRD
-#define RS485_RX_DDR    DDRD
-#define RS485_RX_PORT   PORTD
-#define RS485_TX_PORT   PORTD
-
-#define RS485_TX_PIN    PD4
-#define RS485_NRX_PIN   PD5*/
-
-#endif
-
-/*#if (RS485_CTRL == 1) && (SERIAL_UART == 1) && !(ROLE == ROLE_MASTER)
-#error "RS485_CTRL and SERIAL_UART are mutually exclusive!"
-#endif*/
-
 
 #include <avr/version.h>
 

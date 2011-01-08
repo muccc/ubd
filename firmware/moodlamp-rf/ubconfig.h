@@ -2,6 +2,49 @@
 #define __UB_CONFIG_H_
 #include <stdint.h>
 
+#define UB_ENABLEBRIDGE 1
+#define UB_ENABLESLAVE  1
+#define UB_ENABLERF     1
+#define UB_ENABLERS485  1
+
+#define UB_MAXMULTICAST 8
+
+#define UB_PACKET_TIMEOUT   100
+#define UB_PACKET_RETRIES   5
+
+typedef uint8_t ubaddress_t;
+#define UB_NODEMAX      128
+
+#define UB_INTERVAL         500
+#define UB_CLASS           1
+
+//rf config
+#define RF_PORT		PORTB
+#define RF_DDR		DDRB
+#define RF_PIN		PINB
+#define SDI		5
+#define SCK		7
+#define CS		4
+#define SDO		6
+
+#define RF_IRQDDR	DDRB
+#define RF_IRQPIN	PINB
+#define RF_IRQPORT  PORTB
+#define IRQ		2
+
+#define RF_EICR     EICRA
+#define RF_EICR_MASK    (1<<ISC21)
+#define RF_EIMSK    EIMSK
+#define RF_EXTINT   INT2
+#define RF_SIGNAL   INT2_vect
+
+
+#define RESET_PORT  PORTB
+#define RESET_DDR   DDRB
+#define RESET       PB3
+
+//rs485 config
+#define UB_QUERYMAX     30
 #define RS485_BITRATE       115200
 #define RS485_ISR_EDGE      PCINT3_vect
 
@@ -23,29 +66,5 @@
 #define UB_QUERY        '4'
 #define UB_BOOTLOADER   '5'
 
-#define UB_NODEMAX      128
-
-
-#define UB_ENABLEBRIDGE 1
-#define UB_ENABLESLAVE  1
-#define UB_ENABLERF     1
-#define UB_ENABLERS485  1
-
-#define UB_QUERYMAX     30
-#define UB_MAXMULTICAST 8
-
-#define UB_PACKET_TIMEOUT   100
-#define UB_PACKET_RETRIES   5
-
-typedef uint8_t ubaddress_t;
-
-#define UB_ADDRESS_MASTER       1
-#define UB_ADDRESS_BRIDGE       2
-
-#define UB_ADDRESS_BROADCAST     ((1<<sizeof(ubaddress_t)*8)-1)     //all ones
-#define UB_ADDRESS_MULTICAST     (1<<(sizeof(ubaddress_t)*8-1))     //first bit is one
-
-#define UB_INTERVAL         500
-#define UB_CLASS           1
 #endif
 
