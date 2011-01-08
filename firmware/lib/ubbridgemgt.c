@@ -4,7 +4,7 @@
 
 #include "ub.h"
 #include "ubpacket.h"
-#include "ubmastermgt.h"
+#include "ubbridgemgt.h"
 #include "ubaddress.h"
 
 #include "settings.h"
@@ -12,9 +12,9 @@
 #include "ubrs485master.h"
 
 #define  MGT_BRIDGEDISCOVER     'B'
-#define  MGT_MASTERALIVE        'A'
+#define  MGT_BRIDGEALIVE        'A'
 
-uint8_t ubmastermgt_state;
+uint8_t ubbridgemgt_state;
 
 enum slavemgtstate {
     DISCOVER,
@@ -22,12 +22,12 @@ enum slavemgtstate {
     CONNECTED
 };
 
-void ubmastermgt_init(void)
+void ubbridgemgt_init(void)
 {
-    ubmastermgt_state = DISCOVER;
+    ubbridgemgt_state = DISCOVER;
 }
 
-uint8_t ubmastermgt_process(struct ubpacket_t * p)
+uint8_t ubbridgemgt_process(struct ubpacket_t * p)
 {
     uint8_t * data = p->data;
     struct ubstat_t * flags;
@@ -46,7 +46,7 @@ uint8_t ubmastermgt_process(struct ubpacket_t * p)
         break;
         case 'O':
             ubconfig.configured = 1;
-            ubmastermgt_state = CONNECTED;
+            ubbridgemgt_state = CONNECTED;
         break;
         case 's':
             settings_setid(data+1);
@@ -77,14 +77,14 @@ uint8_t ubmastermgt_process(struct ubpacket_t * p)
     return 0;
 }
 
-void ubmastermgt_tick(void)
+void ubbridgemgt_tick(void)
 {
     struct ubpacket_t * p;
     static uint16_t time = 0;
     static uint8_t flags = 0;
     if(!time--){
         time = 5000;
-        switch(ubmastermgt_state){
+        switch(ubbridgemgt_state){
             case DISCOVER:
                 flags |= 0x01;
             break;
@@ -108,7 +108,7 @@ void ubmastermgt_tick(void)
         }else if( flags & 0x02 ){
             flags ^= 0x02;
             p->header.flags = UB_PACKET_MGT | UB_PACKET_UNSOLICITED;
-            p->data[0] = MGT_MASTERALIVE;
+            p->data[0] = MGT_BRIDGEALIVE;
             p->header.len = 1;
         }
         ubpacket_send();

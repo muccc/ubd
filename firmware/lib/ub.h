@@ -11,18 +11,18 @@ enum UB_INTERFACE { UB_NOIF  = 0,
 enum UB_ERR_CODE { UB_OK, UB_ERROR };
 typedef uint8_t UBSTATUS;
 
-enum UB_SLAVE_CODE { UB_MASTER, UB_SLAVE };
+enum UB_SLAVE_CODE { UB_BRIDGE, UB_SLAVE };
 struct ub_config {
     uint8_t rs485master;
     uint8_t rs485slave;
-    uint8_t master;
+    uint8_t bridge;
     uint8_t slave;
     uint8_t configured;
     uint8_t rf;
 };
 
 extern struct ub_config ubconfig;
-void ub_init(uint8_t ubmode, int8_t slaveinterfaces, int8_t masterinterfaces);
+void ub_init(uint8_t ubmode, int8_t slaveinterfaces, int8_t bridgeinterfaces);
 void ub_process(void);
 void ub_tick(void);
 inline uint8_t ub_getAddress(void);

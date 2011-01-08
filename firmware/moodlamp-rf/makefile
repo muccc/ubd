@@ -108,8 +108,8 @@ SRC = $(TARGET).c \
 	../lib/ubslavemgt.c \
 	../lib/ubrf12.c \
 	../lib/ubrf.c \
-	../lib/ubmastermgt.c \
-	../lib/ubmaster.c \
+	../lib/ubbridgemgt.c \
+	../lib/ubbridge.c \
 	../lib/ubrs485master.c \
 	../lib/ubstat.c
 # List C++ source files here. (C dependencies are automatically generated.)

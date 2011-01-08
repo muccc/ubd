@@ -8,10 +8,10 @@
 #include "ubpacket.h"
 #include "ubstat.h"
 #include "ubaddress.h"
-#include "ubmaster.h"
+#include "ubbridge.h"
 
 #include "ubslavemgt.h"
-#include "ubmastermgt.h"
+#include "ubbridgemgt.h"
 
 #include "serial_handler.h"
 
@@ -81,7 +81,7 @@ void ubpacket_send(void)
     packet_timeout = UB_PACKET_TIMEOUT;
 
     //Don't request an ack from the host computer
-    if( outpacket.header.dest == UB_ADDRESS_MASTER && ubconfig.master )
+    if( outpacket.header.dest == UB_ADDRESS_MASTER && ubconfig.bridge )
         outpacket.header.flags |= UB_PACKET_NOACK;
 
     //packet_acked won't be set if this is a retransmit
@@ -90,8 +90,8 @@ void ubpacket_send(void)
             !(outpacket.header.flags & UB_PACKET_NOACK)){
         serial_sendFrames("Dresetretries");
         packet_retries = 0;
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
+#ifdef UB_ENABLEBRIDGE
+if( ubconfig.bridge ){
         struct ubstat_t *flags=ubstat_getFlags(outpacket.header.dest);
         packet_outseq = flags->outseq;
 }
@@ -136,16 +136,16 @@ if( ubconfig.master ){
         if( outpacket.header.flags & UB_PACKET_NOACK ||
             outpacket.header.len == 0 )
             packet_out_full = 0;
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
+#ifdef UB_ENABLEBRIDGE
+if( ubconfig.bridge ){
         serial_sendFrames("DsPok");
 }
 #endif
     }else{
         //PORTA ^= (1<<4);
         packet_fired = 0;
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
+#ifdef UB_ENABLEBRIDGE
+if( ubconfig.bridge ){
         serial_sendFrames("DsPerror");
 }
 #endif
@@ -174,10 +174,10 @@ static void packet_prepareack(struct ubpacket_t * p)
 static void ubpacket_abort(void)
 {
     serial_sendFrames("Dabort");
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
+#ifdef UB_ENABLEBRIDGE
+if( ubconfig.bridge ){
     if( outpacket.header.src == UB_ADDRESS_MASTER ){
-        ubmaster_abort();
+        ubbridge_abort();
     }
 }
 #endif
@@ -210,15 +210,15 @@ void ubpacket_process(void)
             packet_fired = 1;
             if( outpacket.header.flags & UB_PACKET_NOACK )
                 packet_out_full = 0;
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
+#ifdef UB_ENABLEBRIDGE
+if( ubconfig.bridge ){
             serial_sendFrames("DsPok");
 }
 #endif
         }else{
             //PORTA ^= (1<<7);
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
+#ifdef UB_ENABLEBRIDGE
+if( ubconfig.bridge ){
             serial_sendFrames("DsPerror");
 }
 #endif
@@ -243,16 +243,16 @@ void ubpacket_processPacket(struct ubpacket_t * in)
     //did we see this packet bevore? gets reset when the se is correct
     //or the noack flag is set
     uint8_t dupe    = 1;
-#ifdef UB_ENABLEMASTER
+#ifdef UB_ENABLEBRIDGE
     serial_sendFrames("Dbridge: processing");
-if( ubconfig.master ){
+if( ubconfig.bridge ){
     if( in->header.src == UB_ADDRESS_MASTER ){
-        serial_sendFrames("Dbridge: src=master");
+        serial_sendFrames("Dbridge: src=bridge");
         if( ubadr_isLocal(in->header.dest) ){
             serial_sendFrames("Dbridge: local");
             //this packet was only for us and needs no special care
             packet_incomming = 1;
-            ubmaster_done();
+            ubbridge_done();
         }else if( ubadr_isBroadcast(in->header.dest) ){
             serial_sendFrames("Dbridge: bc");
             //broadcasts also go the other interfaces
@@ -260,30 +260,30 @@ if( ubconfig.master ){
             //packets from the master will only be received when
             //the other interfaces are ready to accept a packet
             ub_sendPacket(in);
-            ubmaster_done();
+            ubbridge_done();
         }else if( ubadr_isLocalMulticast(in->header.dest) ){
             serial_sendFrames("Dbridge: lmc");
             packet_incomming = 1;
             ub_sendPacket(in);
-            ubmaster_done();
+            ubbridge_done();
         }else if( ubadr_isMulticast(in->header.dest) ){
             serial_sendFrames("Dbridge: mc");
             ub_sendPacket(in);
-            ubmaster_done();
+            ubbridge_done();
         }else{
             //send and wait for the ack
             serial_sendFrames("Dbridge: sc");
             memcpy(&outpacket,in,in->header.len + sizeof(in->header));
             ubpacket_send();
             if( in->header.flags & UB_PACKET_NOACK){
-                ubmaster_done();
+                ubbridge_done();
             }
         }
         if( packet_incomming && in->header.flags & UB_PACKET_MGT ){
             //this is a management packet
             packet_incomming = 0;
             outpacket.header.flags = 0;
-            if( ubmastermgt_process(&inpacket) ){
+            if( ubbridgemgt_process(&inpacket) ){
                 //Well this should always be true.
                 //But the master could send a multicast
                 //management packet and we might have our
@@ -303,13 +303,13 @@ if( ubconfig.master ){
         return;
     //is this packet addressed to us?
     if( ubadr_isLocal(in->header.dest) ||
-        (ubconfig.master && (in->header.dest == UB_ADDRESS_MASTER)) ){
+        (ubconfig.bridge && (in->header.dest == UB_ADDRESS_MASTER)) ){
 
         if( in->header.flags & UB_PACKET_ACK ){
             uint8_t ackok = 0;
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
-            //the master has to track seq for all slaves
+#ifdef UB_ENABLEBRIDGE
+if( ubconfig.bridge ){
+            //the bridge has to track seq for all slaves
             struct ubstat_t * flags = ubstat_getFlags(in->header.src);
             if( ackseq != flags->outseq ){
                 flags->outseq = ackseq;
@@ -318,13 +318,13 @@ if( ubconfig.master ){
 
             if( ackok && packet_out_full && 
                     outpacket.header.src == UB_ADDRESS_MASTER ){
-                ubmaster_done();
+                ubbridge_done();
             }
 }
 #endif
 #ifdef UB_ENABLESLAVE
 if( ubconfig.slave ){
-            //a slave only gets packets from the master
+            //a slave only gets packets from the bridge
             if( ackseq != packet_outseq ){
                 packet_outseq = ackseq;
                 ackok = 1;
@@ -347,10 +347,10 @@ if( ubconfig.slave ){
             in->header.flags ^= UB_PACKET_ACK;
         }
 
-#ifdef UB_ENABLEMASTER
-if( ubconfig.master ){
+#ifdef UB_ENABLEBRIDGE
+if( ubconfig.bridge ){
         if( !(in->header.flags & UB_PACKET_NOACK) ){
-            //the master has to track seq for all slaves
+            //the bridge has to track seq for all slaves
             struct ubstat_t * flags = ubstat_getFlags(in->header.src);
             if( seq == flags->inseq ){
                 flags->inseq = seq?0:1;
@@ -364,15 +364,15 @@ if( ubconfig.master ){
 #ifdef UB_ENABLESLAVE
 if( ubconfig.slave ){
         if( !(in->header.flags & UB_PACKET_NOACK) ){
-            //if we still have something to send let the master retry
+            //if we still have something to send let the bridge retry
             if( !ubpacket_free() ){
                 //the packet might have been lost
                 //force a retransmit
                 packet_fired = 0;
-                //the master will retry
+                //the bridge will retry
                 return;
             }
-            //a slave only gets packets from the master
+            //a slave only gets packets from the bridge
             static uint8_t inseq = 0;
             if( seq == inseq ){
                 inseq = seq?0:1;
@@ -418,10 +418,10 @@ if( ubconfig.slave ){
         //this multicast is for us
         packet_incomming = 1;
     }
-#ifdef UB_ENABLEMASTER
-if ( ubconfig.master ){
+#ifdef UB_ENABLEBRIDGE
+if ( ubconfig.bridge ){
     if( forward ){
-        ubmaster_forward(in);
+        ubbridge_forward(in);
     }
     //management packets should have already been processed
     if( packet_incomming && in->header.flags & UB_PACKET_MGT ){

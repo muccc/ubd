@@ -1,4 +1,4 @@
-#include "ubmaster.h"
+#include "ubbridge.h"
 #include "ubconfig.h"
 #include "settings.h"
 #include "ubrs485master.h"
@@ -11,7 +11,7 @@
 #include <avr/io.h>
 uint16_t            ubm_ticks = 0;
 
-void ubmaster_init(void)
+void ubbridge_init(void)
 {
     serial_sendFrames("DInit Master");
 #ifdef UB_ENABLERS485
@@ -29,7 +29,7 @@ void ubmaster_init(void)
 }
 
 //1ms
-inline void ubmaster_tick(void)
+inline void ubbridge_tick(void)
 {
     ubm_ticks++;
 #ifdef UB_ENABLERS485
@@ -42,7 +42,7 @@ inline void ubmaster_tick(void)
 #endif
 }
 
-inline void ubmaster_process(void)
+inline void ubbridge_process(void)
 {
 #ifdef UB_ENABLERS485
     if( ubconfig.rs485master )
@@ -54,12 +54,12 @@ inline void ubmaster_process(void)
 #endif
 }
 
-inline UBSTATUS ubmaster_sendPacket(struct ubpacket_t * packet)
+inline UBSTATUS ubbridge_sendPacket(struct ubpacket_t * packet)
 {
     uint8_t dest = packet->header.dest;
     
     if( dest == UB_ADDRESS_MASTER ){
-        ubmaster_forward(packet);
+        ubbridge_forward(packet);
         return UB_OK;
     }
 
@@ -73,7 +73,7 @@ inline UBSTATUS ubmaster_sendPacket(struct ubpacket_t * packet)
             ubrf_sendPacket(packet);
 #endif
         if( packet->header.src != UB_ADDRESS_MASTER ){
-            ubmaster_forward(packet);
+            ubbridge_forward(packet);
         }
 
     }else{
@@ -94,7 +94,7 @@ inline UBSTATUS ubmaster_sendPacket(struct ubpacket_t * packet)
     return UB_OK; 
 }
 
-inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
+inline uint8_t ubbridge_getPacket(struct ubpacket_t * packet)
 {
     uint8_t len = 0;
     //leds_rx();
@@ -117,9 +117,9 @@ inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
             }
             //FIXME: that was this for again?
             //seems like every command with len=1
-            //just resets the master?
+            //just resets the bridge?
             serial_sendFrames("D1");
-            ub_init(UB_MASTER, -1, -1);
+            ub_init(UB_BRIDGE, -1, -1);
         }
 #ifdef UB_ENABLERF
     }
@@ -147,7 +147,7 @@ inline uint8_t ubmaster_getPacket(struct ubpacket_t * packet)
 }
 
 
-void ubmaster_forward(struct ubpacket_t * packet)
+void ubbridge_forward(struct ubpacket_t * packet)
 {
     serial_putStart();
     serial_putcenc('P');
@@ -155,12 +155,12 @@ void ubmaster_forward(struct ubpacket_t * packet)
     serial_putStop();
 }
 
-void ubmaster_done(void)
+void ubbridge_done(void)
 {
     serial_sendFramec('S');
 }
 
-void ubmaster_abort(void)
+void ubbridge_abort(void)
 {
     serial_sendFramec('A');
 }

@@ -75,6 +75,12 @@ static const uint8_t colorchange_rnd[] PROGMEM = {
 
 
 static const uint8_t colorchange_red[] PROGMEM = {
+    MACRO_SET_CHANNEL(CHANNEL_RED, 0),
+    MACRO_SET_CHANNEL(CHANNEL_GREEN, 0),
+    MACRO_SET_CHANNEL(CHANNEL_BLUE, 0),
+    MACRO_SLEEP(1),
+    MACRO_JUMP(-1),
+
     MACRO_FADE_CHANNEL(CHANNEL_RED, 25, 0x200),
 
     MACRO_WAIT(_BV(CHANNEL_RED)|_BV(CHANNEL_GREEN)|_BV(CHANNEL_BLUE)),
