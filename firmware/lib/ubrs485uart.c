@@ -217,7 +217,7 @@ LICENSE:
 ISR(UART0_RECEIVE_INTERRUPT)//, ISR_NOBLOCK)
 {
 //    volatile uint8_t t  = UART0_DATA;
-#ifdef UB_ENABLEMASTER
+#ifdef UB_ENABLEBRIDGE
     if( ubconfig.rs485master ){
         rs485master_rx();
     }
@@ -233,7 +233,7 @@ ISR(UART0_RECEIVE_INTERRUPT)//, ISR_NOBLOCK)
 ISR(UART0_TRANSMIT_INTERRUPT)//, ISR_NOBLOCK)
 {
     UART0_CONTROL &= ~_BV(UART0_UDRIE);
-#ifdef UB_ENABLEMASTER
+#ifdef UB_ENABLEBRIDGE
     if( ubconfig.rs485master ){
         rs485master_tx();
     }
@@ -249,7 +249,7 @@ ISR(UART0_TRANSMIT_INTERRUPT)//, ISR_NOBLOCK)
 ISR(USART0_TX_vect)//, ISR_NOBLOCK)
 {
     //return;
-#ifdef UB_ENABLEMASTER
+#ifdef UB_ENABLEBRIDGE
     if( ubconfig.rs485master ){
         rs485master_txend();
     }
@@ -415,7 +415,7 @@ inline uint8_t rs485uart_lineActive(void)
 ISR(RS485_ISR_EDGE, ISR_NOBLOCK)
 {
     udebug_edge();
-#ifdef UB_ENABLEMASTER
+#ifdef UB_ENABLEBRIDGE
     if( ubconfig.rs485master ){
         rs485master_edge();
     }

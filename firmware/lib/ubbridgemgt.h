@@ -1,5 +1,5 @@
-#ifndef __UBMASTERMGT_H_
-#define __UBMASTERMGT_H_
+#ifndef __UBBRIDGEMGT_H_
+#define __UBBRIDGEMGT_H_
 #include <stdint.h>
 #include "ubpacket.h"
 

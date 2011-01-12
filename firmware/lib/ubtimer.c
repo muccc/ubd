@@ -1,4 +1,4 @@
-#include <avr/io.h>
+    #include <avr/io.h>
 #include <avr/interrupt.h>
 
 #include "ub.h"
@@ -12,7 +12,7 @@
 
 ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
 {
-#ifdef UB_ENABLEMASTER
+#ifdef UB_ENABLEBRIDGE
     if( ubconfig.rs485master ){
         rs485master_timer();
     }
