@@ -51,6 +51,8 @@ inline struct ubpacket_t * ubpacket_getIncomming(void)
 
 inline uint8_t ubpacket_gotPacket(void)
 {
+    if( packet_incomming )
+        serial_sendFrames("Dpacketincomming");
     return packet_incomming;
 }
 
@@ -82,6 +84,10 @@ void ubpacket_send(void)
 
     //Don't request an ack from the host computer
     if( outpacket.header.dest == UB_ADDRESS_MASTER && ubconfig.bridge )
+        outpacket.header.flags |= UB_PACKET_NOACK;
+    
+    //Dont't request acks on multicast and braodcast packets
+    if( !ubadr_isUnicast(outpacket.header.dest) )
         outpacket.header.flags |= UB_PACKET_NOACK;
 
     //packet_acked won't be set if this is a retransmit
@@ -251,11 +257,14 @@ if( ubconfig.bridge ){
         if( ubadr_isLocal(in->header.dest) ){
             serial_sendFrames("Dbridge: local");
             //this packet was only for us and needs no special care
+            serial_sendFrames("Dincomming");
             packet_incomming = 1;
+            in->header.flags |= UB_PACKET_NOACK;
             ubbridge_done();
         }else if( ubadr_isBroadcast(in->header.dest) ){
             serial_sendFrames("Dbridge: bc");
             //broadcasts also go the other interfaces
+            serial_sendFrames("Dincomming");
             packet_incomming = 1;
             //packets from the master will only be received when
             //the other interfaces are ready to accept a packet
@@ -263,6 +272,7 @@ if( ubconfig.bridge ){
             ubbridge_done();
         }else if( ubadr_isLocalMulticast(in->header.dest) ){
             serial_sendFrames("Dbridge: lmc");
+            serial_sendFrames("Dincomming");
             packet_incomming = 1;
             ub_sendPacket(in);
             ubbridge_done();
@@ -281,9 +291,11 @@ if( ubconfig.bridge ){
         }
         if( packet_incomming && in->header.flags & UB_PACKET_MGT ){
             //this is a management packet
+            serial_sendFrames("Disformgt");
             packet_incomming = 0;
             outpacket.header.flags = 0;
             if( ubbridgemgt_process(&inpacket) ){
+                serial_sendFrames("Dmgthasanswer");
                 //Well this should always be true.
                 //But the master could send a multicast
                 //management packet and we might have our
@@ -298,6 +310,8 @@ if( ubconfig.bridge ){
     }
 }
 #endif
+
+                serial_sendFrames("Dcheckpacket");
     //ignore empty packets
     if( in->header.len == 0 && !(in->header.flags & UB_PACKET_ACK) )
         return;
@@ -412,10 +426,12 @@ if( ubconfig.slave ){
         }
     }else if( ubadr_isBroadcast(in->header.dest) ){
         //broadcasts go to both
+        serial_sendFrames("Dincomming");
         packet_incomming = 1;
         forward = 1;
     }else if(  ubadr_isLocalMulticast(in->header.dest) ){
         //this multicast is for us
+        serial_sendFrames("Dincomming");
         packet_incomming = 1;
     }
 #ifdef UB_ENABLEBRIDGE
@@ -425,18 +441,25 @@ if ( ubconfig.bridge ){
     }
     //management packets should have already been processed
     if( packet_incomming && in->header.flags & UB_PACKET_MGT ){
+    serial_sendFrames("Dprocessed");
         packet_incomming = 0;
     }
 }
 #endif
 #ifdef UB_ENABLESLAVE
 if ( ubconfig.slave ){
-    if( packet_incomming && ubslavemgt_process(&inpacket) ){
-        //this was a management packet
-        serial_sendFrames("Dwas for mgt");
-        packet_incomming = 0;
-        //management packets always need an ack, so send one
-        ubpacket_send();
+    if( packet_incomming ){
+        uint8_t rc = ubslavemgt_process(&inpacket);
+        if( rc ){
+            //this was a management packet
+            serial_sendFrames("Dwas for mgt");
+            packet_incomming = 0;
+            if( rc == 2 ){
+                //packet was valid
+                if( ubadr_isLocal(in->header.dest) )
+                    ubpacket_send();
+            }
+        }
     }
 }
 #endif

@@ -121,7 +121,9 @@ void ubrf12_init(void)
     spi_init();
 #ifdef RESET
     volatile unsigned long j;
+    RESET_DDR |= (1<<RESET);
     RESET_PORT |= (1<<RESET);
+    _delay_ms(10);
     RESET_PORT &= ~(1<<RESET);
     for(j=0;j<900000;j++)
         wdt_reset();

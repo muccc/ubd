@@ -29,6 +29,8 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
 
     if(!(p->header.flags & UB_PACKET_MGT))
         return 0;
+    if(!(p->header.src == UB_ADDRESS_MASTER))
+        return 1;
 
     switch(data[0]){
         case 'S':
@@ -74,7 +76,7 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
             ubpacket_send();
        break;*/
     }
-    return 1;
+    return 2;
 }
 
 void ubslavemgt_tick(void)
