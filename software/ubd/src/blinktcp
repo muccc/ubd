@@ -1,9 +1,9 @@
 while [ true ]
 do
 echo red
-echo -e "B\x05C\xFF\x00\x00" | nc6 $1 2323 -q 1
+echo -e "B\x04C\xFF\x00\x00" | nc6 $1 2323 -q 1
 sleep .5
 echo blue
-echo -e "B\x05C\x00\x00\xFF" | nc6 $1 2323 -q 1
+echo -e "B\x04C\x00\x00\xFF" | nc6 $1 2323 -q 1
 sleep .5
 done
