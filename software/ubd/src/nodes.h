@@ -34,6 +34,7 @@ struct node{
     GSocket         *ubnetd;
     gboolean        netup;
     GSocket         *udp;
+    GSource         *udpsource;
 
     UBSTREAM_CALLBACK   currentcallback;
     gpointer            currentdata;
@@ -43,7 +44,6 @@ struct node{
 
     GSocketService * dataservice;
     GSocketService * mgtservice;
-
 };
 
 void nodes_init(void);

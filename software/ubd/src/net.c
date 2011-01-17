@@ -108,6 +108,7 @@ void net_createSockets(struct node *n)
     g_assert(source != NULL);
     g_source_set_callback(source, (GSourceFunc)udp_read, n, NULL);
     g_source_attach(source, g_main_context_default());
+    n->udpsource = source;
 
     printf("net_createSockets: Creating tcp data socket listener on port 2323\n");
     GSocketService *gss = g_socket_service_new();
@@ -151,6 +152,9 @@ void net_removeSockets(struct node *n)
     //remove data udp socket
     //gboolean rc = g_socket_shutdown(n->udp, FALSE, FALSE, &err);
     printf("net_removeSockets: Closing udp socket\n");
+    g_source_destroy(n->udpsource);
+    g_source_unref(n->udpsource);
+
     gboolean rc = g_socket_close(n->udp, &err);
     if( rc  == TRUE ){
         printf("success\n");
@@ -160,7 +164,6 @@ void net_removeSockets(struct node *n)
         g_error_free(err);
     }
     g_object_unref(n->udp);
-    //TODO: unref GSource also
     
     g_socket_service_stop(n->dataservice);
     g_socket_listener_close(G_SOCKET_LISTENER(n->dataservice));
