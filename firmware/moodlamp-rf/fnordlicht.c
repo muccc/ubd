@@ -139,7 +139,7 @@ int main(void) {
     if((global.config == 21 && !PIN_HIGH(JUMPER1C1)) || (global.config== 30 && !PIN_HIGH(JUMPER1C2)))
         ub_init(UB_SLAVE, UB_RF, UB_RF|UB_RS485);
     else
-        ub_init(UB_SLAVE, UB_RS485, UB_RF|UB_RS485);
+        ub_init(UB_SLAVE, UB_RS485, UB_RS485);
 
     /* enable interrupts globally */
     sei();
