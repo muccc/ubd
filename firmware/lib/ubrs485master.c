@@ -13,6 +13,7 @@
 #include "ubpacket.h"
 #include "ubcrc.h"
 #include "ubaddress.h"
+#include "udebug.h"
 
 #define UB_HOSTADR          1
 #define UB_MASTERADR        2
@@ -224,7 +225,7 @@ UBSTATUS rs485master_sendPacket(struct ubpacket_t * packet)
 
     //use the free packet slot
     if( rs485m_slots[RS485M_PACKETSLOT].full ){
-        serial_sendFrames("Drs485merror");
+        UDEBUG("Drs485merror");
         return UB_ERROR;
     }
 

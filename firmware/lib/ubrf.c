@@ -13,7 +13,7 @@
 #include "ubaddress.h"
 #include "ubrf12.h"
 #include "random.h"
-#include "serial_handler.h"
+#include "udebug.h"
 
 enum UBRF_STATE {   UBRF_IDLE,
                     UBRF_WAITFREE,
@@ -56,7 +56,7 @@ UBSTATUS ubrf_getPacket(struct ubpacket_t * packet)
         ubrf12_rxstart();
         return UB_OK;
     }
-    serial_sendFrames("DRF CRC WRONG");
+    UDEBUG("DRF CRC WRONG");
     ubrf12_rxstart();
     return UB_ERROR;
 }
@@ -78,7 +78,7 @@ UBSTATUS ubrf_sendPacket(struct ubpacket_t * packet)
         packetlen = len;
         return UB_OK;
     }
-    serial_sendFrames("Drferror");
+    UDEBUG("Drferror");
     return UB_ERROR;
 }
 

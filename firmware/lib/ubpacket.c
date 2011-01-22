@@ -13,7 +13,7 @@
 #include "ubslavemgt.h"
 #include "ubbridgemgt.h"
 
-#include "serial_handler.h"
+#include "udebug.h"
 
 typedef uint16_t    time_t;
 
@@ -52,13 +52,13 @@ inline struct ubpacket_t * ubpacket_getIncomming(void)
 inline uint8_t ubpacket_gotPacket(void)
 {
     if( packet_incomming )
-        serial_sendFrames("Dpacketincomming");
+        UDEBUG("Dpacketincomming");
     return packet_incomming;
 }
 
 inline void ubpacket_processed(void)
 {
-    serial_sendFrames("Dprocessed");
+    UDEBUG("Dprocessed");
     packet_incomming = 0;
 }
 
@@ -79,7 +79,7 @@ void ubpacket_send(void)
     //    !(outpacket.header.flags & UB_PACKET_ACK) ){
     //    return;
     //}
-    serial_sendFrames("Dresettimeout");
+    UDEBUG("Dresettimeout");
     packet_timeout = UB_PACKET_TIMEOUT;
 
     //Don't request an ack from the host computer
@@ -94,7 +94,7 @@ void ubpacket_send(void)
     if(ubadr_isUnicast(outpacket.header.dest) &&
             packet_acked &&
             !(outpacket.header.flags & UB_PACKET_NOACK)){
-        serial_sendFrames("Dresetretries");
+        UDEBUG("Dresetretries");
         packet_retries = 0;
 #ifdef UB_ENABLEBRIDGE
 if( ubconfig.bridge ){
@@ -115,10 +115,10 @@ if( ubconfig.bridge ){
 
     //set the sequence number
     if( packet_outseq ){
-        serial_sendFrames("Dsetseq");
+        UDEBUG("Dsetseq");
         outpacket.header.flags |= UB_PACKET_SEQ;
     }else{
-        serial_sendFrames("Dunsetseq");
+        UDEBUG("Dunsetseq");
     }
 
     //outpacket.header.src = ubadr_getAddress();
@@ -126,12 +126,12 @@ if( ubconfig.bridge ){
     if(ubadr_isUnicast(outpacket.header.dest) &&
         !(outpacket.header.flags & UB_PACKET_NOACK) &&
         !(outpacket.header.len == 0) ){
-        serial_sendFrames("Dresetpacketacked");
+        UDEBUG("Dresetpacketacked");
         packet_acked = 0;
     }else{
         //don't wait for an ack
         packet_acked = 1;
-        serial_sendFrames("Dsetpacketacked");
+        UDEBUG("Dsetpacketacked");
     }
 
     packet_out_full = 1;
@@ -144,7 +144,7 @@ if( ubconfig.bridge ){
             packet_out_full = 0;
 #ifdef UB_ENABLEBRIDGE
 if( ubconfig.bridge ){
-        serial_sendFrames("DsPok");
+        UDEBUG("DsPok");
 }
 #endif
     }else{
@@ -152,7 +152,7 @@ if( ubconfig.bridge ){
         packet_fired = 0;
 #ifdef UB_ENABLEBRIDGE
 if( ubconfig.bridge ){
-        serial_sendFrames("DsPerror");
+        UDEBUG("DsPerror");
 }
 #endif
     }
@@ -179,7 +179,7 @@ static void packet_prepareack(struct ubpacket_t * p)
 
 static void ubpacket_abort(void)
 {
-    serial_sendFrames("Dabort");
+    UDEBUG("Dabort");
 #ifdef UB_ENABLEBRIDGE
 if( ubconfig.bridge ){
     if( outpacket.header.src == UB_ADDRESS_MASTER ){
@@ -188,7 +188,7 @@ if( ubconfig.bridge ){
 }
 #endif
     PORTA |= 0x02;
-    serial_sendFrames("Dsetpacketacked");
+    UDEBUG("Dsetpacketacked");
     packet_acked = 1;
     packet_out_full = 0;
 }
@@ -198,9 +198,9 @@ static void ubpacket_sendack(void)
     if( ub_sendPacket((struct ubpacket_t *)&ack)
                                     == UB_OK ){
         packet_ack_full = 0;
-        serial_sendFrames("DAsPok");
+        UDEBUG("DAsPok");
     }else{
-        serial_sendFrames("DAsPerror");
+        UDEBUG("DAsPerror");
     }
 }
 
@@ -218,14 +218,14 @@ void ubpacket_process(void)
                 packet_out_full = 0;
 #ifdef UB_ENABLEBRIDGE
 if( ubconfig.bridge ){
-            serial_sendFrames("DsPok");
+            UDEBUG("DsPok");
 }
 #endif
         }else{
             //PORTA ^= (1<<7);
 #ifdef UB_ENABLEBRIDGE
 if( ubconfig.bridge ){
-            serial_sendFrames("DsPerror");
+            UDEBUG("DsPerror");
 }
 #endif
         }
@@ -250,39 +250,39 @@ void ubpacket_processPacket(struct ubpacket_t * in)
     //or the noack flag is set
     uint8_t dupe    = 1;
 #ifdef UB_ENABLEBRIDGE
-    serial_sendFrames("Dbridge: processing");
+    UDEBUG("Dbridge: processing");
 if( ubconfig.bridge ){
     if( in->header.src == UB_ADDRESS_MASTER ){
-        serial_sendFrames("Dbridge: src=bridge");
+        UDEBUG("Dbridge: src=bridge");
         if( ubadr_isLocal(in->header.dest) ){
-            serial_sendFrames("Dbridge: local");
+            UDEBUG("Dbridge: local");
             //this packet was only for us and needs no special care
-            serial_sendFrames("Dincomming");
+            UDEBUG("Dincomming");
             packet_incomming = 1;
             in->header.flags |= UB_PACKET_NOACK;
             ubbridge_done();
         }else if( ubadr_isBroadcast(in->header.dest) ){
-            serial_sendFrames("Dbridge: bc");
+            UDEBUG("Dbridge: bc");
             //broadcasts also go the other interfaces
-            serial_sendFrames("Dincomming");
+            UDEBUG("Dincomming");
             packet_incomming = 1;
             //packets from the master will only be received when
             //the other interfaces are ready to accept a packet
             ub_sendPacket(in);
             ubbridge_done();
         }else if( ubadr_isLocalMulticast(in->header.dest) ){
-            serial_sendFrames("Dbridge: lmc");
-            serial_sendFrames("Dincomming");
+            UDEBUG("Dbridge: lmc");
+            UDEBUG("Dincomming");
             packet_incomming = 1;
             ub_sendPacket(in);
             ubbridge_done();
         }else if( ubadr_isMulticast(in->header.dest) ){
-            serial_sendFrames("Dbridge: mc");
+            UDEBUG("Dbridge: mc");
             ub_sendPacket(in);
             ubbridge_done();
         }else{
             //send and wait for the ack
-            serial_sendFrames("Dbridge: sc");
+            UDEBUG("Dbridge: sc");
             memcpy(&outpacket,in,in->header.len + sizeof(in->header));
             ubpacket_send();
             if( in->header.flags & UB_PACKET_NOACK){
@@ -291,11 +291,11 @@ if( ubconfig.bridge ){
         }
         if( packet_incomming && in->header.flags & UB_PACKET_MGT ){
             //this is a management packet
-            serial_sendFrames("Disformgt");
+            UDEBUG("Disformgt");
             packet_incomming = 0;
             outpacket.header.flags = 0;
             if( ubbridgemgt_process(&inpacket) ){
-                serial_sendFrames("Dmgthasanswer");
+                UDEBUG("Dmgthasanswer");
                 //Well this should always be true.
                 //But the master could send a multicast
                 //management packet and we might have our
@@ -311,7 +311,7 @@ if( ubconfig.bridge ){
 }
 #endif
 
-                serial_sendFrames("Dcheckpacket");
+                UDEBUG("Dcheckpacket");
     //ignore empty packets
     if( in->header.len == 0 && !(in->header.flags & UB_PACKET_ACK) )
         return;
@@ -346,12 +346,12 @@ if( ubconfig.slave ){
 }
 #endif
             if( ackok ){
-                serial_sendFrames("Dackseqok");
-                serial_sendFrames("Dsetpacketacked");
+                UDEBUG("Dackseqok");
+                UDEBUG("Dsetpacketacked");
                 packet_acked = 1;
                 packet_out_full = 0;
             }else{
-                serial_sendFrames("DackseqNok");
+                UDEBUG("DackseqNok");
             }
 
             //Ignore empty packets
@@ -398,19 +398,19 @@ if( ubconfig.slave ){
 }
 #endif
         if( !(in->header.flags & UB_PACKET_NOACK) ){
-            serial_sendFrames("Dacking");
+            UDEBUG("Dacking");
             packet_prepareack(in);
         }
         //don't forward a dupe to the app
         if( dupe ){
-            serial_sendFrames("DseqNok");
-            serial_sendFrames("Ddupe");
+            UDEBUG("DseqNok");
+            UDEBUG("Ddupe");
             //but still send the ack
             if( !(in->header.flags & UB_PACKET_NOACK) )
                 ubpacket_sendack();
             return;
         }else{
-            serial_sendFrames("Dseqok");
+            UDEBUG("Dseqok");
         }
         //if this packet is for the master forward it to the serial line
         //else send it to the application
@@ -420,18 +420,18 @@ if( ubconfig.slave ){
             if( !(in->header.flags & UB_PACKET_NOACK) )
                 ubpacket_sendack();
         }else{
-            serial_sendFrames("Dincomming");
+            UDEBUG("Dincomming");
             packet_incomming = 1;
             outpacket.header = ack;
         }
     }else if( ubadr_isBroadcast(in->header.dest) ){
         //broadcasts go to both
-        serial_sendFrames("Dincomming");
+        UDEBUG("Dincomming");
         packet_incomming = 1;
         forward = 1;
     }else if(  ubadr_isLocalMulticast(in->header.dest) ){
         //this multicast is for us
-        serial_sendFrames("Dincomming");
+        UDEBUG("Dincomming");
         packet_incomming = 1;
     }
 #ifdef UB_ENABLEBRIDGE
@@ -441,7 +441,7 @@ if ( ubconfig.bridge ){
     }
     //management packets should have already been processed
     if( packet_incomming && in->header.flags & UB_PACKET_MGT ){
-    serial_sendFrames("Dprocessed");
+    UDEBUG("Dprocessed");
         packet_incomming = 0;
     }
 }
@@ -452,7 +452,7 @@ if ( ubconfig.slave ){
         uint8_t rc = ubslavemgt_process(&inpacket);
         if( rc ){
             //this was a management packet
-            serial_sendFrames("Dwas for mgt");
+            UDEBUG("Dwas for mgt");
             packet_incomming = 0;
             if( rc == 2 ){
                 //packet was valid
@@ -468,7 +468,7 @@ if ( ubconfig.slave ){
 void ubpacket_tick(void)
 {
     if(!packet_acked && packet_timeout && --packet_timeout==0){
-        serial_sendFrames("Drt");
+        UDEBUG("Drt");
         packet_retries++;
         if( packet_retries > UB_PACKET_RETRIES ){
             ubpacket_abort();

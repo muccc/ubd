@@ -7,22 +7,20 @@
 #include "ubrf.h"
 #include "leds.h"
 #include "ubstat.h"
+#include "udebug.h"
 
 #include <avr/io.h>
-uint16_t            ubm_ticks = 0;
 
 void ubbridge_init(void)
 {
-    serial_sendFrames("DInit Master");
+    UDEBUG("DInit Master");
 #ifdef UB_ENABLERS485
     if( ubconfig.rs485master ){
-        //serial_sendFrames("DInit RS485");
         rs485master_init();
     }
 #endif
 #ifdef UB_ENABLERF
     if( ubconfig.rf ){
-        //serial_sendFrames("DInit RF");
         ubrf_init();
     }
 #endif
@@ -31,7 +29,6 @@ void ubbridge_init(void)
 //1ms
 inline void ubbridge_tick(void)
 {
-    ubm_ticks++;
 #ifdef UB_ENABLERS485
     if( ubconfig.rs485master )
         rs485master_tick();
@@ -87,7 +84,7 @@ inline UBSTATUS ubbridge_sendPacket(struct ubpacket_t * packet)
         if( flags->rf && ubconfig.rf )
             return ubrf_sendPacket(packet);
 #endif
-        serial_sendFrames("Dinterface not found");
+        UDEBUG("Dinterface not found");
         return UB_ERROR;
     }
 
@@ -112,13 +109,13 @@ inline uint8_t ubbridge_getPacket(struct ubpacket_t * packet)
             //we got a packet from the host
             //ignore control messages for now
             if( len > 1 ){
-                serial_sendFrames("Dgot serial packet");
+                UDEBUG("Dgot serial packet");
                 return UB_OK;
             }
             //FIXME: that was this for again?
             //seems like every command with len=1
             //just resets the bridge?
-            serial_sendFrames("D1");
+            UDEBUG("D1");
             ub_init(UB_BRIDGE, -1, -1);
         }
 #ifdef UB_ENABLERF

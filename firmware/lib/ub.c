@@ -13,6 +13,7 @@
 #include "ubslavemgt.h"
 #include "ubbridgemgt.h"
 #include "serial_handler.h"
+#include "udebug.h"
 
 struct ub_config ubconfig;
 uint8_t ub_address = 0;
@@ -66,7 +67,7 @@ void ub_init(uint8_t ubmode, int8_t slaveinterfaces, int8_t bridgeinterfaces)
         if( ub_slaveinterfaces & UB_RS485 ){
             ubconfig.rs485slave = 1;
             //sei();
-            //serial_sendFrames("Dslavers485 enabled");
+            //UDEBUG("Dslavers485 enabled");
         }
 #endif
 #ifdef UB_ENABLERF

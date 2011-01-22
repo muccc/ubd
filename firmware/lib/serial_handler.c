@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include "ubconfig.h"
 #include "usart.h"
 #include "serial_handler.h"
 
