@@ -17,6 +17,10 @@ def signal_handler(signal, frame):
     running = False
 signal.signal(signal.SIGINT, signal_handler)
 
+if len(sys.argv) < 2:
+    print 'Usage:',sys.argv[0],'<serial device>'
+    sys.exit(1)
+
 out = Queue.Queue(5)
 
 class TCPHandler(SocketServer.BaseRequestHandler):
@@ -84,7 +88,7 @@ def UDPServer():
             out.put(header + data)
         
 
-serial = serialinterface.SerialInterface('/dev/ttyUSB0', 115200, 1)
+serial = serialinterface.SerialInterface(sys.argv[1], 115200, 1)
 
 def initbridge():
     while True:
