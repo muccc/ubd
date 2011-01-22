@@ -163,6 +163,7 @@ void serial_switch(void)
         if( m.len == 1 && m.data[0] == 'B' )
             break;
     }
+    printf("done\n");
     //usleep(1000*1000*2);
 }
 

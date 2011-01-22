@@ -3270,7 +3270,7 @@ else
 fi
 
 
-CFLAGS="$CFLAGS -Wall -Wextra"
+CFLAGS="$CFLAGS -g -Wall -Wextra"
 
 
 
