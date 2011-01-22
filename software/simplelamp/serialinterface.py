@@ -13,7 +13,7 @@ class SerialInterface:
 
     def writeMessage(self,message):
         enc = "\\1" + message.replace('\\','\\\\') + "\\2";
-        print 'writing %s' % list(enc)
+        #print 'writing %s' % list(enc)
         self.ser.write(enc)
 
     def readMessage(self):
@@ -50,7 +50,7 @@ class SerialInterface:
             elif stop:
                 if data[0] == 'D':
                     message = '%f %s'%(time.time(), data[2:])
-                    print 'serial debug message:',data
+                    #print 'serial debug message:',data
                     #print message
                     data = ""
                     stop = False
