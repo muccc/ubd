@@ -11,6 +11,8 @@
 #include "ubstat.h"
 #include "ubrs485master.h"
 
+#include "udebug.h"
+
 #define  MGT_BRIDGEDISCOVER     'B'
 #define  MGT_BRIDGEALIVE        'A'
 
@@ -47,9 +49,10 @@ uint8_t ubbridgemgt_process(struct ubpacket_t * p)
         case 'O':
             ubconfig.configured = 1;
             ubbridgemgt_state = CONNECTED;
+            UDEBUG("Dconfigured");
         break;
         case 's':
-            settings_setid(data+1);
+            ubadr_setID(data+1);
         break;
         case 'r':
             //XXX: think about implementing this again

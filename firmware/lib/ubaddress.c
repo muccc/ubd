@@ -28,8 +28,9 @@ inline uint8_t ubadr_getIDLen(void)
 void ubadr_readID(void)
 {
     eeprom_read_block(ubadr_id,eeprom_id,30);
+    ubadr_id[29] = 0;
     if(ubadr_id[0] == 0xFF){
-         ubadr_setID((uint8_t*)"new");
+         ubadr_setID((uint8_t*)"newnode.local");
     }
     ubadr_idlen = strlen((char*)ubadr_id);
 }

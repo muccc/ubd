@@ -166,10 +166,6 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         control_setColor(param[0],param[1],param[2]);
     }else if(cmd == CMD_RESET){
         jump_to_bootloader();
-    }else if(cmd == CMD_SET_NAME){
-        settings_setid(param);
-        settings_readid(result+1);
-        return strlen((char*)result);
     }else if(cmd == CMD_FADE){
         uint16_t speed = (param[3]<<8)+param[4];
         control_fade(param[0],param[1],param[2],speed);

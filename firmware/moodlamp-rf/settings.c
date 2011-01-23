@@ -46,37 +46,6 @@ struct thread_t script_threads_record[MAX_THREADS] EEMEM;
 struct timeslots_t pwm_record EEMEM;
 struct global_t global_record EEMEM;
 struct settings_record_t global_settings;
-//char id[50] EEMEM = "master5.lamp.blinkenlichts.net";
-char * name = (char *)(E2END - 50);
-
-uint8_t idbuf[60];
-
-void settings_readid(uint8_t * buf)
-{
-//    eeprom_read_block(buf,&id,sizeof(id));
-    eeprom_read_block(buf,name,50);
-}
-
-uint8_t settings_compareid(uint8_t * buf)
-{
-    if(strcmp((char*)idbuf,(char*)buf) == 0)
-        return 1;
-
-    return 0;
-}
-
-void settings_setid(uint8_t * buf)
-{
-    uint8_t len = strlen((char*)buf);
-//    if(len > (sizeof(id)-1)){
-//        len = sizeof(id)-1;
-    if(len > 50){
-        len = 49;
-        buf[len] = 0;
-    }
-//    eeprom_write_block(&id,buf,len+1);
-  eeprom_write_block(buf,name,len+1);  
-}
 
 void settings_save(void)
 {
@@ -105,7 +74,6 @@ void settings_read(void)
     if(global_settings.firstboot){
         global_pwm.dim = 255;
 #if STATIC_SCRIPTS
-//#if RS485_CTRL == 0
         script_threads[0].speed_adjustment = 0;
         script_threads[0].handler.execute = &memory_handler_flash;
         script_threads[0].handler.position = (uint16_t)(&colorchange_red);
@@ -114,7 +82,6 @@ void settings_read(void)
         //script_threads[2].handler.execute = &memory_handler_eeprom;
         //script_threads[2].handler.position = (uint16_t) &testscript_eeprom;
         //script_threads[2].flags.disabled = 0;
-//#endif
 #endif
         global_pwm.channels[0].brightness = 250;
         global_pwm.channels[0].target_brightness = 250;
@@ -131,12 +98,5 @@ void settings_read(void)
         temp = (void *) &global;
         eeprom_read_block(/*(struct global_t *)&global*/temp,&global_record,sizeof(global));
     }
-    eeprom_read_block(idbuf,name,50);
-    if(idbuf[0] == 255){
-        strcpy((char*)idbuf,"newlamp,local");
-        eeprom_write_block(idbuf,name,50);
-    }
-
-//    eeprom_read_block(idbuf,&id,sizeof(id));
 }
 

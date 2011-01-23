@@ -45,7 +45,7 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
             ubslavemgt_state = CONNECTED;
         break;
         case 's':
-            settings_setid(data+1);
+            ubadr_setID(data+1);
         break;
         case 'r':
             wdt_enable(WDTO_30MS);
@@ -86,7 +86,7 @@ void ubslavemgt_tick(void)
     if(!time--){
         time = 1000;
     }
-
+    //return;
     if(time == 0){
         p = ubpacket_getSendBuffer();
         p->header.src = ubadr_getAddress();

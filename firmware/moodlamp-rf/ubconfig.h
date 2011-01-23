@@ -12,7 +12,7 @@
 #define UB_PACKET_TIMEOUT   100
 #define UB_PACKET_RETRIES   5
 
-#define USEDEBUG
+//#define USEDEBUG
 typedef uint8_t ubaddress_t;
 #define UB_NODEMAX      128
 
