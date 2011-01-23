@@ -167,7 +167,6 @@ int main(void) {
         if(packetbase > 32){
             packetbase = 0;
             ub_tick();
-            //packet_tick();
             //if(main_reset++ > 4000)
             //  jump_to_bootloader(); 
             //uint16_t bat = adc_getChannel(6);
