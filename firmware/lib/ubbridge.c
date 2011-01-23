@@ -115,6 +115,10 @@ inline uint8_t ubbridge_getPacket(struct ubpacket_t * packet)
             //FIXME: that was this for again?
             //seems like every command with len=1
             //just resets the bridge?
+            if( len == 1 && ((uint8_t *)packet)[0] == 'R'){
+                while(1);
+            }
+
             UDEBUG("D1");
             ub_init(UB_BRIDGE, -1, -1);
         }

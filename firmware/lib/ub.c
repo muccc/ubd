@@ -1,4 +1,5 @@
 #include <avr/interrupt.h>
+#include <avr/wdt.h> 
 
 #include "ubconfig.h"
 #include "ubrs485uart.h"
@@ -100,6 +101,9 @@ void ub_process(void)
         if( l == 1 && buf[0] == 'B'){
             ub_init(UB_BRIDGE,-1,-1);
             return;
+        }else if( l == 1 && buf[0] == 'R'){
+            wdt_enable(WDTO_15MS);
+            while(1);
         }
     }
 #endif
