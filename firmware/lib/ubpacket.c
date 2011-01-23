@@ -79,6 +79,11 @@ void ubpacket_send(void)
     //    !(outpacket.header.flags & UB_PACKET_ACK) ){
     //    return;
     //}
+    if( outpacket.header.len == 0 &&
+        outpacket.header.dest == UB_ADDRESS_MASTER &&
+        outpacket.header.src == UB_ADDRESS_BRIDGE ){
+        return;
+    }
     UDEBUG("Dresettimeout");
     packet_timeout = UB_PACKET_TIMEOUT;
 
@@ -259,7 +264,12 @@ if( ubconfig.bridge ){
             //this packet was only for us and needs no special care
             UDEBUG("Dincomming");
             packet_incomming = 1;
-            in->header.flags |= UB_PACKET_NOACK;
+            if( !(in->header.flags & UB_PACKET_NOACK) ){
+                UDEBUG("Dacking");
+                packet_prepareack(in);
+                outpacket.header = ack;
+            }
+            //in->header.flags |= UB_PACKET_NOACK;
             ubbridge_done();
         }else if( ubadr_isBroadcast(in->header.dest) ){
             UDEBUG("Dbridge: bc");
