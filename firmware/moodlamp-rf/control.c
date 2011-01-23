@@ -16,7 +16,6 @@
 #include "scripts.h"
 #include <avr/sleep.h>
 
-uint16_t timeoutmax = 400;
 uint32_t sleeptime=0;
 uint32_t sleeptick=0;
 uint16_t timeout = 0;
@@ -30,16 +29,16 @@ void control_init(void)
 
 void control_setColor(uint8_t r, uint8_t g, uint8_t b)
 {
-cli();
+    cli();
     global_pwm.channels[0].brightness = r;
     global_pwm.channels[0].target_brightness = r;
     global_pwm.channels[1].brightness = g;
     global_pwm.channels[1].target_brightness = g;
     global_pwm.channels[2].brightness = b;
     global_pwm.channels[2].target_brightness = b;
-sei();
-control_setTimeout();
-
+    sei();
+    global.state = STATE_REMOTE;
+    global.oldstate = STATE_REMOTE;
 }
 
 void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
@@ -52,21 +51,9 @@ void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
         global_pwm.channels[pos].speed_h = speed >> 8;
         global_pwm.channels[pos].speed_l = speed & 0xFF;
     }
-    control_setTimeout();
-
+    global.state = STATE_REMOTE;
+    global.oldstate = STATE_REMOTE;
 }
-
-void control_setTimeout(void)
-{
-    if(timeout)
-        timeout = timeoutmax;
-    if(global.state != STATE_PAUSE && global.state != STATE_REMOTE){
-        global.oldstate = global.state;
-        global.state = STATE_PAUSE;
-        timeout = timeoutmax;
-     }
-}
-
 
 void control_standby(uint16_t wait)
 {
@@ -152,9 +139,5 @@ void control_tick(void)
             //global.flags.lowbat = 1;
         }
     }
-
-    if(timeout && --timeout == 0)
-        global.state = global.oldstate;
-
 }
 
