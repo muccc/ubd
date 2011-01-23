@@ -59,6 +59,8 @@
 #define CMD_RESET               'r'
 #define CMD_SET_NAME            'N'
 #define CMD_FADE                'F'
+#define CMD_FADEMS              'M'
+#define CMD_FADEMSALT           'T'
 #define CMD_GET_VOLTAGE         'K'
 
 
