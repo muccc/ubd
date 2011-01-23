@@ -89,6 +89,7 @@ def UDPServer():
         
 
 serial = serialinterface.SerialInterface(sys.argv[1], 115200, 1)
+ack = threading.Lock()
 
 def initbridge():
     while True:
@@ -99,22 +100,33 @@ def initbridge():
             #serial.writeMessage("\x01\x02\x10\x01O")
             break
 
+def SerialReader():
+    while True:
+        try:
+            m = serial.readMessage()
+            if m == 'S':
+                #if ack.locked():
+                ack.release()
+            elif m == 's':
+                initbridge()
+        except:
+            initbridge()
+            ack.acquire(False)
+            ack.release()
+
 initbridge()
 thread.start_new_thread(TCPServer,())
 thread.start_new_thread(UDPServer,())
+thread.start_new_thread(SerialReader,())
 
 while running:
-    try:
-        data = out.get(True, 1)
+        try:
+            data = out.get(True, 1)
+        except:
+            continue
+        ack.acquire()
         serial.writeMessage(data)
-        while True:
-            m = serial.readMessage()
-            if m == 'S':
-                break
-            elif m == 's':
-                initbridge()
-                break
-
+        ack.acquire()
+        ack.release()
         out.task_done()
-    except:
-        pass
+

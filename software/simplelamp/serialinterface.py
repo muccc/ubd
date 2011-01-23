@@ -5,16 +5,41 @@ import time
 
 class SerialInterface:
     def  __init__ ( self, path2device, baudrate, timeout=0):
-        self.ser = serial.Serial(path2device, baudrate)
-        self.ser.flushInput()
-        self.ser.flushOutput()
-        if timeout:
-            self.ser.setTimeout(timeout)
+        try:
+            self.ser = serial.Serial(path2device, baudrate)
+            self.path2device = path2device
+            self.baudrate = baudrate
+            self.timeout = timeout+1
+            self.ser.flushInput()
+            self.ser.flushOutput()
+            if timeout:
+                self.ser.setTimeout(timeout+1)
+            self.portopen = True
+        except serial.SerialException:
+            print "exception while opening"
+            pass
+    def close(self):
+        try:
+            self.portopen = False
+            self.ser.close()
+        except serial.SerialException:
+            pass
+    def reinit(self):
+        self.close()
+        print "reopening"
+        while not self.portopen:
+            self.__init__(self.path2device, self.baudrate, self.timeout)
+            time.sleep(1)
+        print "done"
 
     def writeMessage(self,message):
         enc = "\\1" + message.replace('\\','\\\\') + "\\2";
         #print 'writing %s' % list(enc)
-        self.ser.write(enc)
+        try:
+            self.ser.write(enc)
+        except :
+            pass
+            #self.reinit()
 
     def readMessage(self):
         data = ""
@@ -24,12 +49,17 @@ class SerialInterface:
         inframe = False
 
         while True:
+            starttime = time.time()
             c = self.ser.read(1)
+            endtime = time.time()
             if len(c) == 0:             #A timout occured
-                print 'TIMEOUT'
-                return False
-            #print "c=", c
-        #    continue
+                if endtime-starttime < self.timeout - 1:
+                    print "port broken"
+                    self.reinit()
+                    raise Exception()
+                else:
+                    #print 'TIMEOUT'
+                    return False
             if escaped:
                 if c == '1':
                     start = True
@@ -50,7 +80,7 @@ class SerialInterface:
             elif stop:
                 if data[0] == 'D':
                     message = '%f %s'%(time.time(), data[2:])
-                    #print 'serial debug message:',data
+                    print 'serial debug message:',data
                     #print message
                     data = ""
                     stop = False
