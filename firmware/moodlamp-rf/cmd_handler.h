@@ -57,13 +57,7 @@
 #define CMD_SET_STATE           'S'
 #define CMD_SET_COLOR           'C'
 #define CMD_RESET               'r'
-#define CMD_SERVER_SET          'x'
-#define CMD_SETUP_OK            'O'
 #define CMD_SET_NAME            'N'
-#define CMD_RAW                 'W'
-#define CMD_DISABLE_BEACON      'Q'
-#define CMD_SELF_ASSIGN         'A'
-#define CMD_STANDALONE          'X'
 #define CMD_FADE                'F'
 #define CMD_GET_VOLTAGE         'K'
 

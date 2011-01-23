@@ -20,19 +20,11 @@ uint16_t timeoutmax = 400;
 uint32_t sleeptime=0;
 uint32_t sleeptick=0;
 uint16_t timeout = 0;
-uint8_t  serveradr = 0;
-uint16_t control_beacontime = 1000;
 uint8_t control_faderunning = 0;
 uint16_t time = 0;
 
-#define CONTROL_SEARCHMASTER         1
-#define CONTROL_IDENTIFY             2
-#define CONTROL_SETUPOK              3
-uint8_t control_state = CONTROL_SEARCHMASTER;
-
 void control_init(void)
 {
-    control_state = CONTROL_SEARCHMASTER;
     control_faderunning = global.flags.running;
 }
 
@@ -75,16 +67,6 @@ void control_setTimeout(void)
      }
 }
 
-void control_setServer(uint8_t s)
-{
-    serveradr = s;
-    control_state = CONTROL_IDENTIFY;
-}
-
-void control_setupOK(void)
-{
-    control_state = CONTROL_SETUPOK;
-}
 
 void control_standby(uint16_t wait)
 {
@@ -162,46 +144,13 @@ void control_tick(void)
     }
     
     static unsigned int control_beacon = 1000;
-    if(control_beacontime !=  0 && control_beacon-- == 0 ){
-        control_beacon = control_beacontime;
+    if(control_beacon-- == 0 ){
+        control_beacon = 1000;
         
         uint16_t bat = adc_getChannel(6);
         if( bat < ADC_MINBATIDLE ){
             //global.flags.lowbat = 1;
         }
-
-        /*if(control_state == CONTROL_SEARCHMASTER){
-            p.flags = PACKET_BROADCAST;//don't know server yet
-        }else{
-            p.flags = 0;
-        }
-        p.dest = serveradr;     //0 if unknown
-        p.src = packet_getAddress();        //put local address into src
-        p.lasthop = packet_getAddress();
-        p.iface = IFACE_LOCAL;
-        if(control_state == CONTROL_SEARCHMASTER){  //request server adr
-            p.data[0] = 'R';
-            settings_readid(p.data+1);
-            p.len = strlen((char*)p.data);
-        }else if(control_state == CONTROL_IDENTIFY){
-            p.data[0] = 'I';
-            settings_readid(p.data+1);
-            p.len = strlen((char*)p.data);
-        }else{
-//            p.flags = PACKET_BROADCAST;//don't know server yet
-//            control_beacon = 100;
-            if( global.config >= 30){      //use the adc
-                sprintf((char *)p.data,"V=%u",bat);
-                p.len = strlen((char *)p.data);
-            }else{                  //no adc yet
-                p.len = 1;
-                p.data[0] = 'B';
-            }
-        }
-
-        packet_packetOut(&p);
-        */
-//        control_beacon = 0;
     }
 
     if(timeout && --timeout == 0)
@@ -209,14 +158,3 @@ void control_tick(void)
 
 }
 
-void control_selfassign(void)
-{
-    //uint8_t adr = idbuf[0];
-    //wdt_reset();
-    //main_reset = 0;
-    if(control_state == CONTROL_SETUPOK)
-        return;
-    //packet_setAddress(adr,adr);
-    control_setServer(1);
-    control_setupOK();
-}
