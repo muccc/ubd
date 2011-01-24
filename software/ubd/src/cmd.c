@@ -12,9 +12,11 @@ gchar *cmd_list_nodes(void)
     pos += sprintf(pos, "List of local nodes(%d):\n", count);
     for(i=0;i<count;i++){
         struct node *n = nodes_getNode(i);
-        pos += sprintf(pos,"id=\"%s\" version=\"%s\" busadr=%d "
-                            "name=\"%s\" domain=\"%s\"\n",
-              n->id, n->version, n->busadr, n->name, n->domain);
+        if( n->active ){
+            pos += sprintf(pos,"id=\"%s\" version=\"%s\" busadr=%d "
+                "name=\"%s\" domain=\"%s\"\n",
+                n->id, n->version, n->busadr, n->name, n->domain);
+        }
     }
     return result;
 }
