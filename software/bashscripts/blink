@@ -1,0 +1,7 @@
+while [ true ]
+do
+echo -e "C\xFF\x00\x00" | nc -u $2 2323 -q 0
+sleep $1
+echo -e "C\x00\x00\xFF" | nc -u $2 2323 -q 0
+sleep $1
+done
