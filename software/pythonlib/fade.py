@@ -7,8 +7,10 @@ lamp = sys.argv[1]
 a = libml.Moodlamp(lamp)
 a.connect();
 while 1:
-    a.fade(0,25,0,30)
-    time.sleep(2)
-    a.fade(25,0,0,30)
-    time.sleep(2)
+    a.fadems(0,0,255,3000)
+    time.sleep(3)
+    a.fadems(0,255,0,3000)
+    time.sleep(3)
+    a.fadems(255,0,0,3000)
+    time.sleep(3)
 

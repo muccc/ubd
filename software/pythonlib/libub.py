@@ -26,6 +26,9 @@ class UBNode:
             elif rc == 'N':
                 print "error while sending command", list(command)
                 return False
+            else:
+                print "unknown error while sending command", list(command)
+                return False
 
     def sendMgtCommand(self, command):
         self.mgtsocket.send("B%c%s"%(len(command),command))
@@ -35,6 +38,9 @@ class UBNode:
                 return True
             elif rc == 'N':
                 print "error while sending mgt command", list(command)
+                return False
+            else:
+                print "unknown error while sending mgt command", list(command)
                 return False
 
     def openMgtSocket(self):

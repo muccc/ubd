@@ -12,7 +12,7 @@ a = libml.Moodlamp(lamp)
 #    sys.exit()
 a.connect();
 while 1:
-    a.setcolor(0,0,255)
+    a.setcolor(0,255,255)
     time.sleep(0.5)
     a.setcolor(0,0,0)
     time.sleep(0.5)
