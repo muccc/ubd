@@ -216,7 +216,7 @@ void ubpacket_process(void)
         return;
     }
     if( packet_out_full && !packet_fired ){
-        PORTA ^= (1<<5);
+        //PORTA ^= (1<<5);
         if( ub_sendPacket(&outpacket) == UB_OK ){
             packet_fired = 1;
             if( outpacket.header.flags & UB_PACKET_NOACK )
