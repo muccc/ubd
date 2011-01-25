@@ -84,7 +84,7 @@ void ubslavemgt_tick(void)
     struct ubpacket_t * p;
     static uint16_t time = 0;
     if(!time--){
-        time = 1000;
+        time = 10000;
     }
     //return;
     if(time == 0){

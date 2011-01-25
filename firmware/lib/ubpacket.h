@@ -22,7 +22,6 @@ struct ubpacket_t{
 #define UB_PACKET_NOACK         (1<<3)
 #define UB_PACKET_MGT           (1<<4)
 #define UB_PACKET_UNSOLICITED   (1<<5)  //when the node starts talking
-//#define UB_PACKET_DUPE          (1<<6)
 #define UB_PACKET_ACKSEQ        (1<<6)
 
 #define UB_PACKET_IDLE          0

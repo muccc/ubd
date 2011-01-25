@@ -192,7 +192,7 @@ if( ubconfig.bridge ){
     }
 }
 #endif
-    PORTA |= 0x02;
+    //PORTA |= 0x02;
     UDEBUG("Dsetpacketacked");
     packet_acked = 1;
     packet_out_full = 0;
