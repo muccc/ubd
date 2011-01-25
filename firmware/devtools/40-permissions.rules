@@ -1,0 +1,3 @@
+#SUBSYSTEM=="usb_device",SYSFS{idVendor}=="03eb",SYSFS{idProduct}=="2104",MODE="0666"
+ATTR{idVendor}=="03eb", ATTR{idProduct}=="2104", GROUP="admin", MODE="0666"
+
