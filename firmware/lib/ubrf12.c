@@ -188,7 +188,7 @@ void ubrf12_setpower(unsigned char power, unsigned char mod)
 
 unsigned char ubrf12_rxstart(void)
 {
-    PORTC ^= (1<<PC0);
+    //PORTC ^= (1<<PC0);
     //if( RF12_status.New || RF12_status.Tx || RF12_status.Rx )
     //    PORTC ^= (1<<PC2);
     if(RF12_status.New)

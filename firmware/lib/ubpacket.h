@@ -40,5 +40,6 @@ void ubpacket_send(void);
 inline uint8_t ubpacket_gotPacket(void);
 inline struct ubpacket_t * ubpacket_getIncomming(void);
 inline void ubpacket_processed(void);
-
+uint8_t ubpacket_isUnsolicitedDone(void);
+void ubpacket_setUnsolicited(void);
 #endif

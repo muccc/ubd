@@ -167,6 +167,42 @@ int main(void) {
         if(packetbase > 32){
             packetbase = 0;
             ub_tick();
+
+            static int out = 0;
+            static char outp = 'X';
+
+            if( PINC & (1<<PC2) ){
+                //PORTC |= (1<<PC1) | (1<<PC0);
+                if( outp != 'X' ){
+                    outp = 'X';
+                    out = 1;
+                    ubpacket_setUnsolicited();
+                }
+            }else{
+                if( outp != 'O' ){
+                    outp = 'O';
+                    out = 1;
+                    ubpacket_setUnsolicited();
+                }
+                //PORTC &= ~((1<PC1)|(1<<PC0));
+            }
+
+            if( out ){
+                if( ubpacket_free() ){
+                    if( !ubpacket_isUnsolicitedDone() ){
+                        struct ubpacket_t *p = ubpacket_getSendBuffer();
+                        p->header.src = ubadr_getAddress();
+                        p->header.dest = UB_ADDRESS_MASTER;
+                        p->header.flags = UB_PACKET_UNSOLICITED;
+                        p->header.len = 1;
+                        p->data[0] = outp;
+                        ubpacket_send();                       
+                    }else{
+                        out = 0;
+                    }
+                }
+            }
+
             //if(main_reset++ > 4000)
             //  jump_to_bootloader(); 
             //uint16_t bat = adc_getChannel(6);

@@ -34,6 +34,8 @@ uint8_t packet_sniff = 0;
 
 uint8_t packet_outseq = 0;
 
+uint8_t packet_unsolicited = 0;
+
 void ubpacket_init(void)
 {
     packet_out_full = 0;
@@ -67,6 +69,16 @@ inline struct ubpacket_t * ubpacket_getSendBuffer(void)
     return &outpacket;
 }
 
+uint8_t ubpacket_isUnsolicitedDone(void)
+{
+    return packet_unsolicited == 0;
+}
+
+void ubpacket_setUnsolicited(void)
+{
+    packet_unsolicited = 1;
+}
+
 void ubpacket_send(void)
 {
     //don't do anything until we are configured
@@ -84,6 +96,7 @@ void ubpacket_send(void)
         outpacket.header.src == UB_ADDRESS_BRIDGE ){
         return;
     }
+
     UDEBUG("Dresettimeout");
     packet_timeout = UB_PACKET_TIMEOUT;
 
@@ -360,6 +373,10 @@ if( ubconfig.slave ){
                 UDEBUG("Dsetpacketacked");
                 packet_acked = 1;
                 packet_out_full = 0;
+                if( outpacket.header.flags & UB_PACKET_UNSOLICITED &&
+                    !(outpacket.header.flags & UB_PACKET_MGT) ){
+                    packet_unsolicited = 0;
+                }
             }else{
                 UDEBUG("DackseqNok");
             }
