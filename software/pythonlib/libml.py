@@ -26,3 +26,9 @@ class Moodlamp(libub.UBNode):
     def setBrightness(self, brightness):
         cmd = "D%c"%brightness;
         return self.sendCommand(cmd)
+    def getVersion(self):
+        cmd = 'V'
+        if self.sendCommand(cmd):
+            return self.readResponse(self.socket)
+        else:
+            return False
