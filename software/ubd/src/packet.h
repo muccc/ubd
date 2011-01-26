@@ -16,6 +16,7 @@ struct messagestream{
     UBSTREAM_CALLBACK   callback;
     gpointer            data;
     struct node         *n;
+    gchar               mode;
 };
 
 struct packetstream{
@@ -24,6 +25,7 @@ struct packetstream{
     gpointer            data;
     struct node         *n;
     gint                type;
+    gchar               mode;
 };
 
 struct queues{
@@ -39,6 +41,6 @@ void packet_inmessage(struct message*);
 void packet_addCallback(gchar key, void(*cb)(struct ubpacket*));
 void packet_outpacket(struct ubpacket* p);
 void packet_streamPacket(struct node * n, struct ubpacket *p,
-                            UBSTREAM_CALLBACK callback, gpointer data);
+                    UBSTREAM_CALLBACK callback, gpointer data, gchar mode);
 
 #endif

@@ -29,6 +29,7 @@ struct nodebuffer {
     GOutputStream *out;
     GInputStream *in;
     UBNODEBUF_CALLBACK callback;
+    gchar mode;
 };
 
 void tcp_listener_read(GInputStream *in, GAsyncResult *res,

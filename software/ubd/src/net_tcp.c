@@ -26,7 +26,7 @@ static void tcp_queueNewCommand(gpointer data)
     struct nodebuffer *nb = data;
     printf("tcp_cmd: new command for node %d\n", nb->n->busadr);
     bus_streamToID(nb->n->id, (guchar*)nb->cmd, nb->cmdlen,
-                                tcp_reply, nb->out);
+                                tcp_reply, nb->out, nb->mode);
 }
 
 static void tcp_queueNewMgt(gpointer data)
@@ -35,7 +35,36 @@ static void tcp_queueNewMgt(gpointer data)
     struct nodebuffer *nb = data;
     printf("tcp_cmd: new mgt for node %d\n", nb->n->busadr);
     busmgt_streamData(nb->n, (guchar*)nb->cmd, nb->cmdlen,
-                                tcp_reply, nb->out);
+                                tcp_reply, nb->out, nb->mode);
+}
+
+static void tcp_writeBinaryEncoded(GOutputStream *out,
+                                    guchar *data, gint len)
+{
+    g_output_stream_write(out, "B", 1, NULL, NULL);
+    guchar tmp = len;
+    g_output_stream_write(out, &tmp, 1, NULL, NULL);
+    g_output_stream_write(out, data, len, NULL, NULL);
+}
+
+static void tcp_writeCharacterEncoded(GOutputStream *out,
+                                        guchar *data, gint len)
+{
+    //Write the header
+    g_output_stream_write(out, "C", 1, NULL, NULL);
+
+    //find newlines in the data
+    //they must not be transmitted in the encoded data
+    //TODO: find a defined way to deal with this
+    //maybe switching to binary encoding in this case is usefull
+    gint i;
+    for( i=0; i<len; i++ ){
+        if( data[i] == '\r' || data[i] == '\n' )
+            return;
+    }
+
+    g_output_stream_write(out, data, i, NULL, NULL);
+    g_output_stream_write(out, "\n", 1, NULL, NULL);
 }
 
 static void tcp_reply(gpointer data)
@@ -56,7 +85,11 @@ static void tcp_reply(gpointer data)
     }
     if( ps->type == PACKET_PACKET ){
         printf("tcp_reply: PACKET_PACKET len=%d\n", ps->p.len);
-        g_output_stream_write(ps->data, ps->p.data, ps->p.len, NULL, NULL);
+        //g_output_stream_write(ps->data, ps->p.data, ps->p.len, NULL, NULL);
+        if( ps->mode == 'B' )
+            tcp_writeBinaryEncoded(ps->data, ps->p.data, ps->p.len);
+        else if( ps->mode == 'C' )
+            tcp_writeCharacterEncoded(ps->data, ps->p.data, ps->p.len);
     }
 }
 
@@ -77,6 +110,7 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
         break;
         case 1:
             if( data == '\n' || data == '\r' ){
+                nb->mode = 'C';
                 nb->callback(nb);
                 nb->state = 0;
             }else if( data < 0x20 ){
@@ -100,6 +134,7 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
             nb->cmd[nb->cmdlen++] = data;
             if( --nb->cmdbinlen == 0 ){
                 g_assert(nb->callback != NULL);
+                nb->mode = 'B';
                 nb->callback(nb);
                 nb->state = 0;
             }
@@ -123,7 +158,7 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
             printf("tcp_listener_read: node == NULL -> control data\n");
             for( i=0; i<len; i++ ){
                 if( !cmdparser_parse(nb, nb->buf[i]) ){
-                    //not sure if this is a clean way to close
+                    //TODO: not sure if this is a clean way to close
                     //the tcp session
                     g_object_unref(nb->connection);
                     g_free(nb);
