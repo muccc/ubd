@@ -87,4 +87,6 @@ class UBNode:
         self.socket.connect((self.address,2323))
     def closeSocket(self):
         self.socket.close();
+    def listen(self):
+        self.socket.send('L');
 
