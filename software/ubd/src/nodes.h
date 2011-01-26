@@ -38,14 +38,16 @@ struct node{
 
     UBSTREAM_CALLBACK   currentcallback;
     gpointer            currentdata;
-    gchar            currentmode;
+    gchar               currentmode;
 
     UBSTREAM_CALLBACK   nextcallback;
     gpointer            nextdata;
     gchar               nextmode;
 
-    GSocketService * dataservice;
-    GSocketService * mgtservice;
+    GSocketService      *dataservice;
+    GSocketService      *mgtservice;
+
+    GSList              *listeners;
 };
 
 void nodes_init(void);

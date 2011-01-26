@@ -16,6 +16,7 @@ void nodes_init(void)
         nodes[i].version[0] = 0;
         nodes[i].netadr = NULL;
         nodes[i].ubnetd = NULL;
+        nodes[i].listeners = NULL;
 
         //FIXME: find a better way to assign addresses
         //nodes[i].busadr = i;

@@ -9,6 +9,7 @@
 #include "serial.h"
 #include "busmgt.h"
 #include "nodes.h"
+#include "listen.h"
 
 //static void packet_inpacket(struct ubpacket* p);
 static gboolean packet_inpacket(gpointer);
@@ -173,7 +174,8 @@ static gboolean packet_inpacket(gpointer data)
         printf("for bus mgt\n");
         busmgt_inpacket(&ps->p);
     }else if( ps->type == PACKET_PACKET ){
-        printf("unsolicited data. not yet processed.\n");
+        printf("unsolicited data.\n");
+        listen_newMessage(ps);
     }else if( ps->type != PACKET_PACKET ){
         printf("unsolicited status information. not processed.\n");
     }else{

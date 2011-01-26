@@ -40,4 +40,7 @@ gboolean tcp_listener(GSocketService    *service,
                         gpointer           user_data);
 
 void tcp_init(void);
+void tcp_writeCharacterEncoded(GOutputStream *out,
+                                        guchar *data, gint len);
+
 #endif

@@ -12,6 +12,7 @@
 #include "bus.h"
 #include "cmdparser.h"
 #include "nodes.h"
+#include "listen.h"
 
 static void tcp_reply(gpointer data);
 static void tcp_queueNewCommand(gpointer data);
@@ -47,22 +48,22 @@ static void tcp_writeBinaryEncoded(GOutputStream *out,
     g_output_stream_write(out, data, len, NULL, NULL);
 }
 
-static void tcp_writeCharacterEncoded(GOutputStream *out,
+void tcp_writeCharacterEncoded(GOutputStream *out,
                                         guchar *data, gint len)
 {
-    //Write the header
-    g_output_stream_write(out, "C", 1, NULL, NULL);
-
     //find newlines in the data
     //they must not be transmitted in the encoded data
     //TODO: find a defined way to deal with this
     //maybe switching to binary encoding in this case is usefull
     gint i;
     for( i=0; i<len; i++ ){
-        if( data[i] == '\r' || data[i] == '\n' )
+        if( data[i] == '\r' || data[i] == '\n' ){
+            tcp_writeBinaryEncoded(out, data, len);
             return;
+        }
     }
-
+    //Write the header
+    g_output_stream_write(out, "C", 1, NULL, NULL);
     g_output_stream_write(out, data, i, NULL, NULL);
     g_output_stream_write(out, "\n", 1, NULL, NULL);
 }
@@ -106,6 +107,8 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
                 nb->state=2;
                 nb->cmdlen=0;
                 nb->cmdbinlen=0;
+            }else if( data == 'L' ){
+                listen_register(nb->n, nb->out);
             }
         break;
         case 1:
@@ -176,6 +179,7 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
             (GAsyncReadyCallback) tcp_listener_read, nb); 
     }else if( len == 0){
         printf("tcp_listener_read: connection closed\n");
+        listen_unregister(nb->n, nb->out);
         g_object_unref(nb->connection);
         g_free(nb);
     }else{
@@ -209,8 +213,8 @@ gboolean tcp_listener(GSocketService    *service,
         nodebuf->callback = tcp_queueNewMgt;
     }
     g_input_stream_read_async(nodebuf->in, nodebuf->buf,
-                        sizeof(nodebuf->buf), G_PRIORITY_DEFAULT, NULL,
-                        (GAsyncReadyCallback)tcp_listener_read, nodebuf);
+            sizeof(nodebuf->buf), G_PRIORITY_DEFAULT, NULL,
+            (GAsyncReadyCallback)tcp_listener_read, nodebuf);
     g_object_ref(connection);
 
     return FALSE;
