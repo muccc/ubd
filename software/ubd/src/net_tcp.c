@@ -27,7 +27,7 @@ static void tcp_queueNewCommand(gpointer data)
     struct nodebuffer *nb = data;
     printf("tcp_cmd: new command for node %d\n", nb->n->busadr);
     bus_streamToID(nb->n->id, (guchar*)nb->cmd, nb->cmdlen,
-                                tcp_reply, nb->out, nb->mode);
+                                tcp_reply, nb->out);
 }
 
 static void tcp_queueNewMgt(gpointer data)
@@ -36,7 +36,7 @@ static void tcp_queueNewMgt(gpointer data)
     struct nodebuffer *nb = data;
     printf("tcp_cmd: new mgt for node %d\n", nb->n->busadr);
     busmgt_streamData(nb->n, (guchar*)nb->cmd, nb->cmdlen,
-                                tcp_reply, nb->out, nb->mode);
+                                tcp_reply, nb->out);
 }
 
 static void tcp_writeBinaryEncoded(GOutputStream *out,
@@ -87,10 +87,7 @@ static void tcp_reply(gpointer data)
     if( ps->type == PACKET_PACKET ){
         printf("tcp_reply: PACKET_PACKET len=%d\n", ps->p.len);
         //g_output_stream_write(ps->data, ps->p.data, ps->p.len, NULL, NULL);
-        if( ps->mode == 'B' )
-            tcp_writeBinaryEncoded(ps->data, ps->p.data, ps->p.len);
-        else if( ps->mode == 'C' )
-            tcp_writeCharacterEncoded(ps->data, ps->p.data, ps->p.len);
+        tcp_writeCharacterEncoded(ps->data, ps->p.data, ps->p.len);
     }
 }
 
@@ -113,7 +110,6 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
         break;
         case 1:
             if( data == '\n' || data == '\r' ){
-                nb->mode = 'C';
                 nb->callback(nb);
                 nb->state = 0;
             }else if( data < 0x20 ){
@@ -137,7 +133,6 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
             nb->cmd[nb->cmdlen++] = data;
             if( --nb->cmdbinlen == 0 ){
                 g_assert(nb->callback != NULL);
-                nb->mode = 'B';
                 nb->callback(nb);
                 nb->state = 0;
             }

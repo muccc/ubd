@@ -24,7 +24,7 @@ gint bus_sendToID(gchar *id, guchar *buf, gint len, gboolean reply)
 }
 
 gint bus_streamToID(gchar *id, guchar *buf, gint len,
-                UBSTREAM_CALLBACK callback, gpointer data, gchar mode)
+                UBSTREAM_CALLBACK callback, gpointer data)
 {
     struct ubpacket packet;
     struct node* n = nodes_getNodeById(id);
@@ -34,7 +34,7 @@ gint bus_streamToID(gchar *id, guchar *buf, gint len,
     packet.len = len;
     packet.flags = 0;
     memcpy(packet.data, buf, len);
-    packet_streamPacket(n, &packet, callback, data, mode);
+    packet_streamPacket(n, &packet, callback, data);
 
     return 0;
 }

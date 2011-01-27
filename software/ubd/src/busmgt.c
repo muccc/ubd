@@ -217,7 +217,7 @@ void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
 }
 
 void busmgt_streamData(struct node *n, guchar *buf, gint len,
-                UBSTREAM_CALLBACK callback, gpointer data, gchar mode)
+                UBSTREAM_CALLBACK callback, gpointer data)
 {
     struct ubpacket packet;
     packet.dest = n->busadr;
@@ -230,5 +230,5 @@ void busmgt_streamData(struct node *n, guchar *buf, gint len,
     }
     packet.flags = UB_PACKET_MGT;
     memcpy(packet.data, buf, len);
-    packet_streamPacket(n, &packet, callback, data, mode);
+    packet_streamPacket(n, &packet, callback, data);
 }

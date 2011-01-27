@@ -41,7 +41,6 @@ gpointer packet_readerThread(gpointer data)
                         if( n ){
                             ps->callback = n->currentcallback;
                             ps->data = n->currentdata;
-                            ps->mode = n->currentmode;
                         }else{
                             ps->callback = ps->data = NULL;
                         }
@@ -61,8 +60,6 @@ gpointer packet_readerThread(gpointer data)
                                         nextnode->nextcallback;
                         ps->data = nextnode->currentdata =
                                         nextnode->nextdata;
-                        ps->mode = nextnode->currentmode =
-                                        nextnode->nextmode;
 
                         ps->type = PACKET_DONE;
                         g_idle_add(packet_inpacket, ps);
@@ -114,7 +111,6 @@ gpointer packet_writerThread(gpointer data)
         if( msg->n != NULL ){
             msg->n->nextcallback = msg->callback;
             msg->n->nextdata = msg->data;
-            msg->n->nextmode = msg->mode;
         }
         serial_writeMessage(&msg->msg);
         g_free(msg);
@@ -207,7 +203,7 @@ void packet_init(void)
 }*/
 
 void packet_streamPacket(struct node * n, struct ubpacket *p,
-                    UBSTREAM_CALLBACK callback, gpointer data, gchar mode)
+                    UBSTREAM_CALLBACK callback, gpointer data)
 {
     struct messagestream * outmsg = g_new(struct messagestream,1);
     p->src = 1;
@@ -222,11 +218,10 @@ void packet_streamPacket(struct node * n, struct ubpacket *p,
     outmsg->callback = callback;
     outmsg->data = data;
     outmsg->n = n;
-    outmsg->mode = mode;
     g_async_queue_push(packet_out,outmsg);
 }
 
 void packet_outpacket(struct ubpacket* p)
 {
-    packet_streamPacket(NULL, p, NULL, NULL, 0);
+    packet_streamPacket(NULL, p, NULL, NULL);
 }
