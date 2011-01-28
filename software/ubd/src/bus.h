@@ -9,8 +9,9 @@
 #include "debug.h"
 
 
-gint bus_sendToID(gchar *id, guchar *buf, gint len, gboolean reply);
-gint bus_streamToID(gchar *id, guchar *buf, gint len,
+gint bus_sendToID(gchar *id, guchar *buf, gint len, guint classid,
+                    gboolean reply);
+gint bus_streamToID(gchar *id, guchar *buf, gint len, guint classid,
                 UBSTREAM_CALLBACK callback, gpointer data);
 
 #endif

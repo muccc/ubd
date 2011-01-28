@@ -2,6 +2,9 @@ import socket
 import libub
 
 class Moodlamp(libub.UBNode):
+    def __init__(self, address):
+        libub.UBNode.__init__(self,address,2323)
+
     def setcolor(self, r, g, b):
         cmd = "C%c%c%c"%(r,g,b)
         return self.sendCommand(cmd)

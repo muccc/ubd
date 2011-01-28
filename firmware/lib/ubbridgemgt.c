@@ -101,13 +101,17 @@ void ubbridgemgt_tick(void)
         p = ubpacket_getSendBuffer();
         p->header.src = ubadr_getAddress();
         p->header.dest = UB_ADDRESS_MASTER;
-
+        uint8_t classes[] = UB_CLASSES;
         if( flags & 0x01 ){
             flags ^= 0x01;
             p->header.flags = UB_PACKET_MGT | UB_PACKET_NOACK | UB_PACKET_UNSOLICITED;
             p->data[0] = MGT_BRIDGEDISCOVER;
-            strcpy((char*)p->data+1,(char*)ubadr_getID());
-            p->header.len = strlen((char*)p->data);
+            p->data[1] = classes[0];
+            p->data[2] = classes[1];
+            p->data[3] = classes[2];
+            p->data[4] = classes[3];
+            strcpy((char*)p->data+5,(char*)ubadr_getID());
+            p->header.len = strlen((char*)p->data+5)+5;
         }else if( flags & 0x02 ){
             flags ^= 0x02;
             p->header.flags = UB_PACKET_MGT | UB_PACKET_UNSOLICITED;

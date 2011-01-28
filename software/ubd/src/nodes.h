@@ -10,6 +10,16 @@
 #define MAX_NODE    256
 #define MAX_ID      100
 
+struct socketdata{
+    struct node *n;
+    GSource *source;
+    GSocket *socket;
+    GSocketService *socketservice;
+    GSocketAddress *socketaddress;
+    guint classid;
+    GSList          *listeners;
+};
+
 struct node{
     gint        type;
     gchar       id[MAX_ID];
@@ -17,6 +27,7 @@ struct node{
     gchar       domain[MAX_ID];
     gchar       version[MAX_ID];
     gint        groups[32];
+    guchar      classes[32];
     
     gboolean    active;
     gboolean    free;
@@ -33,19 +44,16 @@ struct node{
     GInetAddress    *netadr;
     GSocket         *ubnetd;
     gboolean        netup;
-    GSocket         *udp;
-    GSource         *udpsource;
+
+    struct socketdata udpsockets[32];
+    struct socketdata tcpsockets[32];
+    struct socketdata mgtsocket;
 
     UBSTREAM_CALLBACK   currentcallback;
     gpointer            currentdata;
 
     UBSTREAM_CALLBACK   nextcallback;
     gpointer            nextdata;
-
-    GSocketService      *dataservice;
-    GSocketService      *mgtservice;
-
-    GSList              *listeners;
 };
 
 void nodes_init(void);

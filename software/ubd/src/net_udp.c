@@ -15,7 +15,9 @@ gboolean udp_read(GSocket *socket, GIOCondition condition,
 {
     uint8_t buf[100];
     GSocketAddress * src;
-    struct node *n = user_data;
+    struct socketdata *sd = user_data;
+    struct node *n = sd->n;
+    guint classid = sd->classid;
     gssize len;    
     if( condition == G_IO_IN ){
         len = g_socket_receive_from(socket,&src,(gchar*)buf,
@@ -25,9 +27,9 @@ gboolean udp_read(GSocket *socket, GIOCondition condition,
             debug_hexdump(buf,len);
             printf("\n");
             if( user_data != NULL ){
-                bus_sendToID(n->id, buf, len, FALSE);
+                bus_sendToID(n->id, buf, len, classid, FALSE);
             }else{
-                //TODO: well what shall we do with this data?
+                //UDP data to the mgt port is ignored
             }
         }else{
             printf("udp_read: Error while receiving: len=%d\n",len);

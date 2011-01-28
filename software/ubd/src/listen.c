@@ -5,17 +5,18 @@
 #include "packet.h"
 #include "net_tcp.h"
 
-void listen_register(struct node *n, GOutputStream *out)
+void listen_register(struct node *n, guint classid, GOutputStream *out)
 {
-    n->listeners = g_slist_prepend(n->listeners, out);
+    n->tcpsockets[classid].listeners = 
+        g_slist_prepend(n->tcpsockets[classid].listeners, out);
 }
 
-void listen_unregister(struct node *n, GOutputStream *out)
+void listen_unregister(struct node *n, guint classid, GOutputStream *out)
 {
-    n->listeners = g_slist_remove_all(n->listeners, out);
+    n->tcpsockets[classid].listeners =
+        g_slist_remove_all(n->tcpsockets[classid].listeners, out);
 }
 
-//static void listen_iterate(gpointer data, gpointer user_data)
 static void listen_iterate(gpointer data, struct packetstream *ps)
 {
     tcp_writeCharacterEncoded(data,ps->p.data, ps->p.len);
@@ -23,6 +24,10 @@ static void listen_iterate(gpointer data, struct packetstream *ps)
 
 void listen_newMessage(struct packetstream *ps)
 {
-    g_slist_foreach(ps->n->listeners, (GFunc)listen_iterate,  ps);
+    g_assert(ps != NULL);
+    g_assert(ps->n != NULL);
+    guint classid = ps->p.classid;
+    g_slist_foreach(ps->n->tcpsockets[classid].listeners,
+            (GFunc)listen_iterate,  ps);
 }
 

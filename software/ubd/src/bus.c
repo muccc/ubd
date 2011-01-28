@@ -7,14 +7,15 @@
 #include "bus.h"
 #include "mgt.h"
 
-gint bus_sendToID(gchar *id, guchar *buf, gint len, gboolean reply)
+gint bus_sendToID(gchar *id, guchar *buf, gint len, guint classid,
+                  gboolean reply)
 { 
     struct ubpacket packet;
     struct node* n = nodes_getNodeById(id);
     g_assert(n != NULL);
 
     packet.dest = n->busadr;
-    packet.len = len;
+    packet.len = len | classid << 6;
     packet.flags = 0;
     if( !reply )
         packet.flags = UB_PACKET_NOACK;
@@ -23,15 +24,16 @@ gint bus_sendToID(gchar *id, guchar *buf, gint len, gboolean reply)
     return 0;
 }
 
-gint bus_streamToID(gchar *id, guchar *buf, gint len,
+gint bus_streamToID(gchar *id, guchar *buf, gint len, guint classid,
                 UBSTREAM_CALLBACK callback, gpointer data)
+
 {
     struct ubpacket packet;
     struct node* n = nodes_getNodeById(id);
     g_assert(n != NULL);
 
     packet.dest = n->busadr;
-    packet.len = len;
+    packet.len = len | classid << 6;
     packet.flags = 0;
     memcpy(packet.data, buf, len);
     packet_streamPacket(n, &packet, callback, data);

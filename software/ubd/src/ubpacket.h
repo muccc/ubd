@@ -11,9 +11,10 @@ struct ubpacket{
     address_t src;
     address_t dest;
     uint8_t flags;
-    uint8_t len;
+    uint8_t classid:2;
+    uint8_t len:6;
     uint8_t data[UB_PACKET_DATA];
-};
+}__attribute__((__packed__));
 
 #define UB_PACKET_ACK           (1<<0)
 #define UB_PACKET_SEQ           (1<<1)

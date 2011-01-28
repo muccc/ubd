@@ -26,7 +26,7 @@ static void tcp_queueNewCommand(gpointer data)
     g_assert(data != NULL);
     struct nodebuffer *nb = data;
     printf("tcp_cmd: new command for node %d\n", nb->n->busadr);
-    bus_streamToID(nb->n->id, (guchar*)nb->cmd, nb->cmdlen,
+    bus_streamToID(nb->n->id, (guchar*)nb->cmd, nb->cmdlen, nb->classid,
                                 tcp_reply, nb->out);
 }
 
@@ -105,7 +105,7 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
                 nb->cmdlen=0;
                 nb->cmdbinlen=0;
             }else if( data == 'L' ){
-                listen_register(nb->n, nb->out);
+                listen_register(nb->n, nb->classid, nb->out);
             }
         break;
         case 1:
@@ -174,7 +174,7 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
             (GAsyncReadyCallback) tcp_listener_read, nb); 
     }else if( len == 0){
         printf("tcp_listener_read: connection closed\n");
-        listen_unregister(nb->n, nb->out);
+        listen_unregister(nb->n, nb->classid, nb->out);
         g_object_unref(nb->connection);
         g_free(nb);
     }else{
@@ -187,25 +187,36 @@ gboolean tcp_listener(GSocketService    *service,
                         GObject           *source_object,
                         gpointer           user_data){
     source_object = NULL;
-
+    struct socketdata *sd = user_data;
     struct nodebuffer *nodebuf = g_new0(struct nodebuffer,1);
     g_assert(nodebuf != NULL);
-
-    nodebuf->n = (struct node*)user_data;
+    printf("new listener\n");
+    if( user_data ){
+        printf("socketdata is set\n");
+        nodebuf->n = sd->n;
+        nodebuf->classid = sd->classid;
+        printf("service is for classid %u\n", nodebuf->classid);
+    }else{
+        printf("socketdata is null\n");
+        nodebuf->n = NULL;
+    }
     nodebuf->connection = connection; 
     nodebuf->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
     nodebuf->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
     nodebuf->cmdlen = 0;
+
     if( nodebuf->n == NULL ){
-        if( nodebuf->n == NULL ){
-            char *msg = "Welcome to the control interface\n>";
-            g_output_stream_write(nodebuf->out, msg, strlen(msg),
+        char *msg = "Welcome to the control interface\n>";
+        g_output_stream_write(nodebuf->out, msg, strlen(msg),
                         NULL, NULL);
-        }
-    }else if( service == nodebuf->n->dataservice ){
+    }else if( service ==
+            nodebuf->n->tcpsockets[nodebuf->classid].socketservice ){
         nodebuf->callback = tcp_queueNewCommand; 
-    }else if( service == nodebuf->n->mgtservice ){
+    }else if( service == nodebuf->n->mgtsocket.socketservice ){
         nodebuf->callback = tcp_queueNewMgt;
+    }else{
+        printf("tcp_listener: should not happen\n");
+        g_assert(FALSE);
     }
     g_input_stream_read_async(nodebuf->in, nodebuf->buf,
             sizeof(nodebuf->buf), G_PRIORITY_DEFAULT, NULL,

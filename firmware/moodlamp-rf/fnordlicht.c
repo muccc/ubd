@@ -156,6 +156,7 @@ int main(void) {
             struct ubpacket_t * out = ubpacket_getSendBuffer();
             out->header.len = cmd_interpret(ubpacket_getIncomming()->data,
                                         out->data);
+            out->header.classid = 0;
             if( ubpacket_getIncomming()->header.flags & UB_PACKET_NOACK ){
                 ubpacket_processed();   //has to be after the if
             }else{
@@ -194,6 +195,7 @@ int main(void) {
                         p->header.src = ubadr_getAddress();
                         p->header.dest = UB_ADDRESS_MASTER;
                         p->header.flags = UB_PACKET_UNSOLICITED;
+                        p->header.classid = 1;
                         p->header.len = 1;
                         p->data[0] = outp;
                         ubpacket_send();                       

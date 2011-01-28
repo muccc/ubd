@@ -98,8 +98,14 @@ void ubslavemgt_tick(void)
                 p->data[0] = MGT_DISCOVER;
                 p->data[1] = UB_INTERVAL>>8;
                 p->data[2] = UB_INTERVAL&0xFF;
-                strcpy((char*)p->data+3,(char*)ubadr_getID());
-                p->header.len = strlen((char*)p->data+3)+3;
+                uint8_t classes[] = UB_CLASSES;
+                p->data[3] = classes[0];
+                p->data[4] = classes[1];
+                p->data[5] = classes[2];
+                p->data[6] = classes[3];
+
+                strcpy((char*)p->data+7,(char*)ubadr_getID());
+                p->header.len = strlen((char*)p->data+7)+7;
                 ubpacket_send();
             break;
             case IDENTIFY:

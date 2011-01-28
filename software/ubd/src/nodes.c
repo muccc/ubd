@@ -16,10 +16,11 @@ void nodes_init(void)
         nodes[i].version[0] = 0;
         nodes[i].netadr = NULL;
         nodes[i].ubnetd = NULL;
-        nodes[i].listeners = NULL;
+        gint j;
+        for(j=0; j<32; j++){
+            nodes[i].tcpsockets[j].listeners = NULL;
+        }
 
-        //FIXME: find a better way to assign addresses
-        //nodes[i].busadr = i;
     }
 }
 
@@ -30,6 +31,7 @@ struct node *nodes_getFreeNode(void)
         if( nodes[i].free == TRUE ){
             nodes[i].netup = FALSE;
             memset(nodes[i].groups,0,sizeof(nodes[i].groups));
+            memset(nodes[i].classes,0,sizeof(nodes[i].classes));
             nodes[i].netadr = NULL;
             return &nodes[i];
         }
@@ -132,8 +134,8 @@ void nodes_activateNode(struct node *node)
 void nodes_deactivateNode(struct node *node)
 {
     g_assert(node->free == FALSE);
-    //    printf("nodes.c: warning: trying to" \
-    //            "deactivate a free node!\n");
+    //    printf("nodes.c: warning: trying to");
+    //    printf("deactivate a free node!\n");
     node->active = FALSE;
 }
 

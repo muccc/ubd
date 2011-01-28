@@ -111,9 +111,6 @@ void rs485master_init(void)
 
     rs485m_incomming = UB_NONE;
     rs485uart_enableReceive();
-    
-    //PORTA ^= 0x02;
-    DDRD |= (1<<PD6);
 }
 
 int16_t rs485master_getPacket(struct ubpacket_t * packet)
@@ -148,7 +145,6 @@ int16_t rs485master_getPacket(struct ubpacket_t * packet)
     }else if( incomming != UB_NONE ){
         //ignore these packages
         rs485m_incomming = UB_NONE;
-        PORTD &= ~(1<<PD6);
     }
     //return len;
     return len?UB_OK:UB_ERROR;
@@ -334,14 +330,7 @@ inline void rs485master_rx(void)
     if( !(i & UART_NO_DATA) ){
         //restart timeout
         ubtimer_start(2 * UB_TICKSPERBYTE);
-        //if( i == 0xAA )
-            //PORTA ^= 0x02;
         uint8_t c = i&0xFF;
-        /*if( c == 0xAA ){
-             ubtimer_stop();
-            PORTA &=~ 0x02;
-            rs485m_busState = RS485M_BUS_IDLE;          
-        }*/
 
         i = rs485msg_put(c);
         if( i != UB_NONE ){
@@ -358,7 +347,6 @@ inline void rs485master_edge(void)
 {
     if( rs485m_busState == RS485M_BUS_SEND_TIMER ){
         if( rs485uart_lineActive() && rs485uart_isReceiving() ){
-            //PORTA ^= (1<<PA2);
             rs485m_busState = RS485M_BUS_RECV;
             rs485uart_edgeDisable();
             //return to RS485M_BUS_IDLE if nothing gets received(noise)
@@ -378,7 +366,6 @@ inline void rs485master_timer(void)
     if( rs485m_busState ==  RS485M_BUS_SEND_TIMER || rs485m_busState == RS485M_BUS_RECV ){
         //proceed to the next slot
         rs485m_busState = RS485M_BUS_IDLE;
-        //PORTA &=~ 0x02;
     }
     rs485uart_edgeDisable();
     ubtimer_stop();
@@ -389,7 +376,6 @@ inline void rs485master_setTimeout(void)
     //wait for 4 bytes before timeout
     ubtimer_start(rs485m_timer);
     rs485m_busState = RS485M_BUS_SEND_TIMER;
-    //PORTA |= 0x02;
     rs485uart_edgeEnable();
 }
 

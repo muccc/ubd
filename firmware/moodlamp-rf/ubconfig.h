@@ -17,7 +17,7 @@ typedef uint8_t ubaddress_t;
 #define UB_NODEMAX      128
 
 #define UB_INTERVAL         500
-#define UB_CLASS           1
+#define UB_CLASSES          {23,42,0,0}
 
 //rf config
 #define RF_PORT		PORTB

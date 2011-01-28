@@ -15,6 +15,7 @@ static void busmgt_setQueryInterval(uint8_t adr, uint16_t interval);
 static void busmgt_sendCmd(uint8_t adr, uint8_t cmd);
 static void busmgt_setAddress(uint8_t adr, gchar *id);
 static void busmgt_sendOK(uint8_t adr);
+static void busmgt_setClasses(struct node *n, guchar *classes, int count);
 
 void busmgt_init(void)
 {
@@ -36,6 +37,7 @@ void busmgt_inpacket(struct ubpacket* p)
 {
     //TODO: check len of id buffer
     gchar id[100];
+    guchar classes[4];
     struct node * n;
     uint16_t interval;
 
@@ -46,8 +48,9 @@ void busmgt_inpacket(struct ubpacket* p)
             interval = (p->data[1]<<8) + p->data[2];
             if( p->len > sizeof(id) )
                 return;
-            memcpy(id, p->data+3, p->len-3);
-            id[p->len-3] = 0;
+            memcpy(classes, p->data+3, 4);
+            memcpy(id, p->data+7, p->len-7);
+            id[p->len-7] = 0;
 
             printf("busmgt: got discover from %s\n", id);
 
@@ -67,6 +70,7 @@ void busmgt_inpacket(struct ubpacket* p)
 
             //TODO: check if it is possible for the bus to query
             //the node at this interval
+            busmgt_setClasses(n, classes, sizeof(classes));
             busmgt_setQueryInterval(n->busadr, interval);
             busmgt_setAddress(n->busadr, id);
             n->state = NODE_IDENTIFY;
@@ -118,11 +122,13 @@ void busmgt_inpacket(struct ubpacket* p)
         //the bridge id
         case 'B':
             //TODO: check len of p->data
-            memcpy(id, p->data+1, p->len-1);
-            id[p->len-1] = 0;
+            memcpy(classes, p->data+1, 4);
+            memcpy(id, p->data+5, p->len-5);
+            id[p->len-5] = 0;
             printf("busmgt: bridge id %s\n", id);
             mgt_createBridge(id);
             n = nodes_getNodeByBusAdr(p->src);
+            busmgt_setClasses(n, classes, sizeof(classes));
             busmgt_sendOK(p->src);
             n->state = NODE_NORMAL;
             n->timeout = config.nodetimeout;
@@ -163,6 +169,12 @@ static void busmgt_setQueryInterval(uint8_t adr, uint16_t interval)
     printf("Setting query interval of %u to %u\n", adr,interval);
     uint8_t data[] = {adr,interval>>8,interval&0xFF};
     busmgt_sendCmdData(UB_ADDRESS_BRIDGE,'q',data,sizeof(data));
+}
+
+static void busmgt_setClasses(struct node *n, guchar *classes, int count)
+{
+    memset(n->classes,0,sizeof(n->classes));
+    memcpy(n->classes, classes, count);
 }
 
 //send a broadcast to set the address of the node with name '*id'

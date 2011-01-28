@@ -42,8 +42,8 @@ void debug_packet(gchar *reporter, struct ubpacket* p)
    
     g_get_current_time(&t);
     printf("%ld.%04ld ",t.tv_sec,t.tv_usec);
-    printf("%s: packet from %u to %u flags: %x: %s len %u: ",  
-            reporter, p->src, p->dest, p->flags, flags, p->len);
+    printf("%s: packet from %u to %u flags: (%x: %s) classid: %u len: %u: ",
+            reporter, p->src, p->dest, p->flags, flags, p->classid,p->len);
     debug_hexdump(p->data, p->len);
     printf("\n");
 }

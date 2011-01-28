@@ -2,8 +2,9 @@ import socket
 #bus = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 
 class UBNode:
-    def __init__(self, address):
+    def __init__(self, address, port):
         self.address = address
+        self.port = port
 
     def connect(self):
         self.openSocket()
@@ -84,7 +85,7 @@ class UBNode:
     def openSocket(self):
         self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         self.socket.settimeout(20)
-        self.socket.connect((self.address,2323))
+        self.socket.connect((self.address,self.port))
     def closeSocket(self):
         self.socket.close();
     def listen(self):
