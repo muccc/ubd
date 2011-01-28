@@ -99,7 +99,7 @@ void ubslavemgt_tick(void)
                 p->data[1] = UB_INTERVAL>>8;
                 p->data[2] = UB_INTERVAL&0xFF;
                 strcpy((char*)p->data+3,(char*)ubadr_getID());
-                p->header.len = strlen((char*)p->data);
+                p->header.len = strlen((char*)p->data+3)+3;
                 ubpacket_send();
             break;
             case IDENTIFY:
