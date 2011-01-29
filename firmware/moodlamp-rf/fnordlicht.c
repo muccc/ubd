@@ -80,6 +80,80 @@ void jump_to_bootloader(void)
     while(1);
 }
 
+void sendswitch(void)
+{
+    static int out = 0;
+    static char outp = ' ';
+
+    if( PINC & (1<<PC2) ){
+        //PORTC |= (1<<PC1) | (1<<PC0);
+        if( outp != 'X' ){
+            outp = 'X';
+            out = 1;
+        }
+    }else{
+        if( outp != 'O' ){
+            outp = 'O';
+            out = 1;
+        }
+        //PORTC &= ~((1<PC1)|(1<<PC0));
+    }
+
+    if( out ){
+        if( ubpacket_acquireUnsolicited(1) ){
+            if( !ubpacket_isUnsolicitedDone() ){
+                struct ubpacket_t *p = ubpacket_getSendBuffer();
+                p->header.src = ubadr_getAddress();
+                p->header.dest = UB_ADDRESS_MASTER;
+                p->header.flags = UB_PACKET_UNSOLICITED;
+                p->header.classid = 1;
+                p->header.len = 1;
+                p->data[0] = outp;
+                ubpacket_send();                       
+            }else{
+                out = 0;
+                ubpacket_releaseUnsolicited(1);
+            }
+        }
+    }
+
+}
+
+void sendstest(void)
+{
+    static int out = 0;
+    static char outp = 'X';
+    static int t = 0;
+
+    if( t++ == 1000 ){
+        t = 0;
+        if( outp == 'B' )
+            outp = 'A';
+        else
+            outp = 'B';
+        out = 1;
+    }
+
+    if( out ){
+        if( ubpacket_acquireUnsolicited(0) ){
+            if( !ubpacket_isUnsolicitedDone() ){
+                struct ubpacket_t *p = ubpacket_getSendBuffer();
+                p->header.src = ubadr_getAddress();
+                p->header.dest = UB_ADDRESS_MASTER;
+                p->header.flags = UB_PACKET_UNSOLICITED;
+                p->header.classid = 0;
+                p->header.len = 1;
+                p->data[0] = outp;
+                ubpacket_send();                       
+            }else{
+                out = 0;
+                ubpacket_releaseUnsolicited(0);
+            }
+        }
+    }
+
+}
+
 unsigned int random_seed __attribute__ ((section (".noinit")));
 
 /** main function
@@ -169,41 +243,8 @@ int main(void) {
             packetbase = 0;
             ub_tick();
 
-            static int out = 0;
-            static char outp = 'X';
-
-            if( PINC & (1<<PC2) ){
-                //PORTC |= (1<<PC1) | (1<<PC0);
-                if( outp != 'X' ){
-                    outp = 'X';
-                    out = 1;
-                    ubpacket_setUnsolicited();
-                }
-            }else{
-                if( outp != 'O' ){
-                    outp = 'O';
-                    out = 1;
-                    ubpacket_setUnsolicited();
-                }
-                //PORTC &= ~((1<PC1)|(1<<PC0));
-            }
-
-            if( out ){
-                if( ubpacket_free() ){
-                    if( !ubpacket_isUnsolicitedDone() ){
-                        struct ubpacket_t *p = ubpacket_getSendBuffer();
-                        p->header.src = ubadr_getAddress();
-                        p->header.dest = UB_ADDRESS_MASTER;
-                        p->header.flags = UB_PACKET_UNSOLICITED;
-                        p->header.classid = 1;
-                        p->header.len = 1;
-                        p->data[0] = outp;
-                        ubpacket_send();                       
-                    }else{
-                        out = 0;
-                    }
-                }
-            }
+            //sendstest();
+            sendswitch();
 
             //if(main_reset++ > 4000)
             //  jump_to_bootloader(); 
