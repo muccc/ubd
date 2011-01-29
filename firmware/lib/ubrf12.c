@@ -4,7 +4,6 @@
 #include <avr/wdt.h>
 #include "ubconfig.h"
 #include "ubrf12.h"
-//#include "uart.h"
 #include "leds.h"
 
 struct RF12_stati
@@ -19,19 +18,6 @@ volatile unsigned char ubrf12_checkcrc = 1;
 struct RF12_stati RF12_status;
 volatile unsigned char RF12_Index = 0;
 unsigned char RF12_Data[RF12_DataLength+10];	// +10 == paket overhead
-
-#ifdef RF12DEBUGBIN
-void putbin(unsigned short d)
-{
-    unsigned char i;
-    for(i=15;i<=15;i--){
-        if(d & (1<<i))
-            uart1_putc('1');
-        else
-            uart1_putc('0');
-    }
-}
-#endif
 
 ISR(RF_SIGNAL, ISR_NOBLOCK)
 {
@@ -54,14 +40,8 @@ ISR(RF_SIGNAL, ISR_NOBLOCK)
             RF12_status.New = 1;
         }
     }else if(RF12_status.Tx){
-//		uart_puts("acTab");
         ubrf12_trans(0xB800 | RF12_Data[RF12_Index]);
         if(!RF12_Index){
-#ifdef RF12DEBUGBIN
-#ifdef RF12DEBUGBIN2
-            uart_puts("acIab");
-#endif
-#endif
             RF12_status.Tx = 0;
             ubrf12_trans(0x8208);		// TX off
 			
@@ -70,18 +50,8 @@ ISR(RF_SIGNAL, ISR_NOBLOCK)
             RF12_Index--;
         }
     }else{
-#ifdef RF12DEBUGBIN
-        uart1_puts("acDD");
-        unsigned short s = ubrf12_trans(0x0000);			//dummy read
-                //TODO: what happend
-        putbin(s);
-        uart1_puts("ab");
-        uart1_puts("acEinterruptab");
-        //while(1);
-#endif
     }
 }
-
 
 void spi_init(void)
 {
@@ -188,9 +158,6 @@ void ubrf12_setpower(unsigned char power, unsigned char mod)
 
 unsigned char ubrf12_rxstart(void)
 {
-    //PORTC ^= (1<<PC0);
-    //if( RF12_status.New || RF12_status.Tx || RF12_status.Rx )
-    //    PORTC ^= (1<<PC2);
     if(RF12_status.New)
         return(1);			//buffer not yet empty
     if(RF12_status.Tx)
@@ -223,11 +190,6 @@ unsigned char ubrf12_rxfinish(unsigned char *data)
 
 void ubrf12_txstart(unsigned char *data, unsigned char size)
 {	
-#ifdef RF12DEBUGBIN
-#ifdef RF12DEBUGBIN2
-uart_puts("acbab");
-#endif
-#endif
     leds_tx();
     uint8_t i, l;
 
@@ -254,25 +216,14 @@ uart_puts("acbab");
     RF12_Data[i--] = 0xAA;
 
     ubrf12_trans(0x8238);         // TX on
-#ifdef RF12DEBUGBIN
-#ifdef RF12DEBUGBIN2
-    uart_puts("accab");
-#endif
-#endif
     return;
 }
 
 unsigned char ubrf12_txfinished(void)
 {
     if(RF12_status.Tx){
-#ifdef RF12DEBUGBIN
-#ifdef RF12DEBUGBIN2
-        uart_puts("actab");;
-#endif
-#endif
         return 0;        //not yet finished
     }
- 
     return 1;
 }
 
@@ -291,4 +242,4 @@ uint8_t ubrf12_free(void)
         return 0;
     return 1;
 }
-/* ---------------------- */
+
