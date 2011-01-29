@@ -15,7 +15,8 @@ gint bus_sendToID(gchar *id, guchar *buf, gint len, guint classid,
     g_assert(n != NULL);
 
     packet.dest = n->busadr;
-    packet.len = len | classid << 6;
+    packet.classid = classid;
+    packet.len = len;
     packet.flags = 0;
     if( !reply )
         packet.flags = UB_PACKET_NOACK;
@@ -33,7 +34,8 @@ gint bus_streamToID(gchar *id, guchar *buf, gint len, guint classid,
     g_assert(n != NULL);
 
     packet.dest = n->busadr;
-    packet.len = len | classid << 6;
+    packet.classid = classid;
+    packet.len = len;
     packet.flags = 0;
     memcpy(packet.data, buf, len);
     packet_streamPacket(n, &packet, callback, data);
