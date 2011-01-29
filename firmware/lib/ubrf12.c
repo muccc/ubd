@@ -18,6 +18,7 @@ volatile unsigned char ubrf12_checkcrc = 1;
 struct RF12_stati RF12_status;
 volatile unsigned char RF12_Index = 0;
 unsigned char RF12_Data[RF12_DataLength+10];	// +10 == paket overhead
+unsigned char RF12_channel;
 
 ISR(RF_SIGNAL, ISR_NOBLOCK)
 {
@@ -80,9 +81,10 @@ unsigned short ubrf12_trans(unsigned short d)
 }
 
 
-void ubrf12_init(void)
+void ubrf12_init(unsigned char channel)
 {
     unsigned char i;
+    RF12_channel = channel;
 
     RF_DDR |= (1<<SDI)|(1<<SCK)|(1<<CS);
     RF_DDR &= ~(1<<SDO);
@@ -182,6 +184,10 @@ unsigned char ubrf12_rxfinish(unsigned char *data)
         return 255;
     }
     RF12_status.New = 0;
+
+    if( RF12_Data[RF12_Data[0]+1] != RF12_channel ){
+        return 255;
+    }
     
     for(i=0; i<(RF12_Data[0]); i++)
         data[i] = RF12_Data[i+1];
@@ -210,7 +216,7 @@ void ubrf12_txstart(unsigned char *data, unsigned char size)
         RF12_Data[i--] = data[l];
     }
     //TODO: remove these two bytes
-    RF12_Data[i--] = 0;
+    RF12_Data[i--] = RF12_channel;
     RF12_Data[i--] = 0;
     RF12_Data[i--] = 0xAA;
     RF12_Data[i--] = 0xAA;

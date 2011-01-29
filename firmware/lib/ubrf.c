@@ -27,7 +27,7 @@ void ubrf_init(void)
 {
     leds_rx();
     ubrf_state = UBRF_IDLE;
-    ubrf12_init();
+    ubrf12_init(RF_CHANNEL);
     ubrf12_setfreq(RF12FREQ(434.32));
     ubrf12_setbandwidth(4, 1, 4);     // 200kHz Bandbreite,
     //-6dB Verstärkung, DRSSI threshold: -79dBm

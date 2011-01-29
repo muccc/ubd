@@ -75,7 +75,7 @@
 unsigned short ubrf12_trans(unsigned short wert);
 
 // initialize module
-void ubrf12_init(void);
+void ubrf12_init(unsigned char channel);
 
 // set center frequency
 void ubrf12_setfreq(unsigned short freq);

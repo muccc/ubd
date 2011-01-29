@@ -20,6 +20,7 @@ typedef uint8_t ubaddress_t;
 #define UB_CLASSES          {23,42,0,0}
 
 //rf config
+#define RF_CHANNEL  23
 #define RF_PORT		PORTB
 #define RF_DDR		DDRB
 #define RF_PIN		PINB
