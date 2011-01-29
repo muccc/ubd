@@ -56,7 +56,7 @@ void ub_init(uint8_t ubmode, int8_t slaveinterfaces, int8_t bridgeinterfaces)
         ubbridge_init();
         ubpacket_init();
         ubbridgemgt_init();
-        ubconfig.configured = 1;
+        //ubconfig.configured = 1;
         //This tells the host that we are ready
         sei();
         serial_sendFramec('B');

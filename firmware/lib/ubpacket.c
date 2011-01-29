@@ -33,8 +33,9 @@ uint8_t packet_incomming;
 uint8_t packet_sniff = 0;
 
 uint8_t packet_outseq = 0;
+uint8_t packet_unsolicitedsent = 0;
+uint8_t packet_unsolicitedlock = 255;
 
-uint8_t packet_unsolicited = 0;
 
 void ubpacket_init(void)
 {
@@ -69,14 +70,36 @@ inline struct ubpacket_t * ubpacket_getSendBuffer(void)
     return &outpacket;
 }
 
-uint8_t ubpacket_isUnsolicitedDone(void)
+
+uint8_t ubpacket_acquireUnsolicited(uint8_t class)
 {
-    return packet_unsolicited == 0;
+    if( ubpacket_free() ){
+        if( packet_unsolicitedlock == class ){
+            return 1;
+        }else{
+            if( packet_unsolicitedlock == 255 ){
+                packet_unsolicitedlock = class;
+                packet_unsolicitedsent = 0;
+                return 1;
+            }else{
+                return 0;
+            }
+        }
+    }else{
+        return 0;
+    }
 }
 
-void ubpacket_setUnsolicited(void)
+uint8_t ubpacket_isUnsolicitedDone(void)
 {
-    packet_unsolicited = 1;
+    return packet_unsolicitedsent;
+}
+
+void ubpacket_releaseUnsolicited(uint8_t class)
+{
+    if( class == packet_unsolicitedlock ){
+        packet_unsolicitedlock = 255;
+    }
 }
 
 void ubpacket_send(void)
@@ -158,8 +181,13 @@ if( ubconfig.bridge ){
     if( ub_sendPacket(&outpacket) == UB_OK ){
         packet_fired = 1;
         if( outpacket.header.flags & UB_PACKET_NOACK ||
-            outpacket.header.len == 0 )
+            outpacket.header.len == 0 ){
             packet_out_full = 0;
+            if( outpacket.header.flags & UB_PACKET_UNSOLICITED &&
+                    !(outpacket.header.flags & UB_PACKET_MGT) ){
+                packet_unsolicitedsent = 1;
+            }
+        }
 #ifdef UB_ENABLEBRIDGE
 if( ubconfig.bridge ){
         UDEBUG("DsPok");
@@ -375,7 +403,7 @@ if( ubconfig.slave ){
                 packet_out_full = 0;
                 if( outpacket.header.flags & UB_PACKET_UNSOLICITED &&
                     !(outpacket.header.flags & UB_PACKET_MGT) ){
-                    packet_unsolicited = 0;
+                    packet_unsolicitedsent = 1;
                 }
             }else{
                 UDEBUG("DackseqNok");
