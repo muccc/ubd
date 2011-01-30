@@ -84,7 +84,7 @@ def UDPServer():
     while True:
         data = sock.recv(128)
         if len(data) < 30:
-            header = '\x01\xff\x08%c'%len(data);
+            header = '\x01\xff\x08%c'%(len(data)<<2);
             out.put(header + data)
         
 
