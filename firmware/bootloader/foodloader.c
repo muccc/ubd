@@ -34,8 +34,8 @@
 #include "uart.h"
 
 #ifdef HONOR_WATCHDOG_RESET
-#   include <avr/wdt.h>
 #endif
+#   include <avr/wdt.h>
 
 uint16_t flash_address;             /* start flash (byte address, converted) write at this address */
 uint16_t eeprom_address;            /* start eerprom (byte address) write at this address */
@@ -147,6 +147,14 @@ int main(void)
         wdt_disable();
 #   endif
 
+    wdt_disable();
+    /* Clear WDRF in MCUSR */
+    MCUSR &= ~(1<<WDRF);
+    /* Write logical one to WDCE and WDE */
+    /* Keep old prescaler setting to prevent unintentional time-out */
+    WDTCSR |= (1<<WDCE) | (1<<WDE);
+    /* Turn off WDT */
+    WDTCSR = 0x00;
 
     uint8_t memory_type;
 
