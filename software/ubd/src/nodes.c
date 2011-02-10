@@ -16,9 +16,12 @@ void nodes_init(void)
         nodes[i].version[0] = 0;
         nodes[i].netadr = NULL;
         nodes[i].ubnetd = NULL;
+        nodes[i].avahiaddressgroup = NULL;
         gint j;
         for(j=0; j<32; j++){
             nodes[i].tcpsockets[j].listeners = NULL;
+            nodes[i].tcpsockets[j].avahiservicegroup = NULL;
+            nodes[i].udpsockets[j].avahiservicegroup = NULL;
         }
 
     }
@@ -33,6 +36,13 @@ struct node *nodes_getFreeNode(void)
             memset(nodes[i].groups,0,sizeof(nodes[i].groups));
             memset(nodes[i].classes,0,sizeof(nodes[i].classes));
             nodes[i].netadr = NULL;
+            nodes[i].avahiaddressgroup = NULL;
+            guint j;
+            for(j=0; j<32; j++){
+                nodes[i].tcpsockets[j].listeners = NULL;
+                nodes[i].tcpsockets[j].avahiservicegroup = NULL;
+                nodes[i].udpsockets[j].avahiservicegroup = NULL;
+            }
             return &nodes[i];
         }
     }
@@ -158,5 +168,10 @@ void nodes_setNameFromID(struct node *n)
         printf("ill formated id for this node: %s\n",n->id);
         n->domain[0] = 0;
     }
+
+    //TODO: check buffer
+    strcpy(n->hostname, n->name);
+    strcat(n->hostname, ".local");
+
 }
 

@@ -5,7 +5,8 @@
 #include <gio/gio.h>
 #include <stdio.h>
 #include <string.h>
-#include <packet.h>
+#include "packet.h"
+#include "avahi.h"
 
 #define MAX_NODE    256
 #define MAX_ID      100
@@ -18,6 +19,8 @@ struct socketdata{
     GSocketAddress *socketaddress;
     guint classid;
     GSList          *listeners;
+    AvahiEntryGroup *avahiservicegroup;
+    gchar           *avahiservicename;
 };
 
 struct node{
@@ -26,6 +29,7 @@ struct node{
     gchar       name[MAX_ID];
     gchar       domain[MAX_ID];
     gchar       version[MAX_ID];
+    gchar       hostname[MAX_ID];
     gint        groups[32];
     guchar      classes[32];
     
@@ -54,6 +58,9 @@ struct node{
 
     UBSTREAM_CALLBACK   nextcallback;
     gpointer            nextdata;
+
+    AvahiEntryGroup *avahiaddressgroup;
+
 };
 
 void nodes_init(void);

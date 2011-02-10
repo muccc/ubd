@@ -7,6 +7,7 @@
 #include "net.h"
 #include "interface.h"
 #include "mgt.h"
+#include "avahi.h"
 
 void address6_init(GInetAddress *base)
 {
@@ -27,11 +28,15 @@ void address6_createAddress(struct node *n)
     if( n->netadr == NULL ){
         n->netadr = address6db_getFreeAddr(n->id);
     }
+    avahi_removeNode(n);
+    interface_removeAddress(n);
+    avahi_registerNode(n);
     interface_createAddress(n);
 }
 
 void address6_removeAddress(struct node *n)
 {
+   avahi_removeNode(n);
    interface_removeAddress(n);
 }
 

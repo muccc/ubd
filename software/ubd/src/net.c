@@ -187,11 +187,14 @@ void net_createSockets(struct node *n)
     g_socket_service_start(gss);
 
     printf("net_createSockets: activating network for this node\n");
+   
+    avahi_registerServices(n);
     n->netup = TRUE;
 }
 
 void net_removeSockets(struct node *n)
 {
+    avahi_removeServices(n);
     printf("net_removeSockets: Closing sockets of node %s\n",n->id);
 
     guint i;

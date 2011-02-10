@@ -20,12 +20,16 @@
 #include "xmlconfig.h"
 #include "groups.h"
 #include "config.h"
+#include "avahi.h"
+
 
 int main (void)
 {
+
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
-    
+    GMainLoop * mainloop = g_main_loop_new(NULL,FALSE);
+    avahi_init(mainloop);
 
     nodes_init();
     groups_init();
@@ -64,7 +68,6 @@ int main (void)
     busmgt_init();
     cmdparser_init();
 
-    GMainLoop * mainloop = g_main_loop_new(NULL,TRUE);
     g_main_loop_run(mainloop);
     return 0;
 }

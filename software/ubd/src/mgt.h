@@ -24,6 +24,6 @@ void mgt_init(void);
 
 struct node *mgt_createBridge(gchar *id);
 struct node *mgt_createNode(gint type, gchar *id);
-gint mgt_removeNodeById(gchar * id);
+//gint mgt_removeNodeById(gchar * id);
 
 #endif
