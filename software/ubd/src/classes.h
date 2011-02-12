@@ -2,6 +2,7 @@
 #define _CLASSES_H_
 #include <glib.h>
 
+gboolean classes_exists(guint class);
 gchar* classes_getClassName(guint class);
 gchar* classes_getTcpServiceName(guint class);
 gchar* classes_getUdpServiceName(guint class);
