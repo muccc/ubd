@@ -10,23 +10,12 @@
 void bus_sendToClass(guint class, guchar *buf, gint len )
 {
     struct ubpacket packet;
-    guint nodecount = nodes_getNodeCount();
-    guint i,j;
-
+    packet.dest = 0xFF;
+    packet.class = class;
     packet.len = len;
     packet.flags = UB_PACKET_NOACK;
     memcpy(packet.data, buf, len);
-
-    for(i=0; i<nodecount; i++){ 
-        struct node *n = nodes_getNode(i);
-        for(j=0; j<32; j++){
-            if( n->classes[j] == class ){
-                packet.dest = n->busadr;
-                packet.class = n->classes[j];               
-                packet_outpacket(&packet);
-            }
-        }
-    }
+    packet_outpacket(&packet);
 }
 
 gint bus_sendToID(gchar *id, guchar *buf, gint len, guint classid,
