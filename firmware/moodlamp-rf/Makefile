@@ -39,12 +39,11 @@
 # To rebuild project do "make clean" then "make all".
 #----------------------------------------------------------------------------
 
-
-# MCU name
+# ACAB Lamp
 #MCU = atmega324p
+
+# Moodlamp
 MCU = atmega644p
-#MCU = atmega32
-#MCU = atmega16
 
 
 # Processor frequency.
