@@ -44,9 +44,10 @@ def sendPage(pagedata):
         pos+=1
 
 def reset():
-    serial.write("\\0\x00r\\1")
+    cmd = "".join(['\x01', '\xff', '\x18', '\x04', 'r', '\xa6', '\xc3'])
+    #serial.write("\\0\x00r\\1")
     #serial.write("\\1\x00\xFF\x18\x04r\\2")
-
+    serial.write(cmd)
 def openFile():
     try:
         return open(options.file)
