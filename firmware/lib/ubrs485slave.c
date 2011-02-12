@@ -312,15 +312,15 @@ inline void rs485slave_tx(void)
 //the last word was transmitted
 inline void rs485slave_txend(void)
 {
-    if( rs485s_busState == RS485S_BUS_SEND_DONE ){
+//    if( rs485s_busState == RS485S_BUS_SEND_DONE ){
         rs485s_busState = RS485S_BUS_IDLE;
         rs485s_slots[RS485S_PACKETSLOT].full = 0;
         rs485uart_enableReceive();
 
         //PORTA &= ~0x01;
-    }else{
+//    }else{
         //something went wrong!
         //there was nothing to transmitt or the packet was not completed
-    }
+//    }
 }
 
