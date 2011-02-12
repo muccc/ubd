@@ -41,6 +41,7 @@
 
 
 # MCU name
+#MCU = atmega324p
 MCU = atmega644p
 #MCU = atmega32
 #MCU = atmega16
@@ -70,6 +71,7 @@ MCU = atmega644p
 
 # Output format. (can be srec, ihex, binary)
 FORMAT = ihex
+#FORMAT = binary
 
 
 # Target file name (without extension).
