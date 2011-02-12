@@ -85,6 +85,8 @@ static gboolean net_createUDPSocket(struct node *n, guint classid)
     n->udpsockets[classid].source = source;
     n->udpsockets[classid].socketaddress = sa;
     n->udpsockets[classid].classid = classid;
+
+    broadcast_addService(n->classes[classid]);
     return TRUE;
 }
 
@@ -164,7 +166,6 @@ void net_createSockets(struct node *n)
                     return;
         }
     }
-
 
     printf("net_createSockets: Creating tcp management socket listener on port 2324\n");
     GError * err = NULL;
