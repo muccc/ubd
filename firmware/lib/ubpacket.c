@@ -299,7 +299,7 @@ void ubpacket_processPacket(struct ubpacket_t * in)
     UDEBUG("Dbridge: processing");
 if( ubconfig.bridge ){
     if( in->header.src == UB_ADDRESS_MASTER ){
-        UDEBUG("Dbridge: src=bridge");
+        UDEBUG("Dbridge: src=master");
         if( ubadr_isLocal(in->header.dest) ){
             UDEBUG("Dbridge: local");
             //this packet was only for us and needs no special care
