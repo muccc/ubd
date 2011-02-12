@@ -7,8 +7,8 @@ struct ubheader_t{
     ubaddress_t src;
     ubaddress_t dest;
     uint8_t flags;
-    uint8_t classid:2;
-    uint8_t len:6;
+    uint8_t class;
+    uint8_t len;
 };
 
 struct ubpacket_t{

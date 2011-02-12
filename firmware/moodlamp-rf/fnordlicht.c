@@ -106,7 +106,7 @@ void sendswitch(void)
                 p->header.src = ubadr_getAddress();
                 p->header.dest = UB_ADDRESS_MASTER;
                 p->header.flags = UB_PACKET_UNSOLICITED;
-                p->header.classid = 1;
+                p->header.class = 42;
                 p->header.len = 1;
                 p->data[0] = outp;
                 ubpacket_send();                       
@@ -141,7 +141,7 @@ void sendstest(void)
                 p->header.src = ubadr_getAddress();
                 p->header.dest = UB_ADDRESS_MASTER;
                 p->header.flags = UB_PACKET_UNSOLICITED;
-                p->header.classid = 0;
+                p->header.class = 42;
                 p->header.len = 1;
                 p->data[0] = outp;
                 ubpacket_send();                       
@@ -200,7 +200,7 @@ int main(void) {
     
     init_pwm();
     uart1_init( UART_BAUD_SELECT(115200,F_CPU));
-    uart1_puts("\\1hello world\\2");
+    //uart1_puts("\\1hello world\\2");
 #if RC5_DECODER
     rc5_init();
 #endif
@@ -210,11 +210,16 @@ int main(void) {
 #endif
     settings_read();
     control_init();
+
+#if defined(__AVR_ATmega644P__)
     if((global.config == 21 && !PIN_HIGH(JUMPER1C1)) || (global.config== 30 && !PIN_HIGH(JUMPER1C2)))
         ub_init(UB_SLAVE, UB_RF, UB_RF|UB_RS485);
     else
         ub_init(UB_SLAVE, UB_RS485, UB_RS485);
-
+#elif defined(__AVR_ATmega324P__)
+        ub_init(UB_SLAVE, UB_RS485, UB_RS485);
+        #error
+#endif
     /* enable interrupts globally */
     sei();
 //    global.state = STATE_RUNNING;
@@ -230,7 +235,7 @@ int main(void) {
             struct ubpacket_t * out = ubpacket_getSendBuffer();
             out->header.len = cmd_interpret(ubpacket_getIncomming()->data,
                                         out->data);
-            out->header.classid = 0;
+            out->header.class = 23;
             if( ubpacket_getIncomming()->header.flags & UB_PACKET_NOACK ){
                 ubpacket_processed();   //has to be after the if
             }else{
