@@ -37,7 +37,7 @@ while True:
         elif c == '\\':
             d = '\\'
         elif c == '3':
-            print "%f: discover"%(t-t0)
+            print "%f: discover"%(t)
             continue
         elif c == '4':
             start = True
@@ -54,15 +54,15 @@ while True:
     if start and inframe:
         start = False
     elif start and query:
-        print "%f: query for %d"%(t-t0,ord(c))
+        print "%f: query for %d"%(t,ord(c))
         query = False
         start  = False
     elif stop:
-        print "%f"%(t-t0), len(data) ,data
+        print "%f"%(t), len(data) ,data
         data = []
         stop = False
     elif escaped == False and inframe:
         data.append(d)
     elif escaped == False:
-        print "%f: c= %d"%(t-t0,ord(c))
+        print "%f: c= %d"%(t,ord(c))
 
