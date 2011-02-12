@@ -26,7 +26,14 @@ void listen_newMessage(struct packetstream *ps)
 {
     g_assert(ps != NULL);
     g_assert(ps->n != NULL);
-    guint classid = ps->p.classid;
+    int i;
+    guint classid;
+    //guint classid = ps->p.classid;
+    for(i=0; i<sizeof(ps->n->classes); i++){
+        if( ps->n->classes[i] == ps->p.class )
+            classid = i;
+    }
+
     g_slist_foreach(ps->n->tcpsockets[classid].listeners,
             (GFunc)listen_iterate,  ps);
 }

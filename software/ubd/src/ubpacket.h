@@ -5,14 +5,14 @@
 
 typedef uint8_t    address_t;
 typedef uint8_t     seq_t;
-#define UB_PACKET_HEADER        4
+#define UB_PACKET_HEADER        5
 #define UB_PACKET_DATA          (UB_PACKETLEN-UB_PACKET_HEADER)
 struct ubpacket{
     address_t src;
     address_t dest;
     uint8_t flags;
-    uint8_t classid:2;
-    uint8_t len:6;
+    uint8_t class;
+    uint8_t len;
     uint8_t data[UB_PACKET_DATA];
 }__attribute__((__packed__));
 
