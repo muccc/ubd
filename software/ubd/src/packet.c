@@ -191,21 +191,13 @@ void packet_init(void)
     g_thread_create(packet_writerThread,NULL,FALSE,NULL);
 }
 
-/*void packet_addCallback(gchar key, void(*cb)(struct ubpacket*))
-{
-    gchar buf[2];
-    buf[0] = key;
-    buf[1] = 0;
-
-    g_hash_table_insert(packet_callbacks, g_strdup(buf), cb);
-
-    printf("Added callback for message type %c to 0x%x\n",key,(unsigned int)cb);
-}*/
-
 void packet_streamPacket(struct node * n, struct ubpacket *p,
                     UBSTREAM_CALLBACK callback, gpointer data)
 {
+
     struct messagestream * outmsg = g_new(struct messagestream,1);
+    //the packet has to fit into the msg buffer
+    g_assert((guint)(p->len + UB_PACKET_HEADER) <= sizeof(outmsg->msg.data));
     p->src = 1;
     p->flags &= UB_PACKET_MGT | UB_PACKET_NOACK;
 
@@ -213,7 +205,6 @@ void packet_streamPacket(struct node * n, struct ubpacket *p,
                 p->dest, p->src, p->flags,p->len);
     
     outmsg->msg.len = p->len+UB_PACKET_HEADER;
-    //g_assert(p->len + UB_PACKET_HEADER < );
     memcpy(outmsg->msg.data, p, p->len + UB_PACKET_HEADER);
     outmsg->callback = callback;
     outmsg->data = data;
