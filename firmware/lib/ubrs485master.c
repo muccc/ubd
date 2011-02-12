@@ -15,9 +15,6 @@
 #include "ubaddress.h"
 #include "udebug.h"
 
-#define UB_HOSTADR          1
-#define UB_MASTERADR        2
-
 #define UB_TICKSPERBYTE             10
 #define UB_INITIALDISCOVERINTERVAL  100
 
@@ -25,8 +22,6 @@
 #define UB_QUERYINTERVALMAX      1000    //in ms
 
 #define UB_QUERYINTERVALMAXCOUNT    (UB_QUERYINTERVALMAX/UB_QUERYINTERVALMIN)
-
-#define UB_MAXQUERY                 30
 
 #define RS485M_STATE_INIT               1
 #define RS485M_STATE_INITIALDISCOVER    2
@@ -61,7 +56,7 @@ struct rs485m_slot {
 struct rs485m_slot rs485m_slots[RS485M_SLOTCOUNT];
 
 uint8_t    rs485m_state = RS485M_STATE_INIT;
-uint16_t   rs485m_ticks = 0;
+uint16_t   rs485m_ticks;
 
 
 //used in the interrupts
@@ -72,14 +67,14 @@ volatile uint8_t rs485m_stop;
 volatile uint8_t rs485m_timer;
 
 volatile uint8_t rs485m_busState;
-volatile uint8_t rs485m_granted = 0;
+volatile uint8_t rs485m_granted;
 
 volatile uint8_t rs485m_incomming;
 volatile uint8_t rs485m_packetdata[UB_PACKETLEN+2];    //+ 2 byte crc
 
 //buffer for the slave id during a query
 uint8_t rs485m_querybuf[1];
-volatile uint8_t rs485m_stalled = 0;
+volatile uint8_t rs485m_stalled;
 
 UBSTATUS rs485master_setQueryInterval(uint8_t adr, uint16_t interval)
 { 
@@ -108,8 +103,12 @@ void rs485master_init(void)
     }
 
     rs485m_busState = RS485M_BUS_IDLE;
-
     rs485m_incomming = UB_NONE;
+    rs485m_granted = 0;
+    rs485m_stalled = 0;
+    rs485m_ticks = 0;
+    rs485m_state = RS485M_STATE_INIT;
+
     rs485uart_enableReceive();
 }
 
@@ -130,18 +129,19 @@ int16_t rs485master_getPacket(struct ubpacket_t * packet)
         if( (crc>>8) == msg[len-2] && (crc&0xFF) == msg[len-1] ){
             memcpy(packet, msg , len);
             len-=2;
+            uint8_t adr = packet->header.dest;
+            if( !ubadr_isMulticast(adr) &&
+                !ubadr_isBroadcast(adr) &&
+                !(packet->header.flags & UB_PACKET_ACK) &&
+                !(packet->header.flags & UB_PACKET_NOACK)){
+                PORTA |= (1<<PA7);
+                rs485m_stalled = 1;
+            }
         }else{
-            len = -1;
+            UDEBUG("Dcrcerror");
+            len = 0;
         }
         rs485m_incomming = UB_NONE;
-
-        uint8_t adr = packet->header.dest;
-        if( !ubadr_isMulticast(adr) &&
-            !ubadr_isBroadcast(adr) &&
-            !(packet->header.flags & UB_PACKET_ACK) &&
-            !(packet->header.flags & UB_PACKET_NOACK)){
-            rs485m_stalled = 1;
-        }
     }else if( incomming != UB_NONE ){
         //ignore these packages
         rs485m_incomming = UB_NONE;
@@ -246,6 +246,7 @@ inline void rs485master_tick(void)
     if( rs485m_granted )
         rs485m_granted--;
 }
+
 UBSTATUS rs485master_free(void)
 {
     if( rs485m_slots[RS485M_PACKETSLOT].full )
@@ -307,6 +308,7 @@ void rs485master_runslot(void)
         rs485master_start(UB_START,rs485m_slots[RS485M_PACKETSLOT].data,
                 rs485m_slots[RS485M_PACKETSLOT].len,UB_STOP);
         //this slot will be freed when UB_STOP has been transmitted
+        PORTA &= ~(1<<PA7);
         rs485m_stalled = 0;
     }
 }
