@@ -21,7 +21,7 @@
 #include "groups.h"
 #include "config.h"
 #include "avahi.h"
-
+#include "broadcast.h"
 
 int main (void)
 {
@@ -43,7 +43,7 @@ int main (void)
         fprintf(stderr, "Please specify a base address to use.\n");
         return -1;
     }
-
+    broadcast_init();
     if( net_init(config.interface, 
                         config.base,
                         config.prefix) ){

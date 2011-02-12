@@ -26,8 +26,8 @@ void listen_newMessage(struct packetstream *ps)
 {
     g_assert(ps != NULL);
     g_assert(ps->n != NULL);
-    int i;
-    guint classid;
+    guint i;
+    guint classid = 0;
     //guint classid = ps->p.classid;
     for(i=0; i<sizeof(ps->n->classes); i++){
         if( ps->n->classes[i] == ps->p.class )
