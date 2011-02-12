@@ -16,6 +16,18 @@ struct classdata classes[] =
 {42,"switch","_switch._tcp","_switch._udp",2342}
 };
 
+gboolean classes_exists(guint class)
+{ 
+    guint classcount = sizeof(classes)/sizeof(struct classdata);
+    guint i;
+    for(i=0; i<classcount; i++){
+        if( classes[i].class == class ){
+            return TRUE;
+        }
+    }
+    return FALSE; 
+}
+
 static struct classdata *classes_getClass(guint class)
 {
     guint classcount = sizeof(classes)/sizeof(struct classdata);
