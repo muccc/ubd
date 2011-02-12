@@ -1,0 +1,1 @@
+python flash.py -n "$1" -A select
