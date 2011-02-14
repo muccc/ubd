@@ -5,6 +5,8 @@ import time
 
 class SerialInterface:
     def  __init__ ( self, path2device, baudrate, timeout=0):
+      self.portopen = False
+      while not self.portopen:
         try:
             self.ser = serial.Serial(path2device, baudrate)
             self.path2device = path2device
@@ -18,6 +20,8 @@ class SerialInterface:
         except serial.SerialException:
             print "exception while opening"
             pass
+        time.sleep(1)
+      #print "done"
     def close(self):
         try:
             self.portopen = False

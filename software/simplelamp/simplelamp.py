@@ -62,7 +62,7 @@ class TCPHandler(SocketServer.BaseRequestHandler):
                 break
             m = self.parse(self.data)
             if m:
-                header = '\x01\x02\x00%c'%len(m);
+                header = '\x01\x02\x00\x17%c'%len(m);
                 out.put(header + m)
                 out.join()
                 self.request.send("A")
@@ -84,7 +84,7 @@ def UDPServer():
     while True:
         data = sock.recv(128)
         if len(data) < 30:
-            header = '\x01\xff\x08%c'%(len(data)<<2);
+            header = '\x01\xff\x08\x17%c'%(len(data));
             out.put(header + data)
         
 
