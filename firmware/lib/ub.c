@@ -84,7 +84,10 @@ void ub_init(uint8_t ubmode, int8_t slaveinterfaces, int8_t bridgeinterfaces)
         //wait until we get an address assigned to an interface
         ubconfig.configured = 0;
         sei();
+
+#ifdef UB_ENABLEBRIDGE
         serial_sendFramec('s');
+#endif
     }
 #endif
 }

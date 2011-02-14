@@ -13,15 +13,19 @@
 ISR(TIMER2_COMPA_vect)//, ISR_NOBLOCK)
 {
 #ifdef UB_ENABLEBRIDGE
+#ifdef UB_ENABLERS485
     if( ubconfig.rs485master ){
         rs485master_timer();
     }
 #endif
+#endif
 
 #ifdef UB_ENABLESLAVE
+#ifdef UB_ENABLERS485
     if( ubconfig.rs485slave ){
         rs485slave_timer();
     }
+#endif
 #endif
 }
 
