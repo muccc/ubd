@@ -18,7 +18,7 @@ typedef uint8_t ubaddress_t;
 
 #define UB_INTERVAL         500
 #define UB_CLASSES          {23,42,0,0}
-
+#define UB_INITIALNODENAME  "newnode,example.com"
 //rf config
 #define RF_CHANNEL  23
 #define RF_PORT		PORTB
