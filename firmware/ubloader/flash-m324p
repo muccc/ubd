@@ -1,1 +1,1 @@
-python flash.py -p 128 -f ../moodlamp-bus/fnordlicht.hex -A write
+python flash.py -p 128 -f ../moodlamp-rf/fnordlicht.hex -A write
