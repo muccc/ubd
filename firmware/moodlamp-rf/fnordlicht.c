@@ -218,7 +218,6 @@ int main(void) {
         ub_init(UB_SLAVE, UB_RS485, UB_RS485);
 #elif defined(__AVR_ATmega324P__)
         ub_init(UB_SLAVE, UB_RS485, UB_RS485);
-        #error
 #endif
     /* enable interrupts globally */
     sei();
