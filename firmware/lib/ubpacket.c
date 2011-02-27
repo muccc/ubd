@@ -62,7 +62,12 @@ inline uint8_t ubpacket_gotPacket(void)
 inline void ubpacket_processed(void)
 {
     UDEBUG("Dprocessed");
+    uint8_t noack = ubpacket_getIncomming()->header.flags & UB_PACKET_NOACK;
     packet_incomming = 0;
+    if( !noack ){
+        //we have to send a reply for this packet
+        ubpacket_send();
+    }
 }
 
 inline struct ubpacket_t * ubpacket_getSendBuffer(void)

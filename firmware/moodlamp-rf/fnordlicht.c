@@ -235,12 +235,7 @@ int main(void) {
             out->header.len = cmd_interpret(ubpacket_getIncomming()->data,
                                         out->data);
             out->header.class = 23;
-            if( ubpacket_getIncomming()->header.flags & UB_PACKET_NOACK ){
-                ubpacket_processed();   //has to be after the if
-            }else{
-                ubpacket_processed();
-                ubpacket_send();
-            }
+            ubpacket_processed();
         }
 
         if(packetbase > 32){
