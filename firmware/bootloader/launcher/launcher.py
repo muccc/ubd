@@ -24,7 +24,7 @@ ser.setTimeout(0.0002)
 
 print 'Sending bootloader entry command (p).'
 print 'You may now plug in the target device.'
-ser.write('\\1R\\2')
+ser.write('\\R\\1R\\2')
 while True:
     ser.write('p')
     d = ser.read(1)

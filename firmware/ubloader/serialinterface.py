@@ -17,11 +17,14 @@ class SerialInterface:
         c = crcmod.Crc(0x11021)
         c.update(message);
         message += c.digest()
+        #the bootloader needs escaping
         message = message.replace('\\','\\\\')
         enc = "\\5" + message + "\\2"
         #print "writing",list(enc)
         self.ser.write(enc)
     def write(self, data):
+        #the bridge needs escaping
+        data = data.replace('\\','\\\\')
         self.ser.write(data)
 
     def readMessage(self):

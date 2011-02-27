@@ -15,6 +15,7 @@
 
 int main(void)
 {
+    uint8_t escaped = 0;
     leds_init();
 
     DDR_CONFIG_OUT(RS485_TX_PIN);
@@ -36,7 +37,20 @@ int main(void)
     while(1){
         wdt_reset();
         if( (UCSR1A & (1<<RXC1)) ){
-            UDR0 = UDR1;
+            uint8_t data = UDR1;
+            if( escaped ){
+                escaped = 0;
+                if( data == 'R' ){
+                    wdt_enable(WDTO_2S);
+                    while(1);
+                }
+            }else{
+               if( data == '\\' ){
+                    escaped = 1;
+                    continue;
+                }
+            }
+            UDR0 = data;
             PIN_SET(RS485_TX_PIN);
             PIN_SET(RS485_NRX_PIN);
             //_delay_us(4);
