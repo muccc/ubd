@@ -34,6 +34,7 @@ class SerialInterface:
         start = False
 
         while True:
+            d = ''
             c = self.ser.read(1)
             if len(c) == 0:             #A timout occured
                 print 'TIMEOUT'
