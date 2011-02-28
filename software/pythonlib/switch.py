@@ -7,7 +7,7 @@ import sys
 lamp = sys.argv[1]
 switch = sys.argv[2]
 
-a = libml.Moodlamp(lamp)
+a = libml.Moodlamp(lamp,True)
 s = libswitch.Switch(switch)
 
 a.connect()
@@ -16,8 +16,8 @@ s.listen()
 
 while True:
     rc = s.receiveStatus()
-    if rc == 'X':
+    if rc == 'b0':
         a.timedfade(0,0,255,1)
-    else:
+    elif rc == 'B0':
         a.timedfade(255,0,0,1)
 

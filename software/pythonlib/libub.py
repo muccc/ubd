@@ -2,9 +2,10 @@ import socket
 #bus = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 
 class UBNode:
-    def __init__(self, address, port):
+    def __init__(self, address, port, udp = False):
         self.address = address
         self.port = port
+        self.udp = udp
 
     def connect(self):
         self.openSocket()
@@ -43,6 +44,9 @@ class UBNode:
             return False
 
     def sendCommand(self, command):
+        if self.udp:
+            self.socket.sendto("%s"%(command),(self.address,self.port))
+            return True
         try:
             self.socket.send("B%c%s"%(len(command),command))
             while True:
@@ -83,9 +87,12 @@ class UBNode:
         self.mgtsocket.close();
 
     def openSocket(self):
-        self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-        self.socket.settimeout(20)
-        self.socket.connect((self.address,self.port))
+        if not self.udp:
+            self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            self.socket.connect((self.address,self.port))
+            self.socket.settimeout(20)
+        else:
+            self.socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     def closeSocket(self):
         self.socket.close();
     def listen(self):
