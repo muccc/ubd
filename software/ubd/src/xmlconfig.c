@@ -160,9 +160,6 @@ void xml_parse(void)
             network,"interface");
     config.base = xml_getAttribute(
             network,"base");
-    gchar *prefix = xml_getAttribute(
-            network,"prefix");
-    config.prefix = g_ascii_strtoull(prefix,NULL,10);
 
     mxml_node_t *serial = mxmlFindElement(
         tree, tree, "serial", NULL, NULL, MXML_DESCEND);

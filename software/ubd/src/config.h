@@ -5,7 +5,6 @@
 struct ubconfig {
     gchar *interface;
     gchar *base;
-    gint prefix;
     gchar *device;
     gint rate;
     gint nodetimeout;

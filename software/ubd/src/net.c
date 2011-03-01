@@ -16,14 +16,12 @@
 
 GInetAddress    *net_base;
 GSocket         *udpsocket;
-gint            net_prefix;
 
-gint net_init(gchar* interface, gchar* baseaddress, gint prefix)
+gint net_init(gchar* interface, gchar* baseaddress)
 {
     GError * e = NULL;
     interface = NULL;   //prevent warning
 
-    net_prefix = prefix;
     net_base = g_inet_address_new_from_string(baseaddress);
     if( net_base == NULL ){
         fprintf(stderr, "net_init: Could not parse base address");

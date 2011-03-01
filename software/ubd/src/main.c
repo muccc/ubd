@@ -45,12 +45,11 @@ int main (void)
     }
     broadcast_init();
     if( net_init(config.interface, 
-                        config.base,
-                        config.prefix) ){
+                        config.base) ){
         fprintf(stderr, "Failed to set up network.\n"
                 "Interface=%s\nBaseaddress=%s\n"
                 "Prefix=%d\nAborting.\n",
-                config.interface, config.base, config.prefix);
+                config.interface, config.base);
         return -1;
     }
 
