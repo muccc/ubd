@@ -20,8 +20,9 @@ class SerialInterface:
         #the bootloader needs escaping
         message = message.replace('\\','\\\\')
         enc = "\\5" + message + "\\2"
+        data = enc.replace('\\','\\\\')
         #print "writing",list(enc)
-        self.ser.write(enc)
+        self.ser.write(data)
     def write(self, data):
         #the bridge needs escaping
         data = data.replace('\\','\\\\')
