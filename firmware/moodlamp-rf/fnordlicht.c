@@ -80,45 +80,6 @@ void jump_to_bootloader(void)
     while(1);
 }
 
-void sendswitch(void)
-{
-    static int out = 0;
-    static char outp = ' ';
-
-    if( PINC & (1<<PC2) ){
-        //PORTC |= (1<<PC1) | (1<<PC0);
-        if( outp != 'X' ){
-            outp = 'X';
-            out = 1;
-        }
-    }else{
-        if( outp != 'O' ){
-            outp = 'O';
-            out = 1;
-        }
-        //PORTC &= ~((1<PC1)|(1<<PC0));
-    }
-
-    if( out ){
-        if( ubpacket_acquireUnsolicited(1) ){
-            if( !ubpacket_isUnsolicitedDone() ){
-                struct ubpacket_t *p = ubpacket_getSendBuffer();
-                p->header.src = ubadr_getAddress();
-                p->header.dest = UB_ADDRESS_MASTER;
-                p->header.flags = UB_PACKET_UNSOLICITED;
-                p->header.class = 42;
-                p->header.len = 1;
-                p->data[0] = outp;
-                ubpacket_send();                       
-            }else{
-                out = 0;
-                ubpacket_releaseUnsolicited(1);
-            }
-        }
-    }
-
-}
-
 void sendstest(void)
 {
     static int out = 0;
@@ -200,7 +161,6 @@ int main(void) {
     
     init_pwm();
     uart1_init( UART_BAUD_SELECT(115200,F_CPU));
-    //uart1_puts("\\1hello world\\2");
 #if RC5_DECODER
     rc5_init();
 #endif
@@ -243,10 +203,7 @@ int main(void) {
             ub_tick();
 
             //sendstest();
-            sendswitch();
 
-            //if(main_reset++ > 4000)
-            //  jump_to_bootloader(); 
             //uint16_t bat = adc_getChannel(6);
             /*if( bat < ADC_MINBATIDLE ){
                 global.flags.lowbat = 1;
