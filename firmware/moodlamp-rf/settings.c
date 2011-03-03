@@ -76,7 +76,7 @@ void settings_read(void)
 #if STATIC_SCRIPTS
         script_threads[0].speed_adjustment = 0;
         script_threads[0].handler.execute = &memory_handler_flash;
-        script_threads[0].handler.position = (uint16_t)(&off);
+        script_threads[0].handler.position = (uint16_t)(&colorchange_red);
         script_threads[0].flags.disabled = 0;
 
         //script_threads[2].handler.execute = &memory_handler_eeprom;
