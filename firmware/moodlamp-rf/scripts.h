@@ -94,22 +94,12 @@ static const uint8_t colorchange_red[] PROGMEM = {
     MACRO_JUMP(-9)
     };
 
-static const uint8_t colorchange_stress[] PROGMEM = {
+static const uint8_t off[] PROGMEM = {
     MACRO_SET_CHANNEL(CHANNEL_RED, 0),
     MACRO_SET_CHANNEL(CHANNEL_GREEN, 0),
     MACRO_SET_CHANNEL(CHANNEL_BLUE, 0),
-
-    MACRO_FADE_CHANNEL(CHANNEL_RED, 160, 0x10),
-    MACRO_FADE_CHANNEL(CHANNEL_GREEN, 160, 0x9),
-    MACRO_FADE_CHANNEL(CHANNEL_BLUE, 160, 0x8),
-
-    MACRO_WAIT(_BV(CHANNEL_RED)|_BV(CHANNEL_GREEN)|_BV(CHANNEL_BLUE)),
-    MACRO_FADE_CHANNEL(CHANNEL_RED, 0, 0x20),
-    MACRO_FADE_CHANNEL(CHANNEL_GREEN, 0, 0x20),
-    MACRO_FADE_CHANNEL(CHANNEL_BLUE, 0, 0x20),
-    MACRO_WAIT(_BV(CHANNEL_RED)|_BV(CHANNEL_GREEN)|_BV(CHANNEL_BLUE)),
-
-    MACRO_JUMP(-8)
+    MACRO_SLEEP(125),
+    MACRO_JUMP(-3)
     };
 
 static const uint8_t colorchange_red_blue[] PROGMEM = {
@@ -217,6 +207,6 @@ static const struct playlist_t global_playlist[] = {
     {&memory_handler_flash, (uint16_t) &green_blink},
     {&memory_handler_flash, (uint16_t) &police},
     {&memory_handler_flash, (uint16_t) &red_blink},
-    {&memory_handler_flash, (uint16_t) &colorchange_stress}
+    {&memory_handler_flash, (uint16_t) &off}
 };
 #endif

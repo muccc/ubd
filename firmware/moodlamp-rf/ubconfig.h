@@ -17,7 +17,7 @@ typedef uint8_t ubaddress_t;
 #define UB_NODEMAX      128
 
 #define UB_INTERVAL         500
-#define UB_CLASSES          {23,42,0,0}
+#define UB_CLASSES          {23,0,0,0}
 #define UB_INITIALNODENAME  "newnode,example.com"
 //rf config
 #define RF_CHANNEL  23
