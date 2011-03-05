@@ -1,1 +1,1 @@
-echo -e "s$2\x0" | nc6 -u $1 2324 -q 0
+echo -e "Cs$2\x0\n" | nc $1 2324
