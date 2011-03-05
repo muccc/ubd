@@ -5,13 +5,13 @@
 
 #include "groups.h"
 
-gchar * groups[MAX_GROUPS+1];
+gchar *groups[MAX_GROUPS];
 gint groupcount = 0;
 
 void groups_init(void)
 {
     gint i;
-    for(i=0;i<255;i++){
+    for(i=0;i<MAX_GROUPS;i++){
         groups[i] = NULL;
     }
 
@@ -19,9 +19,8 @@ void groups_init(void)
 
 void groups_addGroup(gchar *groupname)
 {
-    //caller has to take care of the string!
     if( groupcount < MAX_GROUPS ){
-        groups[groupcount++] = groupname;
+        groups[groupcount++] = g_strdup(groupname);
         printf("groups.c: added new group %s as %d\n",
                     groupname,groupcount-1);
     }else{
@@ -32,7 +31,7 @@ void groups_addGroup(gchar *groupname)
 gint groups_getGroupNumber(gchar *groupname)
 {
     gint i;
-    for(i=0;i<255;i++){
+    for(i=0;i<MAX_GROUPS;i++){
         if( groups[i] && strcmp(groupname,groups[i])==0 ){
             return i;
         }
