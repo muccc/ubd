@@ -63,12 +63,15 @@ static struct node *mgt_registerNode(char *id, uint8_t type, uint8_t busadr)
         printf("adding node %s\n",dbn->id);
         nodes_addNode(dbn);
     }
-    if( busadr )
+    if( busadr ){
         dbn->busadr = busadr;
-    else
+        printf("using fixed bus addr %d\n",busadr);
+    }else{
         dbn->busadr = busmgt_getFreeBusAdr();
+    }
     dbn->type = type;
     address6_createAddress(dbn);
+    printf("activating node\n");
     nodes_activateNode(dbn);
     return dbn;
 }
