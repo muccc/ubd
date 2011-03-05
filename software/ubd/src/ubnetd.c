@@ -123,9 +123,12 @@ int main(int argc, char *argv[])
     g_type_init();
     GInetAddress *lo = g_inet_address_new_loopback(
                             G_SOCKET_FAMILY_IPV6);
+    g_assert(lo);
+
     GSocketAddress *sa = g_inet_socket_address_new(
                             lo,
                             42);
+    g_assert(sa);
 
     if( argc < 2){
         printf("Please specify an interface ");
@@ -163,6 +166,7 @@ int main(int argc, char *argv[])
     }
 
     while(TRUE){
+        printf("Waiting for connections\n");
         GSocket *s = g_socket_accept(ss, NULL, &e);        
         if( e != NULL ){
             fprintf(stderr,
