@@ -42,24 +42,31 @@ struct node{
     gint        tpoll;
     gint        ttimeout;
 
+    //address of the node on the bus 
     gint        busadr;
     gboolean    busup;
 
+    //unicast address of the node
     GInetAddress    *netadr;
-    GSocket         *ubnetd;
+    AvahiEntryGroup *avahiaddressgroup;
     gboolean        netup;
 
+    //connection to the ubnetd used to create
+    //the unicast address
+    GSocket         *ubnetd;
+    
+    //one socketpair per class
     struct socketdata udpsockets[32];
     struct socketdata tcpsockets[32];
     struct socketdata mgtsocket;
 
+    //callbacks for the packet threads
     UBSTREAM_CALLBACK   currentcallback;
     gpointer            currentdata;
 
     UBSTREAM_CALLBACK   nextcallback;
     gpointer            nextdata;
 
-    AvahiEntryGroup *avahiaddressgroup;
 
 };
 
