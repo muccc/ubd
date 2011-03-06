@@ -112,8 +112,6 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
             if( data == '\n' || data == '\r' ){
                 nb->callback(nb);
                 nb->state = 0;
-            }else if( data < 0x20 ){
-                nb->state = 4;
             }else{
                 nb->cmd[nb->cmdlen++] = data;
                 if( nb->cmdlen == sizeof(nb->cmd) ){
