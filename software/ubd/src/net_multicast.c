@@ -35,7 +35,10 @@ GSocket *multicast_createSocket(gchar *groupname, guint port,
     struct addrinfo *resmulti;
     struct ipv6_mreq mreq;
     mreq.ipv6mr_interface = if_nametoindex("eth1");
-    getaddrinfo("ff18::1", NULL, NULL, &resmulti);
+    gchar *tmp = g_inet_address_to_string(addr);
+    printf("using address: %s\n",tmp);
+    getaddrinfo(tmp, NULL, NULL, &resmulti);
+    g_free(tmp);
     mreq.ipv6mr_multiaddr = ((struct sockaddr_in6 *)resmulti->ai_addr)->sin6_addr;
     setsockopt(g_socket_get_fd(socket), IPPROTO_IPV6,
         IPV6_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq));
