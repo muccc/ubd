@@ -54,5 +54,19 @@ gint bus_streamToID(gchar *id, guchar *buf, gint len, guint classid,
     return 0;
 }
 
+gint bus_sendToAddress(gint dest, guchar *buf, gint len, guint class,
+                  gboolean reply)
+{ 
+    struct ubpacket packet;
 
+    packet.dest = dest;
+    packet.class = class;
+    packet.len = len;
+    packet.flags = 0;
+    if( !reply )
+        packet.flags = UB_PACKET_NOACK;
+    memcpy(packet.data, buf, len);
+    packet_outpacket(&packet);
+    return 0;
+}
 

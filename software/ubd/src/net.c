@@ -4,11 +4,6 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <gio/gio.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 
 #include "debug.h"
 #include "address6.h"
@@ -21,9 +16,10 @@
 #include "broadcast.h"
 
 GInetAddress    *net_base;
+GInetAddress    *net_multicastbase;
 GSocket         *udpsocket;
 
-gint net_init(gchar* interface, gchar* baseaddress)
+gint net_init(gchar* interface, gchar* baseaddress, gchar *multicastbase)
 {
     GError * e = NULL;
     interface = NULL;   //prevent warning
@@ -33,8 +29,13 @@ gint net_init(gchar* interface, gchar* baseaddress)
         fprintf(stderr, "net_init: Could not parse base address");
         return -1;
     }
-    
-    address6_init(net_base);
+
+    net_multicastbase = g_inet_address_new_from_string(multicastbase);
+    if( net_multicastbase == NULL ){
+        fprintf(stderr, "net_init: Could not parse multicast base address");
+        return -1;
+    }   
+    address6_init(net_base, net_multicastbase);
     tcp_init();
 
     GSocketAddress * sa = g_inet_socket_address_new(net_base,2323);
@@ -64,6 +65,7 @@ static gboolean net_createUDPSocket(struct node *n, guint classid)
     guint port = 2300+n->classes[classid];
 
     printf("net_createSockets: Creating udp socket on port %u\n", port);
+
     GSocketAddress * sa = g_inet_socket_address_new(addr,port);
 
     n->udpsockets[classid].n = n;
@@ -79,12 +81,6 @@ static gboolean net_createUDPSocket(struct node *n, guint classid)
         g_error_free(err);
         return FALSE;
     }
-    struct addrinfo *resmulti;
-    struct ipv6_mreq mreq;
-    mreq.ipv6mr_interface = if_nametoindex("eth0");
-    getaddrinfo("ff18::1", NULL, NULL, &resmulti);
-    mreq.ipv6mr_multiaddr = ((struct sockaddr_in6 *)resmulti->ai_addr)->sin6_addr;
-    setsockopt(g_socket_get_fd(socket), IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq));
 
     GSource *source = g_socket_create_source(socket, G_IO_IN, NULL);
     g_assert(source != NULL);

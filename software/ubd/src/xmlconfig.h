@@ -3,4 +3,5 @@
 
 void xml_init(char *filename);
 
+void xml_parsegroupsandnodes(void);
 #endif

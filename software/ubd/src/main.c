@@ -43,9 +43,14 @@ int main (void)
         fprintf(stderr, "Please specify a base address to use.\n");
         return -1;
     }
+
+    if( config.multicastbase == NULL ){
+        fprintf(stderr, "Please specify a multicast base address to use.\n");
+        return -1;
+    }
     broadcast_init();
     if( net_init(config.interface, 
-                        config.base) ){
+                        config.base, config.multicastbase) ){
         fprintf(stderr, "Failed to set up network.\n"
                 "Interface=%s\nBaseaddress=%s\n"
                 "\nAborting.\n",
@@ -53,6 +58,7 @@ int main (void)
         return -1;
     }
 
+    xml_parsegroupsandnodes();
     mgt_init();
 
     if( serial_open(config.device) ){

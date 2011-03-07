@@ -29,11 +29,12 @@ void nodes_init(void)
 
 struct node *nodes_getFreeNode(void)
 {
-    gint i;
+    gint i,j;
     for(i=0;i<MAX_NODE;i++){
         if( nodes[i].free == TRUE ){
             nodes[i].netup = FALSE;
-            memset(nodes[i].groups,0,sizeof(nodes[i].groups));
+            for(j=0; j<32; j++)
+                nodes[i].groups[j] = -1;
             memset(nodes[i].classes,0,sizeof(nodes[i].classes));
             nodes[i].netadr = NULL;
             nodes[i].avahiaddressgroup = NULL;

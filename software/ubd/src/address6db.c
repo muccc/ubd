@@ -4,19 +4,21 @@
 #include "address6db.h"
 #include "nodes.h"
 
-//GInetAddress *address6db_last;
 GInetAddress *baseaddress;
+GInetAddress *multicastbaseaddress;
 
-void address6db_init(GInetAddress *base)
+void address6db_init(GInetAddress *base, GInetAddress *multicastbase)
 {
-//    address6db_last = g_inet_address_new_from_bytes(
-//                    g_inet_address_to_bytes(base),
-//                    G_SOCKET_FAMILY_IPV6);
+    g_assert(base);
+    g_assert(multicastbase);
     baseaddress = g_inet_address_new_from_bytes(
                     g_inet_address_to_bytes(base),
                     G_SOCKET_FAMILY_IPV6);
+    multicastbaseaddress = g_inet_address_new_from_bytes(
+                    g_inet_address_to_bytes(multicastbase),
+                    G_SOCKET_FAMILY_IPV6);
 }
-
+#if 0
 gboolean db_isIPKnown(GInetAddress *addr)
 {
     int i;
@@ -39,9 +41,8 @@ gboolean db_isIPKnown(GInetAddress *addr)
     g_free(tmp);
     return FALSE;
 }
+#endif
 
-//TODO: use a better algorithm to calculate new addresse
-//based on the netmask
 GInetAddress *address6db_getFreeAddr(gchar *id)
 {
     guint8 addrbuf[16];
@@ -59,6 +60,31 @@ GInetAddress *address6db_getFreeAddr(gchar *id)
     g_checksum_free(checksum);
 
     memcpy(addrbuf+8,digest,8);
+
+    addr = g_inet_address_new_from_bytes(addrbuf,G_SOCKET_FAMILY_IPV6);
+    
+    gchar *tmp = g_inet_address_to_string(addr);
+    printf("using address: %s\n",tmp);
+    g_free(tmp);
+    return addr;
+}
+
+GInetAddress* address6db_getMulticastAddr(gchar *groupname){
+    guint8 addrbuf[16];
+    GInetAddress *addr;
+
+    memcpy(addrbuf,(guint8*) g_inet_address_to_bytes(multicastbaseaddress),16);
+    
+    GChecksum* checksum = g_checksum_new(G_CHECKSUM_MD5);
+    g_checksum_update(checksum, (guchar*)groupname, strlen(groupname));
+
+    guint8 digest[128];
+    gsize size = 128;
+
+    g_checksum_get_digest(checksum, digest, &size);
+    g_checksum_free(checksum);
+
+    memcpy(addrbuf+2,digest,14);
 
     addr = g_inet_address_new_from_bytes(addrbuf,G_SOCKET_FAMILY_IPV6);
     

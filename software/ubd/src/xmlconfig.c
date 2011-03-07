@@ -4,12 +4,6 @@
 #include "nodes.h"
 #include "config.h"
 
-struct xml_node{
-    char *id;
-    char *address;
-    int groups[32];
-};
-
 
 mxml_node_t *tree = NULL;
 #define xml_iterate(tree, node, element) for (node = mxmlFindElement(tree, tree,element, NULL, NULL, MXML_DESCEND); node != NULL; node = mxmlFindElement(node, tree, element, NULL, NULL, MXML_DESCEND))
@@ -125,7 +119,7 @@ void xml_parseNode(mxml_node_t *node)
     int i = 0;
     mxml_node_t *group;
     xml_iterate(node, group, "group"){
-        n->groups[i] = groups_getGroupNumber(
+        n->groups[i] = groups_getBusAddress(
                             xml_getAttribute(group,"name"));
         //printf("found new group name=%s id=%d\n",
         //       xml_getAttribute(group,"name"), n->groups[i]);
@@ -148,11 +142,12 @@ void xml_parseGroups(mxml_node_t *groups)
      mxml_node_t *group;
      printf("parsing groups\n");
      xml_iterate(groups, group, "group"){
-        groups_addGroup(xml_getAttribute(group,"name"));
+        groups_addGroup(xml_getAttribute(group,"name"),
+                        xml_getAttribute(group,"class"));
      }
 }
 
-void xml_parse(void)
+void xml_parsebase(void)
 {
     mxml_node_t *network = mxmlFindElement(
         tree, tree, "network", NULL, NULL, MXML_DESCEND);
@@ -160,7 +155,8 @@ void xml_parse(void)
             network,"interface");
     config.base = xml_getAttribute(
             network,"base");
-
+    config.multicastbase = xml_getAttribute(
+            network,"multicastbase");
     mxml_node_t *serial = mxmlFindElement(
         tree, tree, "serial", NULL, NULL, MXML_DESCEND);
     config.device = xml_getAttribute(
@@ -175,7 +171,10 @@ void xml_parse(void)
     gchar *timeout = xml_getAttribute(
                 bus, "timeout");
     config.nodetimeout = g_ascii_strtoull(timeout,NULL,10);
+}
 
+void xml_parsegroupsandnodes(void)
+{
     mxml_node_t *groups = mxmlFindElement(
         tree, tree, "groups", NULL, NULL, MXML_DESCEND);
     xml_parseGroups(groups);
@@ -189,5 +188,5 @@ void xml_init(char *filename)
 {
     xml_load(filename);
     //xml_print(tree);
-    xml_parse();
+    xml_parsebase();
 }

@@ -5,7 +5,7 @@
 
 #include "nodes.h"
 
-gint net_init(gchar* interface, gchar* baseaddress);
+gint net_init(gchar* interface, gchar* baseaddress, gchar *multicastbase);
 void net_createSockets(struct node *n);
 void net_removeSockets(struct node *n);
 

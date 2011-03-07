@@ -1,32 +1,29 @@
 <?xml version="1.0" encoding='UTF-8'?>
 <ubdconfig version="1">
     <network interface="lo"
-             base="2001:a60:10ff:c401::1" />
+             base="2001:a60:10ff:c401::1"
+             multicastbase="ff18::" />
     <serial device="/dev/ttyUSB0" rate="115200" />
     <bus timeout="120" />
     <nodes>
-        <node id="bridge5,local" address="dfs">
-            <group name="usb"/>
+        <node id="foo,example.com">
+            <group name="room1-lamps"/>
         </node>
-        <node id="fnord,blubb.com" address="::2">
-            <group name="room1"/>
-            <group name="room2"/>
+        <node id="bar,example.com">
+            <group name="room2-lamps"/>
+            <group name="sofa"/>
         </node>
-        <node id="fnord2,blubb.com" address="::3">
-            <group name="room1"/>
-            <group name="room2"/>
-        </node>
-        <node id="fnord3,blubb.com" address="::5">
-            <group name="room1"/>
+        <node id="baz,example.com">
+            <group name="room1-lamps"/>
             <group name="sofa"/>
         </node>
     </nodes>
     <groups>
-        <group name="room1"/>
-        <group name="room2"/>
-        <group name="sofa">
-            <!-- <group name="room1"/> idea: sofa is already in room1-->
+        <group name="room1-lamps.local" class="moodlamp">
         </group>
-        <group name="usb"/>
+        <group name="room2-lamps.local" class="moodlamp">
+        </group>
+        <group name="sofa.local" class="moodlamp">
+        </group>
     </groups>
 </ubdconfig>

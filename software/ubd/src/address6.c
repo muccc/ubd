@@ -9,9 +9,9 @@
 #include "mgt.h"
 #include "avahi.h"
 
-void address6_init(GInetAddress *base)
+void address6_init(GInetAddress *base, GInetAddress *multicastbase)
 {
-    address6db_init(base);
+    address6db_init(base, multicastbase);
 }
 
 /*
