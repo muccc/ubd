@@ -10,7 +10,7 @@
             <group name="room1-lamps.local"/>
         </node>
         <node id="bar,example.com">
-            <group name="room2-lamps.lcoal"/>
+            <group name="room2-lamps.local"/>
             <group name="sofa.local"/>
         </node>
         <node id="baz,example.com">
