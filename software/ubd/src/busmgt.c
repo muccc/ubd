@@ -211,6 +211,7 @@ static void busmgt_sendMulticastGroups(struct node *n)
     printf("sending multicast groups\n");
     for(i=0; i<32; i++){
         if( n->groups[i] != -1 ){
+            printf("adding multicast address %d\n",n->groups[i]);
             uint8_t d = n->groups[i];
             busmgt_sendCmdData(n->busadr,'A',&d,1);
         }
