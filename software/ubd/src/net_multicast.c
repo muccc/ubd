@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "address6db.h"
+#include "config.h"
 
 GSocket *multicast_createSocket(gchar *groupname, guint port,
                                  GSocketAddress **sa)
@@ -34,7 +35,7 @@ GSocket *multicast_createSocket(gchar *groupname, guint port,
 
     struct addrinfo *resmulti;
     struct ipv6_mreq mreq;
-    mreq.ipv6mr_interface = if_nametoindex("eth1");
+    mreq.ipv6mr_interface = if_nametoindex(config.interface);
     gchar *tmp = g_inet_address_to_string(addr);
     printf("using address: %s\n",tmp);
     getaddrinfo(tmp, NULL, NULL, &resmulti);
