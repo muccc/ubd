@@ -27,6 +27,7 @@ void address6_createAddress(struct node *n)
     printf("adding address for %s\n",n->id);
     if( n->netadr == NULL ){
         n->netadr = address6db_getFreeAddr(n->id);
+	g_assert(n->netadr);
     }
     avahi_removeNode(n);
     interface_removeAddress(n);
