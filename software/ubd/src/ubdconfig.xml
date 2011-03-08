@@ -7,15 +7,15 @@
     <bus timeout="120" />
     <nodes>
         <node id="foo,example.com">
-            <group name="room1-lamps"/>
+            <group name="room1-lamps.local"/>
         </node>
         <node id="bar,example.com">
-            <group name="room2-lamps"/>
-            <group name="sofa"/>
+            <group name="room2-lamps.lcoal"/>
+            <group name="sofa.local"/>
         </node>
         <node id="baz,example.com">
-            <group name="room1-lamps"/>
-            <group name="sofa"/>
+            <group name="room1-lamps.local"/>
+            <group name="sofa.local"/>
         </node>
     </nodes>
     <groups>
