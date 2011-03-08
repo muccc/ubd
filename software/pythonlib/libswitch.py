@@ -3,7 +3,7 @@ import libub
 
 class Switch(libub.UBNode):
     def __init__(self, address):
-        libub.UBNode.__init__(self,address,2342)
+        libub.UBNode.__init__(self,address,2310)
 
     def receiveStatus(self):
         while True:
