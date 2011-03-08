@@ -121,8 +121,8 @@ void xml_parseNode(mxml_node_t *node)
     xml_iterate(node, group, "group"){
         n->groups[i] = groups_getBusAddress(
                             xml_getAttribute(group,"name"));
-        //printf("found new group name=%s id=%d\n",
-        //       xml_getAttribute(group,"name"), n->groups[i]);
+        printf("adding group name=%s id=%d\n",
+               xml_getAttribute(group,"name"), n->groups[i]);
         i++;
     }
     nodes_addNode(n);
