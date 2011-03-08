@@ -1,5 +1,4 @@
 import socket
-#bus = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 
 class UBNode:
     def __init__(self, address, port, udp = False):
@@ -73,7 +72,8 @@ class UBNode:
                     print "error while sending mgt command", list(command)
                     return False
                 else:
-                    print "unknown error while sending mgt command", list(command)
+                    print "unknown error while sending mgt command", \
+                            list(command)
                     return False
         except socket.timeout:
             print "timeout while sending mgt command", list(command)
@@ -83,18 +83,20 @@ class UBNode:
         self.mgtsocket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         self.mgtsocket.settimeout(20)
         self.mgtsocket.connect((self.address,2324))       
+
     def closeMgtSocket(self):
         self.mgtsocket.close();
 
     def openSocket(self):
-        if not self.udp:
+        if self.udp:
+            self.socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        else:
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
             self.socket.connect((self.address,self.port))
             self.socket.settimeout(20)
-        else:
-            self.socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     def closeSocket(self):
         self.socket.close();
+
     def listen(self):
         self.socket.send('L');
 
