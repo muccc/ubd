@@ -26,7 +26,7 @@ void debug_packet(gchar *reporter, struct ubpacket* p)
     if( p->flags & 0x80 )
         strcat(flags, "PACKET NOT ACKED | ");
     if( p->flags & 0x40 )
-        strcat(flags, "DUPE | ");
+        strcat(flags, "ACKSEQ | ");
     if( p->flags & UB_PACKET_MGT )
         strcat(flags, "MGT | ");
     if( p->flags & UB_PACKET_NOACK )
