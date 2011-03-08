@@ -14,6 +14,7 @@
 #include "net_tcp.h"
 #include "net_udp.h"
 #include "broadcast.h"
+#include "nodes.h"
 
 GInetAddress    *net_base;
 GInetAddress    *net_multicastbase;
@@ -29,7 +30,13 @@ gint net_init(gchar* interface, gchar* baseaddress, gchar *multicastbase)
         fprintf(stderr, "net_init: Could not parse base address");
         return -1;
     }
-
+    struct node n;
+    n.netadr = net_base;
+    n.ubnetd = NULL;
+    printf("creating base address...");
+    interface_createAddress(&n);
+    usleep(3000*1000);
+    printf("done\n");
     net_multicastbase = g_inet_address_new_from_string(multicastbase);
     if( net_multicastbase == NULL ){
         fprintf(stderr, "net_init: Could not parse multicast base address");
@@ -92,7 +99,7 @@ static gboolean net_createUDPSocket(struct node *n, guint classid)
     n->udpsockets[classid].socketaddress = sa;
     n->udpsockets[classid].classid = classid;
 
-    broadcast_addService(n->classes[classid]);
+    //broadcast_addService(n->classes[classid]);
     return TRUE;
 }
 
