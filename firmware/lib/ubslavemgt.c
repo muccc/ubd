@@ -39,6 +39,10 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
                 ubadr_setAddress(data[1]);
                 ubconfig.configured = 1;
                 ubslavemgt_state = IDENTIFY;
+#ifdef UB_ENABLERS485
+                if( ubconfig.rs485slave )
+                    rs485slave_setConfigured(1);
+#endif
             }
         break;
         case 'O':
