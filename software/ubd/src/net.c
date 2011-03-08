@@ -33,7 +33,7 @@ gint net_init(gchar* interface, gchar* baseaddress, gchar *multicastbase)
     struct node n;
     n.netadr = net_base;
     n.ubnetd = NULL;
-    printf("creating base address...");
+    printf("creating base address...\n");
     interface_createAddress(&n);
     usleep(3000*1000);
     printf("done\n");
