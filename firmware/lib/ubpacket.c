@@ -126,8 +126,7 @@ void ubpacket_send(void)
     }
 
     UDEBUG("Dresettimeout");
-    packet_timeout = UB_PACKET_TIMEOUT;
-
+    packet_timeout = ub_getTimeout();
     //Don't request an ack from the host computer
     if( outpacket.header.dest == UB_ADDRESS_MASTER && ubconfig.bridge )
         outpacket.header.flags |= UB_PACKET_NOACK;
@@ -534,6 +533,10 @@ void ubpacket_tick(void)
             ubpacket_abort();
             return;
         }
+        //TODO: race condition
+        //if the retransmit gets buffered and the ack of the original
+        //packet arrives the retransmitt will still be executed
+        //and might get corrupted by the code handling the ack
         ubpacket_send();
         //PORTA ^= 0x04;
     }

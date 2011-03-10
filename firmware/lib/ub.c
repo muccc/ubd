@@ -166,6 +166,29 @@ uint8_t ub_getPacket(struct ubpacket_t * packet)
     return 0;
 }
 
+uint16_t ub_getTimeout(void)
+{
+#ifdef UB_ENABLEBRIDGE
+    if( ubconfig.bridge ){
+        return UB_PACKET_TIMEOUT;
+    }
+#endif
+#ifdef UB_ENABLESLAVE
+    if( ubconfig.slave ){
+#ifdef UB_ENABLERS485
+        if( ubconfig.rs485slave ){
+            return UB_RS485_TIMEOUT;
+        }
+#endif
+#ifdef UB_ENABLERF
+        if( ubconfig.rf ){
+            return UB_RF_TIMEOUT;
+        }
+#endif
+    }   
+#endif
+    return 500;
+}
 /*uint8_t ub_mgt(struct ubpacket_t * packet)
 {
 #ifdef UB_ENABLEBRIDGE

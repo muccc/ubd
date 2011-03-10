@@ -35,4 +35,5 @@ void ub_tick(void);
 inline uint8_t ub_getAddress(void);
 UBSTATUS ub_sendPacket(struct ubpacket_t * packet);
 uint8_t ub_getPacket(struct ubpacket_t * packet);
+uint16_t ub_getTimeout(void);
 #endif

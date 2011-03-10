@@ -9,8 +9,6 @@
 
 #define UB_MAXMULTICAST 8
 
-#define UB_PACKET_TIMEOUT   100
-#define UB_PACKET_RETRIES   5
 
 //#define USEDEBUG
 typedef uint8_t ubaddress_t;
@@ -19,6 +17,13 @@ typedef uint8_t ubaddress_t;
 #define UB_INTERVAL         500
 #define UB_CLASSES          {23,0,0,0}
 #define UB_INITIALNODENAME  "newnode,example.com"
+
+
+#define UB_PACKET_TIMEOUT   100
+#define UB_RF_TIMEOUT       100
+#define UB_RS485_TIMEOUT   (UB_INTERVAL + 200)
+#define UB_PACKET_RETRIES   5
+
 //rf config
 #define RF_CHANNEL  23
 #define RF_PORT		PORTB
