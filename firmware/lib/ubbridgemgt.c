@@ -40,10 +40,10 @@ uint8_t ubbridgemgt_process(struct ubpacket_t * p)
         case 'q':
             //TODO: check if it's on the rf
             flags = ubstat_getFlags(data[1]);
-            if( flags->rs485 ){
+            //if( flags->rs485 ){
                 rs485master_setQueryInterval(data[1], (data[2] << 8) + data[3]);
                 flags->known = 1;
-            }
+            //}
             //flags->rs485 = 1;
         break;
         case 'O':
