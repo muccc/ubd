@@ -192,9 +192,12 @@ int main(void) {
         ub_process();
         if( ubpacket_gotPacket() ){
             struct ubpacket_t * out = ubpacket_getSendBuffer();
-            out->header.len = cmd_interpret(ubpacket_getIncomming()->data,
+            uint8_t len = cmd_interpret(ubpacket_getIncomming()->data,
                                         out->data);
-            out->header.class = 23;
+            if( !(ubpacket_getIncomming()->header.flags & UB_PACKET_NOACK) ){
+                out->header.len = len; 
+                out->header.class = 23;
+            }
             ubpacket_processed();
         }
 

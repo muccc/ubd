@@ -154,9 +154,11 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
 
         //strcpy((char *) result, "D="__DATE__"H=");
         //strcat((char *) result,__DATE__);
+        if( result == NULL ) return 0;
         sprintf((char *)result,"D="__DATE__" H=%d",global.config);
         return strlen((char *)result);
     }else if(cmd == CMD_GET_STATE){
+        if( result == NULL ) return 0;
         result[0] = global.state;
         result[1] = script_threads[0].speed_adjustment;
         result[2] = global_pwm.dim;
@@ -181,6 +183,7 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         uint16_t time = (param[3]<<8)+param[4];
         control_fademsalt(param[0],param[1],param[2],time);
     }else if(cmd == CMD_GET_VOLTAGE){
+        if( result == NULL ) return 0;
         uint16_t adc = adc_getChannel(6);
         sprintf((char *)result,"V=%u",adc);
         return strlen((char *)result);
