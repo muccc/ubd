@@ -187,6 +187,12 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         uint16_t adc = adc_getChannel(6);
         sprintf((char *)result,"V=%u",adc);
         return strlen((char *)result);
+    }else if(cmd == CMD_GET_COLOR){
+        if( result == NULL ) return 0;
+        result[0] = global_pwm.channels[0].brightness;
+        result[1] = global_pwm.channels[1].brightness;
+        result[2] = global_pwm.channels[2].brightness;
+        return 3;
     }
     return 0;
 }
