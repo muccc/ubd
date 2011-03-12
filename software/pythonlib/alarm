@@ -1,0 +1,2 @@
+#!/bin/bash
+python switchsiren.py HauptbahnhofLampen.local testlamp.local lamp66.local

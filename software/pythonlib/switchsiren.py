@@ -25,7 +25,8 @@ s.listen()
 state = 'b'
 play = False
 pygame.mixer.init()
-music.load('siren.wav')
+#music.load('siren.wav')
+music.load('puddi.mp3')
 r = g = b = 0
 
 def setcolors():
@@ -40,16 +41,16 @@ def setcolors():
         elif state == 'b1':
             time.sleep(.1)
         elif state == 'r1':
-            a.timedfade(255,0,0,.3)
+            a.timedfade(255,0,0,.4)
             if not play:
             	music.play(-1)
                 play = True
             state = 'r2'
-            time.sleep(.3);
+            time.sleep(.4);
         elif state == 'r2':
-            a.timedfade(0,0,0,.3)
+            a.timedfade(0,0,0,.4)
             state = 'r1'
-            time.sleep(.3)
+            time.sleep(.4)
 
 thread.start_new_thread(setcolors,())
 
