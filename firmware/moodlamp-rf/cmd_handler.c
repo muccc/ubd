@@ -189,15 +189,10 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         return strlen((char *)result);
     }else if(cmd == CMD_GET_COLOR){
         if( result == NULL ) return 0;
-        cli();
         result[0] = global_pwm.channels[0].brightness;
         result[1] = global_pwm.channels[1].brightness;
         result[2] = global_pwm.channels[2].brightness;
-        sei();
-        result[3] = 0x0F;
-        result[4] = 0xFF;
-        result[5] = 'a';
-        return 6;
+        return 3;
     }
     return 0;
 }
