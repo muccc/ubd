@@ -8,7 +8,12 @@ class Moodlamp(libub.UBNode):
     def setcolor(self, r, g, b):
         cmd = "C%c%c%c"%(r,g,b)
         return self.sendCommand(cmd)
-    
+    def getcolor(self):
+        cmd = "g"
+        if self.sendCommand(cmd):
+            return self.readResponse(self.socket)
+        else:
+            return False
     def fade(self, r, g, b, speed):
         h = int(speed)>>8
         l = int(speed)&0xFF
