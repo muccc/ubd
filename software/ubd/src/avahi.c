@@ -379,7 +379,7 @@ void avahi_registerMulticastGroup(struct multicastgroup *g)
                 AVAHI_IF_UNSPEC,
                 AVAHI_PROTO_UNSPEC,
                 0,
-                g->name,
+                g->hostname,
                 &a )) < 0 ){
         fprintf(stderr, "Failed to add address: %s\n", avahi_strerror(ret));
     }
@@ -396,7 +396,7 @@ void avahi_registerMulticastGroup(struct multicastgroup *g)
                 g->name,
                 g->avahiservicename,
                 NULL,
-                g->name,
+                g->hostname,
                 classes_getServicePort(class),
                 NULL)) < 0 ){
         fprintf(stderr, "Failed to add service: %s\n", avahi_strerror(ret));

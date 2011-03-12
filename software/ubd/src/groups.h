@@ -11,6 +11,7 @@
 //only one service is allowed per group!
 struct multicastgroup{
     gchar           *name;
+    gchar           hostname[100];
     guint           class;
     GSocket         *socket;
     GSocketAddress  *sa;

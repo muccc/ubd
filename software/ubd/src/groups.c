@@ -20,6 +20,7 @@ gboolean groups_read(GSocket *socket, GIOCondition condition,
     GSocketAddress * src;
     struct multicastgroup *g = user_data;
     gssize len;    
+    printf("foobar\n");
     if( condition == G_IO_IN ){
         len = g_socket_receive_from(socket,&src,(gchar*)buf,
                                 sizeof(buf),NULL,NULL);
@@ -74,6 +75,9 @@ void groups_addGroup(gchar *groupname, gchar *classname)
         GSocket *socket = multicast_createSocket(groupname, udpport, &sa);
         if( socket != NULL){
             groups[g].name = g_strdup(groupname);
+            groups[g].hostname[0] = 0;
+	    strcat(groups[g].hostname,groupname);
+	    strcat(groups[g].hostname,".local");
             groups[g].busadr = g + GROUPS_STARTADDRESS;
             groups[g].class = class;
             GSource *source = g_socket_create_source(socket,
