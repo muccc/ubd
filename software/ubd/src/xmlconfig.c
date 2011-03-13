@@ -103,11 +103,19 @@ void xml_parseNode(mxml_node_t *node)
 {
     gchar *id = xml_getAttribute(node,"id");
     gchar *address = xml_getAttribute(node,"address");
+    gchar *hostname = xml_getAttribute(node,"hostname");
 
     //printf("parsing node %s address %s\n", id, address);
 
     struct node *n = nodes_getFreeNode();
     strncpy(n->id, id, MAX_ID);
+    n->id[MAX_ID-1] = 0;
+
+    if( hostname != NULL && strlen(hostname) != 0 ){
+        strncpy(n->hostname, hostname, MAX_ID);
+        n->hostname[MAX_ID-1] = 0;
+    }
+
     if( address != NULL && strlen(address) != 0 ){
         n->netadr = g_inet_address_new_from_string(address);
         //g_assert(n->netadr != NULL);

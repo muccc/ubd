@@ -6,7 +6,7 @@
     <serial device="/dev/ttyUSB0" rate="115200" />
     <bus timeout="120" />
     <nodes>
-        <node id="foo,example.com">
+        <node id="foo,example.com" hostname="foolamp">
             <group name="room1-lamps"/>
         </node>
         <node id="bar,example.com">

@@ -44,6 +44,7 @@ struct node *nodes_getFreeNode(void)
                 nodes[i].tcpsockets[j].avahiservicegroup = NULL;
                 nodes[i].udpsockets[j].avahiservicegroup = NULL;
             }
+            nodes[i].hostname[0] = 0;
             return &nodes[i];
         }
     }
@@ -169,10 +170,10 @@ void nodes_setNameFromID(struct node *n)
         printf("ill formated id for this node: %s\n",n->id);
         n->domain[0] = 0;
     }
-
-    //TODO: check buffer
-    strcpy(n->hostname, n->name);
-    strcat(n->hostname, ".local");
-
+    if( n->hostname[0] == 0 ){
+        //TODO: check buffer
+        strcpy(n->hostname, n->name);
+        strcat(n->hostname, ".local");
+    }
 }
 
