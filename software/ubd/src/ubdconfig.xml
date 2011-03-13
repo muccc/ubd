@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding='UTF-8'?>
 <ubdconfig version="1">
-    <network interface="lo"
-             base="2001:a60:10ff:c401::1"
+    <network interface="eth1"
+             base="2001:a60:10ff:c401::1:1"
              multicastbase="ff18::" />
     <serial device="/dev/ttyUSB0" rate="115200" />
     <bus timeout="120" />
     <nodes>
         <node id="foo,example.com">
-            <group name="room1-lamps.local"/>
+            <group name="room1-lamps"/>
         </node>
         <node id="bar,example.com">
-            <group name="room2-lamps.local"/>
-            <group name="sofa.local"/>
+            <group name="room2-lamps"/>
+            <group name="sofa"/>
         </node>
         <node id="baz,example.com">
-            <group name="room1-lamps.local"/>
-            <group name="sofa.local"/>
+            <group name="room1-lamps"/>
+            <group name="sofa"/>
         </node>
     </nodes>
     <groups>
-        <group name="room1-lamps.local" class="moodlamp">
+        <group name="room1-lamps" class="moodlamp">
         </group>
-        <group name="room2-lamps.local" class="moodlamp">
+        <group name="room2-lamps" class="moodlamp">
         </group>
-        <group name="sofa.local" class="moodlamp">
+        <group name="sofa" class="moodlamp">
         </group>
     </groups>
 </ubdconfig>
