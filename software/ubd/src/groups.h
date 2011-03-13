@@ -11,7 +11,7 @@
 //only one service is allowed per group!
 struct multicastgroup{
     gchar           *name;
-    gchar           hostname[100];
+    gchar           *hostname;
     guint           class;
     GSocket         *socket;
     GSocketAddress  *sa;
@@ -23,7 +23,7 @@ struct multicastgroup{
 };
 
 void groups_init(void);
-void groups_addGroup(gchar *groupname, gchar *classname);
+void groups_addGroup(gchar *groupname, gchar *hostname, gchar *classname);
 gint groups_getBusAddress(gchar *groupname);
 gint groups_getGroupCount(void);
 struct multicastgroup *groups_getGroup(gint group);

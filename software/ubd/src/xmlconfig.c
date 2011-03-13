@@ -143,6 +143,7 @@ void xml_parseGroups(mxml_node_t *groups)
      printf("parsing groups\n");
      xml_iterate(groups, group, "group"){
         groups_addGroup(xml_getAttribute(group,"name"),
+                        xml_getAttribute(group,"hostname"),
                         xml_getAttribute(group,"class"));
      }
 }

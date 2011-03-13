@@ -60,7 +60,7 @@ void groups_init(void)
     }
 }
 
-void groups_addGroup(gchar *groupname, gchar *classname)
+void groups_addGroup(gchar *groupname, gchar *hostname, gchar *classname)
 {
     if( groups_getGroupByName(groupname) != NULL ){
         printf("groups.c: warning: group already exists\n");
@@ -75,9 +75,7 @@ void groups_addGroup(gchar *groupname, gchar *classname)
         GSocket *socket = multicast_createSocket(groupname, udpport, &sa);
         if( socket != NULL){
             groups[g].name = g_strdup(groupname);
-            groups[g].hostname[0] = 0;
-	    strcat(groups[g].hostname,groupname);
-	    strcat(groups[g].hostname,".local");
+            groups[g].hostname = g_strdup(hostname);
             groups[g].busadr = g + GROUPS_STARTADDRESS;
             groups[g].class = class;
             GSource *source = g_socket_create_source(socket,

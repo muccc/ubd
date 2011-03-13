@@ -19,11 +19,8 @@
         </node>
     </nodes>
     <groups>
-        <group name="room1-lamps" class="moodlamp">
-        </group>
-        <group name="room2-lamps" class="moodlamp">
-        </group>
-        <group name="sofa" class="moodlamp">
-        </group>
+        <group name="room1-lamps" hostname="Room1Lamps"  class="moodlamp" />
+        <group name="room2-lamps" hostname="room2-lamps" class="moodlamp" />
+        <group name="sofa"        hostname="sofa"        class="moodlamp" />
     </groups>
 </ubdconfig>
