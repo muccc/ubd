@@ -45,6 +45,7 @@ struct node *nodes_getFreeNode(void)
                 nodes[i].udpsockets[j].avahiservicegroup = NULL;
             }
             nodes[i].hostname[0] = 0;
+            nodes[i].avahiname[0] = 0;
             return &nodes[i];
         }
     }
@@ -169,6 +170,10 @@ void nodes_setNameFromID(struct node *n)
         //there was no domain in the id
         printf("ill formated id for this node: %s\n",n->id);
         n->domain[0] = 0;
+    }
+    if( n->avahiname[0] == 0 ){
+        //TODO: check buffer
+        strcpy(n->avahiname, n->name);
     }
     if( n->hostname[0] == 0 ){
         //TODO: check buffer

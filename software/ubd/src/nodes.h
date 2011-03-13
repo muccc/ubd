@@ -27,6 +27,7 @@ struct node{
     gint        type;
     gchar       id[MAX_ID];
     gchar       name[MAX_ID];
+    gchar       avahiname[MAX_ID];
     gchar       domain[MAX_ID];
     gchar       version[MAX_ID];
     gchar       hostname[MAX_ID];

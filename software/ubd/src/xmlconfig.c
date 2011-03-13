@@ -112,7 +112,10 @@ void xml_parseNode(mxml_node_t *node)
     n->id[MAX_ID-1] = 0;
 
     if( hostname != NULL && strlen(hostname) != 0 ){
+        strncpy(n->avahiname, hostname, MAX_ID);
         strncpy(n->hostname, hostname, MAX_ID);
+        //TODO: check buffer len
+        strcat(n->hostname, ".local");
         n->hostname[MAX_ID-1] = 0;
     }
 
