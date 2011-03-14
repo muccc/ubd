@@ -22,7 +22,7 @@ uint8_t packet_out_full = 0;
 uint8_t packet_fired = 0;
 uint8_t packet_acked = 1;
 uint8_t packet_retries;
-time_t  packet_timeout = 0;
+uint16_t  packet_timeout = 0;
 
 struct ubheader_t ack;
 uint8_t packet_ack_full = 0;
