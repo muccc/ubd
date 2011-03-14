@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import libml
+import uberbus.moodlamp
 import time
 import sys
 
@@ -9,7 +9,7 @@ g = int(sys.argv[3])
 b = int(sys.argv[4])
 t = float(sys.argv[5])
 
-a = libml.Moodlamp(lamp)
+a = uberbus.moodlamp.Moodlamp(lamp)
 a.connect();
 
 if a.timedfade(r,g,b,t):

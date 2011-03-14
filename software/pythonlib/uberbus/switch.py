@@ -1,9 +1,9 @@
 import socket
-import libub
+import ubnode
 
-class Switch(libub.UBNode):
+class Switch(ubnode.UBNode):
     def __init__(self, address):
-        libub.UBNode.__init__(self,address,2310)
+        ubnode.UBNode.__init__(self,address,2310)
 
     def receiveStatus(self):
         while True:

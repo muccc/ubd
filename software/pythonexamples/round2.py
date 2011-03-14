@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import libml
+import uberbus.moodlamp
 import time
 import sys
 import random
@@ -21,7 +21,7 @@ def isNear(r1,g1,b1,r2,g2,b2):
 
 t = float(sys.argv[1])
 
-lamps = map( lambda x: libml.Moodlamp(x), lamps)
+lamps = map( lambda x: uberbus.moodlamp.Moodlamp(x), lamps)
 for lamp in lamps:
     lamp.connect()
 index = 0

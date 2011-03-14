@@ -1,6 +1,6 @@
 #!/usr/bin/python
-import libml
-import libswitch
+import uberbus.moodlamp
+import uberbus.switch
 import time
 import sys
 import threading
@@ -13,9 +13,9 @@ lamps = sys.argv[1]
 switch = sys.argv[2]
 lamp = sys.argv[3]
 
-a = libml.Moodlamp(lamps,True)
-s = libswitch.Switch(switch)
-l = libml.Moodlamp(lamp)
+a = uberbus.moodlamp.Moodlamp(lamps,True)
+s = uberbus.switch.Switch(switch)
+l = uberbus.moodlamp.Moodlamp(lamp)
 
 a.connect()
 s.connect()
