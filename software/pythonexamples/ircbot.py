@@ -39,6 +39,15 @@ class uberbusbot(irclib.SimpleIRCClient):
                 l.connect()
                 l.setcolor(r,g,b)
                 self.connection.privmsg(target,'core meltdown!')
+            elif t[0] == '!get':
+                print "got !get"
+                if len(t) < 2:
+                    return
+                lamp = t[1] + ".local"
+                l = uberbus.moodlamp.Moodlamp(lamp)
+                l.connect()
+                r = l.getcolor()
+                self.connection.privmsg(target,list(r))
         except Exception as e:
             self.connection.privmsg(target,e)
             print e
