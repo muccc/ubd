@@ -1,24 +1,77 @@
 import socket
 
 class UBNode:
+    """
+    A base class for uberbus nodes.
+
+    This class provides basic TCP and UDP support
+    to communicate with uberbus nodes.
+
+    """
     def __init__(self, address, port, udp = False):
+        """
+        Create a new uberbus node object.
+        
+        Parameters:
+        address -- The hostname or ip address of the node
+        port    -- The port to connect on the node. This determines the service to be used.
+        udp     -- If set to True commands will be sent with UDP packets.
+
+        """
         self.address = address
         self.port = port
         self.udp = udp
+        self.socket = False
 
     def connect(self):
+        """ Open a connection to the node.
+
+        Return value: None
+
+        Exceptions: Throws exceptions if the connection failed.
+        
+        """
         self.openSocket()
 
     def disconnect(self):
+        """ Close the connection to the node.
+
+        Return value: None
+        
+        """
         self.closeSocket()
 
     def setID(self, id):
+        """ Set the ID of a node
+
+        Opens a connection to the management service of the node
+        and tries to set its ID. See the uberbus
+        documentation on the format of an ID.
+
+        Return value: True if the command was successfull.
+
+        Exceptions: Throws exceptions if no connection
+                    can be opened to the node.
+
+        """
         self.openMgtSocket()
         ret = self.sendMgtCommand('s%s\x00'%id)
         self.closeMgtSocket()
         return ret
-    
+
     def readResponse(self, s):
+        """
+        Read the response of the node.
+
+        After sending a command with sendCommand() or listening to
+        the node with listen(), responses from the node can be
+        received.
+
+        Return values:  False if a timeout occoured
+                        The received response if a respnse from the
+                        node arrived.
+
+        """
         try:
             while True:
                 rc = s.recv(1)
@@ -43,6 +96,16 @@ class UBNode:
             return False
 
     def sendCommand(self, command):
+        """
+        Send a command to the node.
+
+        Before using this operation the node has to be connected
+        with connect()
+        The command will be send using the binary uberbus protocol.
+
+        Return value: True if the command was sent successfully.
+
+        """
         if self.udp:
             self.socket.sendto("%s"%(command),(self.address,self.port))
             return True
@@ -85,7 +148,7 @@ class UBNode:
         self.mgtsocket.connect((self.address,2324))       
 
     def closeMgtSocket(self):
-        self.mgtsocket.close();
+        self.mgtsocket.close()
 
     def openSocket(self):
         if self.udp:
@@ -95,8 +158,20 @@ class UBNode:
             self.socket.connect((self.address,self.port))
             self.socket.settimeout(20)
     def closeSocket(self):
-        self.socket.close();
+        if not self.udp and self.socket:
+            self.socket.close()
+            self.socket = False
 
     def listen(self):
-        self.socket.send('L');
+        """
+        Listen to messages from the node.
+
+        Nodes can send messages which are not in response to commands.
+        To receive theses messages listen() has to be called.
+        Messages can then be read using readRespnse()
+
+        Returns noting.
+
+        """
+        self.socket.send('L')
 
