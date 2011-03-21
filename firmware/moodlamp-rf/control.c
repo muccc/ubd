@@ -75,7 +75,7 @@ void control_fadems(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
     //time = steps / (speed * ticks_per_time)
     //speed = steps * 1000 / ( time * 144 );
     uint32_t lsteps = max * 1024L * 256L; //good enough
-    uint16_t speed = lsteps / (time * 144L);
+    uint16_t speed = lsteps / (time * PWM_STEPS_PER_SECOND);
     
     for(pos = 0; pos < 3; pos++){
         global_pwm.channels[pos].speed_h = speed >> 8;
@@ -106,7 +106,7 @@ void control_fademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
         uint8_t dist = abs(a-b);
 
         uint32_t lsteps = dist * 1024L * 256L; //good enough
-        uint16_t speed = lsteps / (time * 144L);
+        uint16_t speed = lsteps / (time * PWM_STEPS_PER_SECOND);
         global_pwm.channels[pos].speed_h = speed >> 8;
         global_pwm.channels[pos].speed_l = speed & 0xFF;
     }

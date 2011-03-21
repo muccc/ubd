@@ -32,8 +32,16 @@
 #ifndef PWM_H
 #define PWM_H
 
+#include "config.h"
+
 /* possible pwm interrupts in a pwm cycle */
 #define PWM_MAX_TIMESLOTS (PWM_CHANNELS+1)
+
+//#ifdef FAST_PWM
+//#define PWM_STEPS_PER_SECOND (F_CPU/64000)
+//#else
+#define PWM_STEPS_PER_SECOND (F_CPU/128000)
+//#endif
 
 /* contains all the data for one color channel */
 struct channel_t

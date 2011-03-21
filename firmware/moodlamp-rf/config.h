@@ -46,6 +46,8 @@
 #define LED_PORT_INVERT 0
 #endif
 
+#define FAST_PWM
+
 /* color <-> channel assignment */
 #define CHANNEL_RED     0
 #define CHANNEL_GREEN   1
