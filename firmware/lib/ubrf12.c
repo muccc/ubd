@@ -4,7 +4,7 @@
 #include <avr/wdt.h>
 #include "ubconfig.h"
 #include "ubrf12.h"
-#include "leds.h"
+//#include "leds.h"
 
 struct RF12_stati
 {
@@ -24,19 +24,19 @@ ISR(RF_SIGNAL, ISR_NOBLOCK)
 {
     if(RF12_status.Rx){
         if(RF12_Index < RF12_DataLength){
-            leds_rx();
+            //leds_rx();
             unsigned char d  = ubrf12_trans(0xB000) & 0x00FF;
             if(RF12_Index == 0 && d > RF12_DataLength)
                 d = RF12_DataLength;
             RF12_Data[RF12_Index++]=d;
         }else{
             ubrf12_trans(0x8208);
-            leds_rxend();
+            //leds_rxend();
             RF12_status.Rx = 0;
         }
         if(RF12_Index >= RF12_Data[0] + 3){		//EOT
             ubrf12_trans(0x8208);
-            leds_rxend();
+            //leds_rxend();
             RF12_status.Rx = 0;
             RF12_status.New = 1;
         }
@@ -46,7 +46,7 @@ ISR(RF_SIGNAL, ISR_NOBLOCK)
             RF12_status.Tx = 0;
             ubrf12_trans(0x8208);		// TX off
 			
-            leds_txend();
+            //leds_txend();
         }else{
             RF12_Index--;
         }
@@ -196,7 +196,7 @@ unsigned char ubrf12_rxfinish(unsigned char *data)
 
 void ubrf12_txstart(unsigned char *data, unsigned char size)
 {	
-    leds_tx();
+    //leds_tx();
     uint8_t i, l;
 
     ubrf12_allstop();
