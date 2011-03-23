@@ -11,6 +11,7 @@
 #define STATE_REMOTE        7
 #define STATE_LOWBAT        8
 #define STATE_ENTERPOWERDOWN    9
+#define STATE_FLASH         10
 #define SLEEP_TIME          (180 * 125)        //125 equals 1 second
 
 extern uint8_t control_faderunning;
@@ -19,6 +20,7 @@ void control_init(void);
 void control_setColor(uint8_t r, uint8_t g, uint8_t b);
 void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed);
 void control_fadems(uint8_t r, uint8_t g, uint8_t b, uint16_t time);
+void control_flash(uint8_t r, uint8_t g, uint8_t b, uint16_t time);
 void control_fademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time);
 void control_setTimeout(void);
 void control_tick(void);

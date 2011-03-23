@@ -193,6 +193,9 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         result[1] = global_pwm.channels[1].brightness;
         result[2] = global_pwm.channels[2].brightness;
         return 3;
+    }else if(cmd == CMD_FLASH){
+        uint16_t time = (param[3]<<8)+param[4];
+        control_flash(param[0],param[1],param[2],time);
     }
     return 0;
 }

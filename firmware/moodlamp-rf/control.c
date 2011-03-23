@@ -20,6 +20,9 @@ uint32_t sleeptime=0;
 uint32_t sleeptick=0;
 uint8_t control_faderunning = 0;
 uint16_t time = 0;
+uint8_t oldr, oldg, oldb;
+uint8_t oldtargetr, oldtargetg, oldtargetb;
+uint16_t timeout;
 
 void control_init(void)
 {
@@ -114,6 +117,29 @@ void control_fademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
     global.oldstate = STATE_REMOTE;
 }
 
+void control_flash(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
+{
+    cli();
+    oldtargetr = global_pwm.channels[0].target_brightness;
+    oldtargetg = global_pwm.channels[1].target_brightness;
+    oldtargetb = global_pwm.channels[2].target_brightness;
+    
+    oldr = global_pwm.channels[0].brightness;
+    oldg = global_pwm.channels[1].brightness;
+    oldb = global_pwm.channels[2].brightness;
+    
+    global_pwm.channels[0].brightness = r;
+    global_pwm.channels[0].target_brightness = r;
+    global_pwm.channels[1].brightness = g;
+    global_pwm.channels[1].target_brightness = g;
+    global_pwm.channels[2].brightness = b;
+    global_pwm.channels[2].target_brightness = b;
+    sei();
+    timeout = time;    
+    global.state = STATE_FLASH;
+    global.oldstate = STATE_REMOTE;
+}
+
 void control_standby(uint16_t wait)
 {
     time = wait;
@@ -187,6 +213,19 @@ void control_tick(void)
                     sleep_mode();
             }
         break;
+        case STATE_FLASH:
+            if( timeout -- == 0 ){
+                global.state = global.oldstate;
+                cli();
+                global_pwm.channels[0].brightness = oldr;
+                global_pwm.channels[0].target_brightness = oldtargetr;
+                global_pwm.channels[1].brightness = oldg;
+                global_pwm.channels[1].target_brightness = oldtargetg;
+                global_pwm.channels[2].brightness = oldb;
+                global_pwm.channels[2].target_brightness = oldtargetb;
+                sei();
+            }
+            break;
     }
     
     static unsigned int control_beacon = 1000;
