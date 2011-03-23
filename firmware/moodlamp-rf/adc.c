@@ -19,14 +19,12 @@ void adc_init(void)
 
 uint16_t adc_getChannel(uint8_t channel)
 {
-    leds_adc();
     //uint8_t sreg = SREG; cli();
     ADMUX &= 0xF0;
     ADMUX |= channel;
     ADCSRA |= (1<<ADSC);
     while( ADCSRA & (1<<ADSC) );
     //SREG = sreg;
-    leds_adcend();
     return ADC;
 
 }

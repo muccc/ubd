@@ -14,6 +14,7 @@
 #include "ubrf12.h"
 #include "random.h"
 #include "udebug.h"
+#include "ubleds.h"
 
 enum UBRF_STATE {   UBRF_IDLE,
                     UBRF_WAITFREE,
@@ -25,7 +26,7 @@ uint8_t packetlen;
 
 void ubrf_init(void)
 {
-    //leds_rx();
+    ubleds_rx();
     ubrf_state = UBRF_IDLE;
     ubrf12_init(RF_CHANNEL);
     ubrf12_setfreq(RF12FREQ(434.32));
@@ -34,7 +35,7 @@ void ubrf_init(void)
     ubrf12_setbaud(19200);
     ubrf12_setpower(0, 6);            // 1mW Ausgangangsleistung,120kHz Frequenzshift
     ubrf12_rxstart();
-    //leds_rxend();
+    ubleds_rxend();
 }
 
 UBSTATUS ubrf_getPacket(struct ubpacket_t * packet)

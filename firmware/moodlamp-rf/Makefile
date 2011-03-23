@@ -92,7 +92,6 @@ SRC = $(TARGET).c \
 	cmd_handler.c \
 	control.c \
 	adc.c \
-	leds.c \
 	../lib/ub.c \
 	../lib/ubaddress.c \
 	../lib/ubtimer.c \
@@ -112,7 +111,8 @@ SRC = $(TARGET).c \
 	../lib/ubbridgemgt.c \
 	../lib/ubbridge.c \
 	../lib/ubrs485master.c \
-	../lib/ubstat.c
+	../lib/ubstat.c \
+	../lib/ubleds.c
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
 

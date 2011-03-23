@@ -60,7 +60,6 @@
 #include "pinutils.h"
 #include "adc.h"
 #include "scripts.h"
-#include "leds.h"
 
 #include "ub.h"
 #include "ubaddress.h"
@@ -144,8 +143,6 @@ int main(void) {
         global.config = 21;
     }
     
-    leds_init();
-
     if( global.config == 21 ){
         DDR_CONFIG_IN(JUMPER1C1);
         PIN_SET(JUMPER1C1);
@@ -188,7 +185,6 @@ int main(void) {
 
     while (1) {
         wdt_reset();
-        leds_main();
         ub_process();
         if( ubpacket_gotPacket() ){
             struct ubpacket_t * out = ubpacket_getSendBuffer();

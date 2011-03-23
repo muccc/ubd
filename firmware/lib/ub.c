@@ -15,6 +15,7 @@
 #include "ubbridgemgt.h"
 #include "serial_handler.h"
 #include "udebug.h"
+#include "ubleds.h"
 
 struct ub_config ubconfig;
 uint8_t ub_address = 0;
@@ -38,6 +39,7 @@ void ub_init(uint8_t ubmode, int8_t slaveinterfaces, int8_t bridgeinterfaces)
 
     udebug_init();
     ubadr_init();
+    ubleds_init();
     random_init(ubadr_getID(),ubadr_getIDLen());
 #ifdef UB_ENABLEBRIDGE
     if( ubmode == UB_BRIDGE ){
