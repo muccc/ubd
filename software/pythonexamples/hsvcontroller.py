@@ -3,6 +3,9 @@ import uberbus.moodlamp
 import uberbus.switch
 import time
 import sys
+
+lamps = ['wipptischlampen.local', 'wipplampelampen.local', 'wipplampen.local']
+
 def hsvToRGB(h, s, v):
     """Convert HSV color space to RGB color space
     
@@ -26,13 +29,11 @@ def hsvToRGB(h, s, v):
         5: (v, p, q),
     }[hi]
 
-lamp = sys.argv[1]
-switch = sys.argv[2]
+switch = sys.argv[1]
 
-a = uberbus.moodlamp.Moodlamp(lamp,True)
+
 hid = uberbus.switch.Switch(switch)
 
-a.connect()
 hid.connect()
 hid.listen()
 
@@ -41,9 +42,12 @@ v = 1
 h = 0
 
 r = g = b = 0
+lamp = 0
 while True:
     rc = hid.receiveStatus()
-    if rc[0] == 'A':
+    print list(rc)
+    cmd = rc[0]
+    if cmd == 'A':
         channel = rc[1]
         value = (ord(rc[2]) << 8) + ord(rc[3]);
         if channel == '4':
@@ -52,9 +56,15 @@ while True:
         elif channel == '5':
             v = value / 1024.
             print 'v=',v
-    (r,g,b) = hsvToRGB(h,s,v)
-    print 'r=',r
-    print 'g=',g
-    print 'b=',b
-    a.timedfade(int(r*255),int(g*255),int(b*255),.5)
+        (r,g,b) = hsvToRGB(h,s,v)
+        a = uberbus.moodlamp.Moodlamp(lamps[lamp],True)
+        print "connecting to", lamps[lamp]
+        a.connect()
+        a.timedfade(int(r*255),int(g*255),int(b*255),.5)
+    elif cmd == 'B':
+        button = rc[1]
+        if button == '0':
+            lamp += 1
+            if lamp == len(lamps):
+                lamp = 0
 
