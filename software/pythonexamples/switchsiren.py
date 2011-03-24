@@ -17,11 +17,6 @@ a = uberbus.moodlamp.Moodlamp(lamps,True)
 s = uberbus.switch.Switch(switch)
 l = uberbus.moodlamp.Moodlamp(lamp)
 
-a.connect()
-s.connect()
-l.connect()
-
-s.listen()
 state = 'b'
 play = False
 pygame.mixer.init()
@@ -53,19 +48,26 @@ def setcolors():
             time.sleep(.4)
 
 thread.start_new_thread(setcolors,())
-
 while True:
-    #time.sleep(1)
-    #continue
-    rc = s.receiveStatus()
-    if rc == 'b0':
-        state = 'b0'
-        #a.timedfade(0,0,255,1)
-    elif rc == 'B0':
-        color = l.getcolor()
-        r = ord(color[0])
-        g = ord(color[1])
-        b = ord(color[2])
-        state = 'r1'
-        #a.timedfade(255,0,0,1)
+    a.connect()
+    s.connect()
+    l.connect()
+    s.listen()
 
+    while True:
+        #time.sleep(1)
+        #continue
+        rc = s.receiveStatus()
+        if rc == 'b0':
+            state = 'b0'
+            #a.timedfade(0,0,255,1)
+        elif rc == 'B0':
+            color = l.getcolor()
+            r = ord(color[0])
+            g = ord(color[1])
+            b = ord(color[2])
+            state = 'r1'
+            #a.timedfade(255,0,0,1)
+    except:
+        print "error in connection"
+        time.sleep(5)
