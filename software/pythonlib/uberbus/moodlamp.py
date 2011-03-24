@@ -73,6 +73,14 @@ class Moodlamp(ubnode.UBNode):
         cmd = "%c%c%c%c%c%c"%(fadecmd,r,g,b,h,l);
         return self.sendCommand(cmd)
 
+    def flash(self, r, g, b, time):
+        time = time * 1000
+        h = int(time)>>8
+        l = int(time)&0xFF
+        fadecmd = 'f'
+        cmd = "%c%c%c%c%c%c"%(fadecmd,r,g,b,h,l);
+        return self.sendCommand(cmd)
+
     def setBrightness(self, brightness):
         cmd = "D%c"%brightness;
         return self.sendCommand(cmd)
