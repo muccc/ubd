@@ -54,7 +54,10 @@ while True:
             h = value * (360./1024.)
             print 'h=',h
         elif channel == '5':
-            v = value / 1024.
+            v = 1. - value / 1024.
+            print 'v=',v
+        elif channel == '6':
+            s = value / 1024.
             print 'v=',v
         (r,g,b) = hsvToRGB(h,s,v)
         a = uberbus.moodlamp.Moodlamp(lamps[lamp],True)
@@ -67,4 +70,9 @@ while True:
             lamp += 1
             if lamp == len(lamps):
                 lamp = 0
+            a = uberbus.moodlamp.Moodlamp(lamps[lamp],True)
+            print "connecting to", lamps[lamp]
+            a.connect()
+            a.flash(64,0,0,.01)
+ 	
 
