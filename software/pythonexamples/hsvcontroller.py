@@ -30,12 +30,7 @@ def hsvToRGB(h, s, v):
     }[hi]
 
 switch = sys.argv[1]
-
-
 hid = uberbus.switch.Switch(switch)
-
-hid.connect()
-hid.listen()
 
 s = 1
 v = 1
@@ -43,36 +38,44 @@ h = 0
 
 r = g = b = 0
 lamp = 0
-while True:
-    rc = hid.receiveStatus()
-    print list(rc)
-    cmd = rc[0]
-    if cmd == 'A':
-        channel = rc[1]
-        value = (ord(rc[2]) << 8) + ord(rc[3]);
-        if channel == '4':
-            h = value * (360./1024.)
-            print 'h=',h
-        elif channel == '5':
-            v = 1. - value / 1024.
-            print 'v=',v
-        elif channel == '6':
-            s = value / 1024.
-            print 'v=',v
-        (r,g,b) = hsvToRGB(h,s,v)
-        a = uberbus.moodlamp.Moodlamp(lamps[lamp],True)
-        print "connecting to", lamps[lamp]
-        a.connect()
-        a.timedfade(int(r*255),int(g*255),int(b*255),.5)
-    elif cmd == 'B':
-        button = rc[1]
-        if button == '0':
-            lamp += 1
-            if lamp == len(lamps):
-                lamp = 0
-            a = uberbus.moodlamp.Moodlamp(lamps[lamp],True)
-            print "connecting to", lamps[lamp]
-            a.connect()
-            a.flash(64,0,0,.01)
- 	
 
+
+while True:
+    try:
+        hid.connect()
+        hid.listen()
+
+        while True:
+            rc = hid.receiveStatus()
+            print list(rc)
+            cmd = rc[0]
+            if cmd == 'A':
+                channel = rc[1]
+                value = (ord(rc[2]) << 8) + ord(rc[3]);
+                if channel == '4':
+                    h = value * (360./1024.)
+                    print 'h=',h
+                elif channel == '5':
+                    v = 1. - value / 1024.
+                    print 'v=',v
+                elif channel == '6':
+                    s = value / 1024.
+                    print 'v=',v
+                (r,g,b) = hsvToRGB(h,s,v)
+                a = uberbus.moodlamp.Moodlamp(lamps[lamp],True)
+                print "connecting to", lamps[lamp]
+                a.connect()
+                a.timedfade(int(r*255),int(g*255),int(b*255),.5)
+            elif cmd == 'B':
+                button = rc[1]
+                if button == '0':
+                    lamp += 1
+                    if lamp == len(lamps):
+                        lamp = 0
+                    a = uberbus.moodlamp.Moodlamp(lamps[lamp],True)
+                    print "connecting to", lamps[lamp]
+                    a.connect()
+                    a.flash(64,0,0,.01)
+    except:
+        print "error with connection"
+        time.sleep(5)
