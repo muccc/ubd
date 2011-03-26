@@ -58,7 +58,7 @@ while True:
         query = False
         start  = False
     elif stop:
-        print "%f"%(t), len(data) ,data
+        print "%f"%(t), len(data) ,"".join(data)
         data = []
         stop = False
     elif escaped == False and inframe:
