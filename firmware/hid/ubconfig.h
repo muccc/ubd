@@ -5,7 +5,7 @@
 /*#define UB_ENABLEBRIDGE 1*/
 #define UB_ENABLESLAVE  1
 #define UB_ENABLERF     1
-#define UB_ENABLERS485  1
+//#define UB_ENABLERS485  1
 
 #define UB_MAXMULTICAST 8
 
@@ -13,22 +13,28 @@
 #define UB_PACKET_RETRIES   5
 
 //#define USEDEBUG
+
 typedef uint8_t ubaddress_t;
 #define UB_NODEMAX      128
 
 #define UB_INTERVAL         100
 #define UB_CLASS_HID        10
 #define UB_CLASSES          {UB_CLASS_HID,0,0,0}
-#define UB_INITIALNODENAME  "newnode,example.com"
+#define UB_INITIALNODENAME  "newhid,example.com"
+
+#define UB_PACKET_TIMEOUT   100
+#define UB_RF_TIMEOUT       100
+#define UB_RS485_TIMEOUT   (UB_INTERVAL + 200)
+#define UB_PACKET_RETRIES   5
 
 //rf config
-#define RF_CHANNEL  23
+#define RF_CHANNEL  24
 #define RF_PORT		PORTB
 #define RF_DDR		DDRB
 #define RF_PIN		PINB
 #define SDI		5
 #define SCK		7
-#define CS		4
+#define CS		1
 #define SDO		6
 
 #define RF_IRQDDR	DDRB
@@ -45,17 +51,17 @@ typedef uint8_t ubaddress_t;
 
 #define RESET_PORT  PORTB
 #define RESET_DDR   DDRB
-#define RESET       PB3
+#define RESET       PB0
 
 //rs485 config
 #define RS485_BITRATE       115200
-#define RS485_ISR_EDGE      PCINT3_vect
+#define RS485_ISR_EDGE      PCINT2_vect
 
-#define RS485_DE_PIN        PC4
+#define RS485_DE_PIN        PC2
 #define RS485_DE_PORT       PORTC
 #define RS485_DE_DDR        DDRC
 
-#define RS485_nRE_PIN       PC5
+#define RS485_nRE_PIN       PC3
 #define RS485_nRE_PORT      PORTC
 #define RS485_nRE_DDR       DDRC
 

@@ -80,6 +80,7 @@ OBJDIR = .
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = $(TARGET).c \
+	adc.c \
 	../lib/ub.c \
 	../lib/ubaddress.c \
 	../lib/ubtimer.c \
@@ -94,6 +95,9 @@ SRC = $(TARGET).c \
 	../lib/ubrs485slave.c \
 	../lib/ubrs485uart.c \
 	../lib/ubrs485message.c \
+	../lib/usart.c \
+	../lib/serial_handler.c \
+	../lib/ubleds.c \
 	timer0.c
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 

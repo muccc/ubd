@@ -2,7 +2,7 @@
 #include <avr/io.h>
 
 volatile uint8_t timebase = 0;
-ISR(TIMER0_OVF_vect , ISR_NOBLOCK)
+ISR(TIMER0_OVF_vect)
 {
     timebase++;
 }
