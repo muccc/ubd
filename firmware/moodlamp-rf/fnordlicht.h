@@ -45,7 +45,7 @@ struct flags_t {
 struct global_t {
     struct flags_t flags;
     uint8_t state;
-    uint8_t oldstate;
+    uint8_t nextstate;
     uint8_t config;
 };
 

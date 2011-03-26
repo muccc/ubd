@@ -69,10 +69,10 @@ void cmd_setscript(void (*execute)(struct thread_t *current_thread), uint16_t po
     script_threads[0].handler_stack_offset = 0;
     cmd_dark();
     
-    //resets state & oldstate in case fadems was used earlier.
+    //resets state & nextstate in case fadems was used earlier.
     //TODO: handle in state machine
     global.state=STATE_RUNNING;
-    global.oldstate=STATE_RUNNING;
+    global.nextstate=STATE_RUNNING;
 }
 
 uint8_t cmd_interpret(uint8_t * cmd, uint8_t * result)
@@ -96,10 +96,9 @@ uint8_t cmd_handler(uint8_t cmd, uint8_t * param, uint8_t * result)
         global_pwm.dim=0;
     }else if(cmd == CMD_POWER){
         if(global.state != STATE_STANDBY){
-            if(global.state == STATE_SLEEP)
-                global.oldstate = STATE_RUNNING;
-            else
-                global.oldstate = global.state;
+            global.nextstate = global.state;
+            if(global.nextstate == STATE_SLEEP)
+                global.nextstate = STATE_RUNNING;
             //global.state = STATE_ENTERSTANDBY;
             control_standby(0);
         }else{

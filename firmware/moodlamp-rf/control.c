@@ -40,7 +40,7 @@ void control_setColor(uint8_t r, uint8_t g, uint8_t b)
     global_pwm.channels[2].target_brightness = b;
     sei();
     global.state = STATE_REMOTE;
-    global.oldstate = STATE_REMOTE;
+    global.nextstate = STATE_REMOTE;
 }
 
 void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
@@ -54,7 +54,7 @@ void control_fade(uint8_t r, uint8_t g, uint8_t b, uint16_t speed)
         global_pwm.channels[pos].speed_l = speed & 0xFF;
     }
     global.state = STATE_REMOTE;
-    global.oldstate = STATE_REMOTE;
+    global.nextstate = STATE_REMOTE;
 }
 
 void control_fadems(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
@@ -89,7 +89,7 @@ void control_fadems(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
     ///manually when launching script. see => cmd_handler.c
     //TODO: add STATE_REMOTE handling to state-machine
     global.state = STATE_REMOTE;
-    global.oldstate = STATE_REMOTE;
+    global.nextstate = STATE_REMOTE;
 }
 
 void control_fademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
@@ -114,7 +114,7 @@ void control_fademsalt(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
         global_pwm.channels[pos].speed_l = speed & 0xFF;
     }
     global.state = STATE_REMOTE;
-    global.oldstate = STATE_REMOTE;
+    global.nextstate = STATE_REMOTE;
 }
 
 void control_flash(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
@@ -135,9 +135,10 @@ void control_flash(uint8_t r, uint8_t g, uint8_t b, uint16_t time)
     global_pwm.channels[2].brightness = b;
     global_pwm.channels[2].target_brightness = b;
     sei();
+
     timeout = time;    
     global.state = STATE_FLASH;
-    global.oldstate = STATE_REMOTE;
+    global.nextstate = STATE_REMOTE;
 }
 
 void control_standby(uint16_t wait)
@@ -181,7 +182,7 @@ void control_tick(void)
         case STATE_LEAVESTANDBY:
             global_pwm.dim = global_pwm.olddim;
             global.flags.running = 1;
-            global.state = global.oldstate; //STATE_RUNNING;
+            global.state = global.nextstate; //STATE_RUNNING;
         break;
         case STATE_ENTERSLEEP:
             sleeptime = 0;
@@ -215,7 +216,7 @@ void control_tick(void)
         break;
         case STATE_FLASH:
             if( timeout -- == 0 ){
-                global.state = global.oldstate;
+                global.state = global.nextstate;
                 cli();
                 global_pwm.channels[0].brightness = oldr;
                 global_pwm.channels[0].target_brightness = oldtargetr;
