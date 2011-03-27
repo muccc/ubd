@@ -80,8 +80,14 @@ class UBNode:
                 elif rc == 'N':
                     return False
                 elif rc == 'C':
-                    rc = s.makefile().readline()[:-1]
-                    return rc
+                    #rc = s.makefile().readline()[:-1]
+                    data = ''
+                    while 1:
+                        rc = s.recv(1)
+                        if rc != chr(0x0A):
+                            data += rc
+                        else:
+                            return data
                 elif rc == 'B':
                     count = ord(s.recv(1))
                     rc = ''
