@@ -5,7 +5,7 @@ import time
 import sys
 
 #lamps = ['wipptischlampen.local', 'wipplampelampen.local', 'wipplampen.local']
-lamps = ['kuechenzeile.local', 'kuechelampen.local']
+#lamps = ['kuechenzeile.local', 'kuechelampen.local']
 
 def hsvToRGB(h, s, v):
     """Convert HSV color space to RGB color space
@@ -31,6 +31,8 @@ def hsvToRGB(h, s, v):
     }[hi]
 
 switch = sys.argv[1]
+lamps = sys.argv[2:]
+
 hid = uberbus.switch.Switch(switch)
 
 s = 1
