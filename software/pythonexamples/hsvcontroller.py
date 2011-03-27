@@ -4,7 +4,8 @@ import uberbus.switch
 import time
 import sys
 
-lamps = ['wipptischlampen.local', 'wipplampelampen.local', 'wipplampen.local']
+#lamps = ['wipptischlampen.local', 'wipplampelampen.local', 'wipplampen.local']
+lamps = ['kuechenzeile.local', 'kuechelampen.local']
 
 def hsvToRGB(h, s, v):
     """Convert HSV color space to RGB color space
@@ -47,6 +48,8 @@ while True:
 
         while True:
             rc = hid.receiveStatus()
+            if rc == False:
+                break
             print list(rc)
             cmd = rc[0]
             if cmd == 'A':
@@ -69,13 +72,22 @@ while True:
             elif cmd == 'B':
                 button = rc[1]
                 if button == '0':
+                    hid.clear(7-lamp)
                     lamp += 1
                     if lamp == len(lamps):
                         lamp = 0
+                    if lamp < 3:
+                        hid.set(7-lamp)
                     a = uberbus.moodlamp.Moodlamp(lamps[lamp],True)
                     print "connecting to", lamps[lamp]
                     a.connect()
                     a.flash(64,0,0,.01)
+                    
+                if button == '6':
+                    a = uberbus.moodlamp.Moodlamp(lamps[lamp],True)
+                    print "connecting to", lamps[lamp]
+                    a.connect()
+                    a.setcolor(255,255,255)
     except:
         print "error with connection"
         time.sleep(5)
