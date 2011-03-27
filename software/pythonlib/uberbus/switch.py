@@ -10,3 +10,13 @@ class Switch(ubnode.UBNode):
             rc = self.readResponse(self.socket)
             if rc:
                 return rc
+
+    def set(self, pin):
+        cmd = "S%c"%(pin+0x30)
+        return self.sendCommand(cmd)
+
+    def clear(self, pin):
+        cmd = "s%c"%(pin+0x30)
+        return self.sendCommand(cmd)
+
+
