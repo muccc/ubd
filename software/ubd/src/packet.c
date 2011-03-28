@@ -2,6 +2,7 @@
 #include <glib.h>
 #include <string.h>
 #include <stdio.h>
+#include <syslog.h>
 
 #include "packet.h"
 #include "ubpacket.h"
@@ -24,13 +25,13 @@ gpointer packet_readerThread(gpointer data)
     data = NULL;
     struct message in;
 
-    printf("started packet_readerThread()\n");
+    syslog(LOG_DEBUG,"started packet_readerThread()\n");
     while( 1 ){
         serial_readMessage(&in);
         if( in.len > 0){
             switch( in.data[0] ){
                 case PACKET_PACKET:
-                    printf("new packet\n");
+                    syslog(LOG_DEBUG,"new packet\n");
                     if( sizeof(struct ubpacket) >= in.len ){
                         struct packetstream *ps =
                                 g_new(struct packetstream,1);
@@ -51,8 +52,8 @@ gpointer packet_readerThread(gpointer data)
                     }
                 break;
                 case PACKET_DONE:
-                    printf("new message: ");
-                    printf("%c: packet done\n", in.data[0]);
+                    syslog(LOG_DEBUG,"new message: ");
+                    syslog(LOG_DEBUG,"%c: packet done\n", in.data[0]);
                     if( nextnode ){
                         struct packetstream *ps =
                             g_new(struct packetstream,1);
@@ -68,8 +69,8 @@ gpointer packet_readerThread(gpointer data)
                                 (gpointer)PACKET_DONE);
                 break;
                 case PACKET_ABORT:
-                    printf("new message: ");
-                    printf("packet aborted\n");
+                    syslog(LOG_INFO,"new message: ");
+                    syslog(LOG_INFO,"packet aborted\n");
 
                     if( nextnode ){
                         struct packetstream *ps =
@@ -86,7 +87,7 @@ gpointer packet_readerThread(gpointer data)
                                 (gpointer)PACKET_ABORT);
                 break;
                 case 'D':
-                    //printf("debug\n");
+                    //syslog(LOG_DEBUG,"debug\n");
                 break;
             }
         }
@@ -125,9 +126,9 @@ gpointer packet_writerThread(gpointer data)
 
         if( status == (gpointer)PACKET_ABORT ){
             //TODO: add log
-            printf("PACKET WAS ABORTED\n");
+            syslog(LOG_INFO,"PACKET WAS ABORTED\n");
         }else if( status == (gpointer)PACKET_DONE ){
-            //printf("packet done\n");
+            //syslog(LOG_DEBUG,"packet done\n");
         }
     }
 }
@@ -136,7 +137,7 @@ gpointer packet_writerThread(gpointer data)
 {
     value = NULL;
     data = NULL;
-    printf(key);
+    syslog(LOG_DEBUG,key);
 }*/
 
 static gboolean packet_inpacket(gpointer data)
@@ -146,14 +147,14 @@ static gboolean packet_inpacket(gpointer data)
     gchar buf[2];
     buf[0] = p->data[0];
     buf[1] = 0;
-    printf("registred:\n");
+    syslog(LOG_DEBUG,"registred:\n");
     g_hash_table_foreach(packet_callbacks,printkey,NULL);
-    printf("end\n");
+    syslog(LOG_DEBUG,"end\n");
     cb = g_hash_table_lookup(packet_callbacks, buf);
     if( cb ){
         cb(p);
     }else{
-        printf("There is no handler registerd for packet type %s\n",buf);
+        syslog(LOG_DEBUG,"There is no handler registerd for packet type %s\n",buf);
     }*/
     g_assert(data != NULL);
     struct packetstream *ps = (struct packetstream *)data;
@@ -164,18 +165,18 @@ static gboolean packet_inpacket(gpointer data)
     if( ps->callback != NULL &&
                     (ps->type != PACKET_PACKET ||
                             !(ps->p.flags & UB_PACKET_UNSOLICITED)) ){
-        printf("forwarding packet\n");
+        syslog(LOG_DEBUG,"forwarding packet\n");
         ps->callback(ps);
     }else if( ps->type == PACKET_PACKET && ps->p.flags & UB_PACKET_MGT ){
-        printf("for bus mgt\n");
+        syslog(LOG_DEBUG,"for bus mgt\n");
         busmgt_inpacket(&ps->p);
     }else if( ps->type == PACKET_PACKET ){
-        printf("unsolicited data.\n");
+        syslog(LOG_DEBUG,"unsolicited data.\n");
         listen_newMessage(ps);
     }else if( ps->type != PACKET_PACKET ){
-        printf("unsolicited status information. not processed.\n");
+        syslog(LOG_INFO,"unsolicited status information. not processed.\n");
     }else{
-        printf("should not happen\n");
+        syslog(LOG_INFO,"should not happen\n");
         while(1);
     }
 
@@ -201,7 +202,7 @@ void packet_streamPacket(struct node * n, struct ubpacket *p,
     p->src = 1;
     p->flags &= UB_PACKET_MGT | UB_PACKET_NOACK;
 
-    printf("sending packet with dest=%u src=%u flags=%u len=%u\n",
+    syslog(LOG_DEBUG,"sending packet with dest=%u src=%u flags=%u len=%u\n",
                 p->dest, p->src, p->flags,p->len);
     
     outmsg->msg.len = p->len+UB_PACKET_HEADER;

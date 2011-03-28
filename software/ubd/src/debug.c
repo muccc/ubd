@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "debug.h"
 #include "packet.h"
@@ -9,11 +10,11 @@ void debug_hexdump(uint8_t * data, uint16_t len)
     uint16_t i;
     for(i=0; i<len; i++){
         if( data[i] < 0x10 ){
-            printf(" 0x0%X", data[i]);
+            syslog(LOG_DEBUG," 0x0%X", data[i]);
         }else if (data[i] < ' ' || data[i] > 0x7F){
-            printf(" 0x%X", data[i]);
+            syslog(LOG_DEBUG," 0x%X", data[i]);
         }else{
-            printf("%c", data[i]);
+            syslog(LOG_DEBUG,"%c", data[i]);
         }
     }
 }
@@ -41,10 +42,10 @@ void debug_packet(gchar *reporter, struct ubpacket* p)
         strcat(flags, "UNSOLICITED | ");
    
     g_get_current_time(&t);
-    printf("%ld.%04ld ",t.tv_sec,t.tv_usec);
-    printf("%s: packet from %u to %u flags: (%x: %s) class: %u len: %u: ",
+    syslog(LOG_DEBUG,"%ld.%04ld ",t.tv_sec,t.tv_usec);
+    syslog(LOG_DEBUG,"%s: packet from %u to %u flags: (%x: %s) class: %u len: %u: ",
             reporter, p->src, p->dest, p->flags, flags, p->class,p->len);
     debug_hexdump(p->data, p->len);
-    printf("\n");
+    syslog(LOG_DEBUG,"\n");
 }
 

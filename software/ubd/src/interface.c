@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <syslog.h>
+
 #include "interface.h"
 
 void interface_init()
@@ -30,14 +32,14 @@ gint interface_createAddress(struct node *n) //GInetAddress *addr)
                             G_SOCKET_PROTOCOL_TCP,
                             &e);
     if( e != NULL ){
-        fprintf(stderr,"interface_pushAddress: Error while creating socket: %s\n", e->message);
+        syslog(LOG_ERR,"interface_pushAddress: Error while creating socket: %s\n", e->message);
         g_error_free(e);
         return -1;
     }
 
     g_socket_connect(s, sa, NULL, &e);
     if( e != NULL ){
-        fprintf(stderr,"interface_pushAddress: Error while connecting: %s\n", e->message);
+        syslog(LOG_ERR,"interface_pushAddress: Error while connecting: %s\n", e->message);
         g_error_free(e);
         return -1;
     }
@@ -66,14 +68,14 @@ gint interface_removeAddress(struct node *n)
                             G_SOCKET_PROTOCOL_TCP,
                             &e);
     if( e != NULL ){
-        fprintf(stderr,"interface_popAddress: error while creating socket: %s\n", e->message);
+        syslog(LOG_ERR,"interface_popAddress: error while creating socket: %s\n", e->message);
         g_error_free(e);
         return -1;
     }
 
     g_socket_connect(s, sa, NULL, &e);
     if( e != NULL ){
-        fprintf(stderr,"interface_popAddress: error while connecting: %s\n", e->message);
+        syslog(LOG_ERR,"interface_popAddress: error while connecting: %s\n", e->message);
         g_error_free(e);
         return -1;
     }

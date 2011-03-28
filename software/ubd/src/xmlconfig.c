@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <mxml.h>
+#include <syslog.h>
+
 #include "groups.h"
 #include "nodes.h"
 #include "config.h"
@@ -14,52 +16,52 @@ void xml_print(mxml_node_t *t)
     mxml_node_t *node = t;
     int count = 0;
     do{
-        printf("Node %d: type=", count++);
+        syslog(LOG_DEBUG,"Node %d: type=", count++);
         switch(node->type){
             case MXML_TEXT:
-                printf("TEXT");
+                syslog(LOG_DEBUG,"TEXT");
             break;
             case MXML_INTEGER:
-                printf("INTEGER");
+                syslog(LOG_DEBUG,"INTEGER");
             break;
             case MXML_ELEMENT:
-                printf("ELEMENT");
+                syslog(LOG_DEBUG,"ELEMENT");
             break;
             case MXML_OPAQUE:
-                printf("OPAQUE");
+                syslog(LOG_DEBUG,"OPAQUE");
             break;
             case MXML_REAL:
-                printf("REAL");
+                syslog(LOG_DEBUG,"REAL");
             break;
             case MXML_IGNORE:
-                printf("IGNORE");
+                syslog(LOG_DEBUG,"IGNORE");
             break;
             default:
-                printf("ELSE");
+                syslog(LOG_DEBUG,"ELSE");
             break;
         }
-        printf(" value=");
+        syslog(LOG_DEBUG," value=");
         switch(node->type){
             case MXML_TEXT:
-                printf("%s",node->value.text.string);
+                syslog(LOG_DEBUG,"%s",node->value.text.string);
             break;
             case MXML_ELEMENT:
-                printf("%s",node->value.element.name);
+                syslog(LOG_DEBUG,"%s",node->value.element.name);
                 int i;
                 if( node->value.element.num_attrs )
-                    printf(" Element contains attributes:");
+                    syslog(LOG_DEBUG," Element contains attributes:");
                 for(i=0; i<node->value.element.num_attrs; i++){
-                    printf(" %s=%s", node->value.element.attrs[i].name, node->value.element.attrs[i].value);
+                    syslog(LOG_DEBUG," %s=%s", node->value.element.attrs[i].name, node->value.element.attrs[i].value);
                 }
             break;
             case MXML_INTEGER:
-                printf("%d",node->value.integer);
+                syslog(LOG_DEBUG,"%d",node->value.integer);
             break;
             default:
-                printf("ELSE");
+                syslog(LOG_DEBUG,"ELSE");
             break;
         }
-        printf("\n");
+        syslog(LOG_DEBUG,"\n");
     }while( (node = mxmlWalkNext(node, t, MXML_DESCEND)) );
 }
 
@@ -84,18 +86,18 @@ void xml_load(char *filename)
     FILE *fp;
     fp = fopen(filename, "r");
     if( fp==NULL ){
-        printf("no configuration file found\n");
+        syslog(LOG_INFO, "no configuration file found\n");
         exit(1);
     }
-    printf("Parsing configuration file\n");
+    syslog(LOG_INFO,"Parsing configuration file\n");
     xml_free();
     tree = mxmlLoadFile(NULL, fp, MXML_NO_CALLBACK);
     //tree = mxmlLoadFile(NULL, fp, MXML_TEXT_CALLBACK);
     if( tree == NULL ){
-        printf("configuration invalid\n");
+        syslog(LOG_ERR,"configuration invalid\n");
         exit(1);
     }
-    printf("configuration seems valid\n");
+    syslog(LOG_DEBUG,"configuration seems valid\n");
     fclose(fp);
 }
 
@@ -105,7 +107,7 @@ void xml_parseNode(mxml_node_t *node)
     gchar *address = xml_getAttribute(node,"address");
     gchar *hostname = xml_getAttribute(node,"hostname");
 
-    //printf("parsing node %s address %s\n", id, address);
+    //syslog(LOG_INFO,"parsing node %s address %s\n", id, address);
 
     struct node *n = nodes_getFreeNode();
     strncpy(n->id, id, MAX_ID);
@@ -132,7 +134,7 @@ void xml_parseNode(mxml_node_t *node)
     xml_iterate(node, group, "group"){
         n->groups[i] = groups_getBusAddress(
                             xml_getAttribute(group,"name"));
-        printf("adding group name=%s id=%d\n",
+        syslog(LOG_INFO,"adding group name=%s id=%d\n",
                xml_getAttribute(group,"name"), n->groups[i]);
         i++;
     }
@@ -142,7 +144,7 @@ void xml_parseNode(mxml_node_t *node)
 void xml_parseNodes(mxml_node_t *nodes)
 {
     mxml_node_t *node;
-    printf("parsing nodes\n");
+    syslog(LOG_DEBUG,"parsing nodes\n");
     xml_iterate(nodes, node, "node"){
         xml_parseNode(node);
     }
@@ -151,7 +153,7 @@ void xml_parseNodes(mxml_node_t *nodes)
 void xml_parseGroups(mxml_node_t *groups)
 {
      mxml_node_t *group;
-     printf("parsing groups\n");
+     syslog(LOG_DEBUG,"parsing groups\n");
      xml_iterate(groups, group, "group"){
         groups_addGroup(xml_getAttribute(group,"name"),
                         xml_getAttribute(group,"hostname"),

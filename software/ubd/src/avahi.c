@@ -15,6 +15,7 @@
 #include <avahi-client/publish.h>
 #include <avahi-common/alternative.h>
 #include <avahi-common/address.h>
+#include <syslog.h>
 
 #include "avahi.h"
 #include "nodes.h"
@@ -33,7 +34,7 @@ static void avahi_client_callback (AVAHI_GCC_UNUSED AvahiClient *client,
 {
     GMainLoop *loop = userdata;
 
-    g_message ("Avahi Client State Change: %d", state);
+    syslog(LOG_INFO, "Avahi Client State Change: %d", state);
 
     if (state == AVAHI_CLIENT_FAILURE)
     {
@@ -57,20 +58,20 @@ static void address_group_callback(AvahiEntryGroup *group,
     switch (state) {
         case AVAHI_ENTRY_GROUP_ESTABLISHED :
             /* The entry group has been established successfully */
-            fprintf(stderr, "Address '%s' successfully established.\n", name);
+            syslog(LOG_INFO, "Address '%s' successfully established.\n", name);
             break;
 
         case AVAHI_ENTRY_GROUP_COLLISION : 
             /* An address collision with a remote address
              * happened.*/
 
-            fprintf(stderr, "Address collision for %s\n", name);
-            fprintf(stderr, "Is another ubd running in the local network?\n");
+            syslog(LOG_ERR, "Address collision for %s\n", name);
+            syslog(LOG_ERR, "Is another ubd running in the local network?\n");
             g_main_loop_quit (loop);
         break;
 
         case AVAHI_ENTRY_GROUP_FAILURE :
-            fprintf(stderr, "Entry group failure: %s\n",
+            syslog(LOG_ERR, "Entry group failure: %s\n",
                 avahi_strerror(avahi_client_errno(
                             avahi_entry_group_get_client(group))));
 
@@ -94,7 +95,7 @@ static void entry_group_callback(AvahiEntryGroup *group,
     switch (state) {
         case AVAHI_ENTRY_GROUP_ESTABLISHED :
             /* The entry group has been established successfully */
-            fprintf(stderr, "Service '%s' successfully established.\n", name);
+            syslog(LOG_INFO, "Service '%s' successfully established.\n", name);
             break;
 
         case AVAHI_ENTRY_GROUP_COLLISION : {
@@ -106,7 +107,7 @@ static void entry_group_callback(AvahiEntryGroup *group,
             avahi_free(name);
             name = n;
 
-            fprintf(stderr, "Service name collision,"
+            syslog(LOG_ERR, "Service name collision,"
                                 "renaming service to '%s'\n", name);
             while(1);
             /* And recreate the services */
@@ -115,7 +116,7 @@ static void entry_group_callback(AvahiEntryGroup *group,
         }
 
         case AVAHI_ENTRY_GROUP_FAILURE :
-            fprintf(stderr, "Entry group failure: %s\n",
+            syslog(LOG_ERR, "Entry group failure: %s\n",
                 avahi_strerror(avahi_client_errno(
                             avahi_entry_group_get_client(group))));
 
@@ -140,7 +141,7 @@ static void multicast_group_callback(AvahiEntryGroup *group,
     switch (state) {
         case AVAHI_ENTRY_GROUP_ESTABLISHED :
             /* The entry group has been established successfully */
-            fprintf(stderr, "Multicast group '%s' successfully established.\n",
+            syslog(LOG_INFO, "Multicast group '%s' successfully established.\n",
                     name);
             break;
 
@@ -153,7 +154,7 @@ static void multicast_group_callback(AvahiEntryGroup *group,
             avahi_free(name);
             name = n;
 
-            fprintf(stderr, "Service name collision,"
+            syslog(LOG_ERR, "Service name collision,"
                                 "renaming service to '%s'\n", name);
             while(1);
             /* And recreate the services */
@@ -162,7 +163,7 @@ static void multicast_group_callback(AvahiEntryGroup *group,
         }
 
         case AVAHI_ENTRY_GROUP_FAILURE :
-            fprintf(stderr, "Entry group failure: %s\n",
+            syslog(LOG_ERR, "Entry group failure: %s\n",
                 avahi_strerror(avahi_client_errno(
                             avahi_entry_group_get_client(group))));
 
@@ -205,7 +206,7 @@ void avahi_init(GMainLoop *mainloop)
         g_main_loop_quit(loop);
     }
 
-    g_message("Avahi Server Version: %s", version);
+    syslog(LOG_INFO, "Avahi Server Version: %s", version);
 }
 
 void avahi_addService(struct node *n, guint classid)
@@ -233,10 +234,10 @@ void avahi_addService(struct node *n, guint classid)
                 n->hostname,
                 classes_getServicePort(class),
                 NULL)) < 0 ){
-        fprintf(stderr, "Failed to add service: %s\n", avahi_strerror(ret));
+        syslog(LOG_ERR, "Failed to add service: %s\n", avahi_strerror(ret));
     }
     if( (ret = avahi_entry_group_commit(sd->avahiservicegroup)) < 0 ){
-        fprintf(stderr, "Failed to commit entry group: %s\n",
+        syslog(LOG_ERR, "Failed to commit entry group: %s\n",
             avahi_strerror(ret));
         while(1);
     }
@@ -261,10 +262,10 @@ void avahi_addService(struct node *n, guint classid)
                 n->hostname,
                 classes_getServicePort(class),
                 NULL)) < 0 ){
-        fprintf(stderr, "Failed to add service: %s\n", avahi_strerror(ret));
+        syslog(LOG_ERR, "Failed to add service: %s\n", avahi_strerror(ret));
     }
     if( (ret = avahi_entry_group_commit(sd->avahiservicegroup)) < 0 ){
-        fprintf(stderr, "Failed to commit entry group: %s\n",
+        syslog(LOG_ERR, "Failed to commit entry group: %s\n",
             avahi_strerror(ret));
         while(1);
     }
@@ -300,7 +301,7 @@ void avahi_registerServices(struct node *n)
 
     for(i=0; i<sizeof(n->classes); i++){
         if( n->classes[i] != 0 ){
-            printf("adding service %d\n", n->classes[i]);
+            syslog(LOG_DEBUG,"adding service %d\n", n->classes[i]);
             avahi_addService(n, i);
         }
     }
@@ -311,11 +312,11 @@ void avahi_removeServices(struct node *n)
     guint i;
     g_assert(n->avahiaddressgroup != NULL);
 
-    printf("removing services for node %s", n->id);
+    syslog(LOG_DEBUG,"removing services for node %s", n->id);
 
     for(i=0; i<sizeof(n->classes); i++){
         if( n->classes[i] != 0 ){
-            printf("removing service %d\n", n->classes[i]);
+            syslog(LOG_DEBUG,"removing service %d\n", n->classes[i]);
             avahi_removeService(n, i);
         }
     }
@@ -341,11 +342,11 @@ void avahi_registerNode(struct node *n)
                 0,
                 n->hostname,
                 &a )) < 0 ){
-        fprintf(stderr, "Failed to add address: %s\n", avahi_strerror(ret));
+        syslog(LOG_ERR, "Failed to add address: %s\n", avahi_strerror(ret));
     }
 
     if( (ret = avahi_entry_group_commit(n->avahiaddressgroup)) < 0 ){
-        fprintf(stderr, "Failed to commit entry group: %s\n",
+        syslog(LOG_ERR, "Failed to commit entry group: %s\n",
             avahi_strerror(ret));
         while(1);
     }
@@ -381,7 +382,7 @@ void avahi_registerMulticastGroup(struct multicastgroup *g)
                 0,
                 g->hostname,
                 &a )) < 0 ){
-        fprintf(stderr, "Failed to add address: %s\n", avahi_strerror(ret));
+        syslog(LOG_ERR, "Failed to add address: %s\n", avahi_strerror(ret));
     }
 
     guint class = g->class;
@@ -399,11 +400,11 @@ void avahi_registerMulticastGroup(struct multicastgroup *g)
                 g->hostname,
                 classes_getServicePort(class),
                 NULL)) < 0 ){
-        fprintf(stderr, "Failed to add service: %s\n", avahi_strerror(ret));
+        syslog(LOG_ERR, "Failed to add service: %s\n", avahi_strerror(ret));
     }
 
     if( (ret = avahi_entry_group_commit(g->avahientrygroup)) < 0 ){
-        fprintf(stderr, "Failed to commit entry group: %s\n",
+        syslog(LOG_ERR, "Failed to commit entry group: %s\n",
             avahi_strerror(ret));
         while(1);
     }

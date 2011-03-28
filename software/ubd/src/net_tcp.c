@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <syslog.h>
 
 #include "debug.h"
 #include "busmgt.h"
@@ -25,7 +26,7 @@ static void tcp_queueNewCommand(gpointer data)
 {
     g_assert(data != NULL);
     struct nodebuffer *nb = data;
-    printf("tcp_cmd: new command for node %d\n", nb->n->busadr);
+    syslog(LOG_DEBUG,"tcp_cmd: new command for node %d\n", nb->n->busadr);
     bus_streamToID(nb->n->id, (guchar*)nb->cmd, nb->cmdlen, nb->classid,
                                 tcp_reply, nb->out);
 }
@@ -34,7 +35,7 @@ static void tcp_queueNewMgt(gpointer data)
 {
     g_assert(data != NULL);
     struct nodebuffer *nb = data;
-    printf("tcp_cmd: new mgt for node %d\n", nb->n->busadr);
+    syslog(LOG_DEBUG,"tcp_cmd: new mgt for node %d\n", nb->n->busadr);
     busmgt_streamData(nb->n, (guchar*)nb->cmd, nb->cmdlen,
                                 tcp_reply, nb->out);
 }
@@ -77,15 +78,15 @@ static void tcp_reply(gpointer data)
     //in this case the outputstream is invalid
     //and a error message is displayed
     if( ps->type == PACKET_DONE ){
-        printf("tcp_reply: PACKET_DONE\n");
+        syslog(LOG_DEBUG,"tcp_reply: PACKET_DONE\n");
         g_output_stream_write(ps->data, "A", 1, NULL, NULL);
     }
     if( ps->type == PACKET_ABORT ){
-        printf("tcp_reply: PACKET_ABORT\n");
+        syslog(LOG_DEBUG,"tcp_reply: PACKET_ABORT\n");
         g_output_stream_write(ps->data, "N", 1, NULL, NULL);
     }
     if( ps->type == PACKET_PACKET ){
-        printf("tcp_reply: PACKET_PACKET len=%d\n", ps->p.len);
+        syslog(LOG_DEBUG,"tcp_reply: PACKET_PACKET len=%d\n", ps->p.len);
         //g_output_stream_write(ps->data, ps->p.data, ps->p.len, NULL, NULL);
         tcp_writeCharacterEncoded(ps->data, ps->p.data, ps->p.len);
     }
@@ -94,7 +95,7 @@ static void tcp_reply(gpointer data)
 static void tcp_parse(struct nodebuffer *nb, guchar data)
 {
     g_assert(nb != NULL);
-    printf("state = %d data = %d\n",nb->state,data);
+    syslog(LOG_DEBUG,"state = %d data = %d\n",nb->state,data);
     switch(nb->state){
         case 0:
             if( data == 'C' ){
@@ -149,9 +150,9 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
     gssize len = g_input_stream_read_finish(in, res, &e);
     int i;
     if( len > 0 ){
-        printf("tcp_listener_read: Received %d data bytes\n", len);
+        syslog(LOG_DEBUG,"tcp_listener_read: Received %d data bytes\n", len);
         if( nb->n == NULL ){
-            printf("tcp_listener_read: node == NULL -> control data\n");
+            syslog(LOG_DEBUG,"tcp_listener_read: node == NULL -> control data\n");
             for( i=0; i<len; i++ ){
                 if( !cmdparser_parse(nb, nb->buf[i]) ){
                     //TODO: not sure if this is a clean way to close
@@ -171,12 +172,12 @@ void tcp_listener_read(GInputStream *in, GAsyncResult *res,
             G_PRIORITY_DEFAULT, NULL,
             (GAsyncReadyCallback) tcp_listener_read, nb); 
     }else if( len == 0){
-        printf("tcp_listener_read: connection closed\n");
+        syslog(LOG_DEBUG,"tcp_listener_read: connection closed\n");
         listen_unregister(nb->n, nb->classid, nb->out);
         g_object_unref(nb->connection);
         g_free(nb);
     }else{
-        printf("tcp_listener_read: received an error\n");
+        syslog(LOG_WARNING,"tcp_listener_read: received an error\n");
     }
 }
 
@@ -188,14 +189,14 @@ gboolean tcp_listener(GSocketService    *service,
     struct socketdata *sd = user_data;
     struct nodebuffer *nodebuf = g_new0(struct nodebuffer,1);
     g_assert(nodebuf != NULL);
-    printf("new listener\n");
+    syslog(LOG_DEBUG,"new listener\n");
     if( user_data ){
-        printf("socketdata is set\n");
+        syslog(LOG_DEBUG,"socketdata is set\n");
         nodebuf->n = sd->n;
         nodebuf->classid = sd->classid;
-        printf("service is for classid %u\n", nodebuf->classid);
+        syslog(LOG_DEBUG,"service is for classid %u\n", nodebuf->classid);
     }else{
-        printf("socketdata is null\n");
+        syslog(LOG_DEBUG,"socketdata is null\n");
         nodebuf->n = NULL;
     }
     nodebuf->connection = connection; 
@@ -213,7 +214,7 @@ gboolean tcp_listener(GSocketService    *service,
     }else if( service == nodebuf->n->mgtsocket.socketservice ){
         nodebuf->callback = tcp_queueNewMgt;
     }else{
-        printf("tcp_listener: should not happen\n");
+        syslog(LOG_ERR,"tcp_listener: should not happen\n");
         g_assert(FALSE);
     }
     g_input_stream_read_async(nodebuf->in, nodebuf->buf,

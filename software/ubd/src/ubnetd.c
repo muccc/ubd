@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <syslog.h>
 
 #include "ubnetd.h"
 #include "interface.h"
@@ -26,7 +27,7 @@ static gint ubnetd_createInterface(GInetAddress *addr,
 
     sprintf(buf,"ip addr del %s dev %s",
                             tmp, interface);
-    printf("ubnetd: interface_createInterface: system(\"%s\")\n",buf);
+    syslog(LOG_DEBUG,"ubnetd: interface_createInterface: system(\"%s\")\n",buf);
     rc = system(buf);
     //seems like this works instantly. no need to wait
     //usleep(1000*1000*3); 
@@ -34,19 +35,19 @@ static gint ubnetd_createInterface(GInetAddress *addr,
     sprintf(buf,"ip addr add %s dev %s",
                             tmp, interface);
 
-    printf("ubnetd: interface_createInterface: system(\"%s\")\n",buf);
+    syslog(LOG_DEBUG,"ubnetd: interface_createInterface: system(\"%s\")\n",buf);
     rc = system(buf);
 
     g_free(tmp);
     if( rc ){
-        printf("ubnetd: interface_createInterface: Error: system() return value: %d\n",rc);
+        syslog(LOG_WARNING,"ubnetd: interface_createInterface: Error: system() return value: %d\n",rc);
         return rc;
     }
 
     //we have to wait before crating sockets on it
-    printf("ubnetd: interface_createInterface: New interface created. Now sleeping for 3s!\n");
+    syslog(LOG_DEBUG,"ubnetd: interface_createInterface: New interface created. Now sleeping for 3s!\n");
     usleep(3*1000*1000); 
-    printf("ubnetd: interface_createInterface: Done\n");
+    syslog(LOG_DEBUG,"ubnetd: interface_createInterface: Done\n");
     return 0;
 }
 
@@ -59,10 +60,10 @@ static gint ubnetd_removeAddress(GInetAddress *addr,
     sprintf(buf,"ip addr del %s dev %s",
                             tmp, interface);
     g_free(tmp);
-    printf("ubnetd: interface_removeAddress: system(\"%s\")\n",buf);
+    syslog(LOG_DEBUG,"ubnetd: interface_removeAddress: system(\"%s\")\n",buf);
     rc = system(buf);
     if( rc ){
-        printf("ubnetd: interface_removeAddress: Error: system() return value: %d\n",rc);
+        syslog(LOG_WARNING,"ubnetd: interface_removeAddress: Error: system() return value: %d\n",rc);
     }
     return rc;
 }
@@ -86,7 +87,7 @@ static gpointer connection_handler(gpointer p)
     GSocket *s = (GSocket*)p;
     g_socket_set_blocking(s, TRUE);
     gint len = receive(s, buf, 17);
-    printf("ubnetd: connection_handler: Received %d bytes\n", len);
+    syslog(LOG_DEBUG,"ubnetd: connection_handler: Received %d bytes\n", len);
     if( len != 17 || (buf[0] != 'A' && buf[0] != 'D') ){
         g_socket_close(s, NULL);
         return NULL;
@@ -119,6 +120,7 @@ static gpointer connection_handler(gpointer p)
 
 int main(int argc, char *argv[])
 {
+    openlog("ubnetd",LOG_PID | LOG_PERROR ,LOG_DAEMON);
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
     GInetAddress *lo = g_inet_address_new_loopback(
@@ -135,6 +137,7 @@ int main(int argc, char *argv[])
         printf("to use.\n");
         return -1;
     }
+    openlog("ubnetd",LOG_PID ,LOG_DAEMON);
     interface_init(argv[1]);
     interface = argv[1];
     GError * e = NULL;
@@ -143,7 +146,7 @@ int main(int argc, char *argv[])
                             G_SOCKET_PROTOCOL_TCP,
                             &e);
     if( e != NULL ){
-        fprintf(stderr,
+        syslog(LOG_WARNING,
             "Error while creating socket: %s\n", e->message);
         g_error_free(e);
         return -1;
@@ -151,7 +154,7 @@ int main(int argc, char *argv[])
    
     g_socket_bind(ss, sa, TRUE, &e);
     if( e != NULL ){
-        fprintf(stderr,
+        syslog(LOG_WARNING,
             "Error while binding socket to port: %s\n", e->message);
         g_error_free(e);
         return -1;
@@ -159,22 +162,22 @@ int main(int argc, char *argv[])
     
     g_socket_listen(ss, &e);
      if( e != NULL ){
-        fprintf(stderr,
+        syslog(LOG_WARNING,
             "Cannot listen on socket: %s\n", e->message);
         g_error_free(e);
         return -1;
     }
 
     while(TRUE){
-        printf("Waiting for connections\n");
+        syslog(LOG_DEBUG,"Waiting for connections\n");
         GSocket *s = g_socket_accept(ss, NULL, &e);        
         if( e != NULL ){
-            fprintf(stderr,
+            syslog(LOG_WARNING,
                 "ubnetd: Error while accepting: %s\n", e->message);
             g_error_free(e);
             continue;
         }
-        printf("ubnetd: New connection\n");
+        syslog(LOG_DEBUG,"ubnetd: New connection\n");
         g_thread_create(connection_handler, s, FALSE, NULL);
     }
 }

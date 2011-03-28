@@ -35,13 +35,13 @@ gssize cmdparser_cmd(gchar* cmd, gsize n, gchar** result)
         else if( SYMBOL(scanner,6) ) //groups
             *result = cmd_list_groups();
         /*g_scanner_get_next_token(scanner);
-        printf("token=%d\n",scanner->token);
+        syslog(LOG_DEBUG,"token=%d\n",scanner->token);
         if( scanner->token == G_TOKEN_STRING ||
             scanner->token == G_TOKEN_IDENTIFIER){
-            printf("pong %s\n", scanner->value.v_string);
+            syslog(LOG_DEBUG,"pong %s\n", scanner->value.v_string);
         }else{
             int value = scanner->value.v_int;
-            printf("pong %d\n", value);
+            syslog(LOG_DEBUG,"pong %d\n", value);
         }*/
     }else if( SYMBOL(scanner,8) ){ //exit
         *result = malloc(30);

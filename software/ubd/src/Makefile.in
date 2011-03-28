@@ -52,7 +52,7 @@ am_ubd_OBJECTS = main.$(OBJEXT) serial.$(OBJEXT) debug.$(OBJEXT) \
 	xmlconfig.$(OBJEXT) groups.$(OBJEXT) nodes.$(OBJEXT) \
 	config.$(OBJEXT) net_tcp.$(OBJEXT) net_udp.$(OBJEXT) \
 	listen.$(OBJEXT) avahi.$(OBJEXT) classes.$(OBJEXT) \
-	broadcast.$(OBJEXT) net_multicast.$(OBJEXT)
+	broadcast.$(OBJEXT) net_multicast.$(OBJEXT) daemon.$(OBJEXT)
 ubd_OBJECTS = $(am_ubd_OBJECTS)
 ubd_LDADD = $(LDADD)
 am_ubnetd_OBJECTS = ubnetd.$(OBJEXT) interface.$(OBJEXT)
@@ -169,7 +169,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ubd_SOURCES = main.c serial.c debug.c net.c packet.c busmgt.c ubpacket.h serial.h debug.h net.h packet.h busmgt.h ubconfig.h message.h address6db.c address6db.h interface.c interface.h address6.h address6.c bus.c bus.h mgt.h mgt.c cmd.c cmd.h cmdparser.c cmdparser.h xmlconfig.c xmlconfig.h groups.c groups.h nodes.h nodes.c config.h config.c net_tcp.c net_tcp.h net_udp.c net_udp.h listen.c listen.h avahi.c avahi.h classes.c classes.h broadcast.c broadcast.h net_multicast.c net_multicast.h
+ubd_SOURCES = main.c serial.c debug.c net.c packet.c busmgt.c ubpacket.h serial.h debug.h net.h packet.h busmgt.h ubconfig.h message.h address6db.c address6db.h interface.c interface.h address6.h address6.c bus.c bus.h mgt.h mgt.c cmd.c cmd.h cmdparser.c cmdparser.h xmlconfig.c xmlconfig.h groups.c groups.h nodes.h nodes.c config.h config.c net_tcp.c net_tcp.h net_udp.c net_udp.h listen.c listen.h avahi.c avahi.h classes.c classes.h broadcast.c broadcast.h net_multicast.c net_multicast.h daemon.c daemon.h
 ubnetd_SOURCES = ubnetd.c ubnetd.h interface.c interface.h
 all: all-am
 
@@ -265,6 +265,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmdparser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/daemon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/groups.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/interface.Po@am__quote@

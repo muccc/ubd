@@ -9,6 +9,7 @@
 #include "serial.h"
 #include <unistd.h>
 #include <errno.h>
+#include <syslog.h>
 
 uint8_t serial_buffer[SERIAL_BUFFERLEN];
 int fd;
@@ -79,9 +80,9 @@ static uint16_t serial_in(uint8_t data)
     static int fill = -1;
     static uint8_t escaped = 0;
     int tmp;
-    /*printf("serial: in:");
+    /*syslog(LOG_DEBUG,"serial: in:");
     debug_hexdump(&data,1);
-    printf("\n");*/
+    syslog(LOG_DEBUG,"\n");*/
 
     if(data == SERIAL_ESCAPE){
         if(!escaped){
@@ -121,8 +122,8 @@ void serial_readMessage(struct message * msg)
             len = serial_in(c);
             if( len ){
                 if( serial_buffer[0] != 'P' ){
-                    printf("%ld.%04ld serial: new message: ->",start.tv_sec,start.tv_usec);
-                    debug_hexdump(serial_buffer, len);printf("<-\n");
+                    syslog(LOG_DEBUG,"%ld.%04ld serial: new message: ->",start.tv_sec,start.tv_usec);
+                    debug_hexdump(serial_buffer, len);syslog(LOG_DEBUG,"<-\n");
                 }
                 msg->len = len;
                 if( sizeof(msg->data) >= len ){
@@ -134,17 +135,17 @@ void serial_readMessage(struct message * msg)
                 }
             }
         }else if( rc == 0){
-            printf("timeout on serial line\n");
+            syslog(LOG_WARNING,"timeout on serial line\n");
         }else if( rc < 0){
-            printf("error while reading from serial line: rc=%d errno=%d\n",rc,errno);
+            syslog(LOG_ERR,"error while reading from serial line: rc=%d errno=%d\n",rc,errno);
         }
     }
 }
 
 void serial_writeMessage(struct message * outmsg)
 {
-    //printf("serial: write message: ->");debug_hexdump(outmsg->data, outmsg->len);
-    //printf("<-\n");
+    //syslog(LOG_DEBUG,"serial: write message: ->");debug_hexdump(outmsg->data, outmsg->len);
+    //syslog(LOG_DEBUG,"<-\n");
     serial_putStart();
     serial_putenc((uint8_t*) outmsg->data, outmsg->len);
     serial_putStop();
@@ -154,7 +155,7 @@ void serial_writeMessage(struct message * outmsg)
 
 void serial_switch(void)
 {
-    printf("switching serial node to bridge mode\n");
+    syslog(LOG_INFO,"switching serial node to bridge mode\n");
     serial_sendFrames("B");
     struct message m;
     //return;
@@ -163,7 +164,7 @@ void serial_switch(void)
         if( m.len == 1 && m.data[0] == 'B' )
             break;
     }
-    printf("done\n");
+    syslog(LOG_INFO,"done\n");
     //usleep(1000*1000*2);
 }
 
@@ -171,7 +172,7 @@ int serial_open (char * device)
 {
     fd = open(device, O_RDWR|O_NOCTTY);// |O_SYNC);//|O_NONBLOCK);
     if( fd == -1 ){
-//        printf("Failed to open serial device %s\n", argv[1]);
+        syslog(LOG_ERR,"Failed to open serial device %s\n", device);
         return -1;
     }
     struct termios tio;

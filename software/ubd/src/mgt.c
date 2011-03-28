@@ -2,6 +2,7 @@
 #include <gio/gio.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "mgt.h"
 #include "busmgt.h"
@@ -50,28 +51,28 @@ static struct node *mgt_registerNode(char *id, uint8_t type, uint8_t busadr)
     struct node *dbn = nodes_getNodeById(id);
     
     if( dbn != NULL){
-        printf("node known\n");
+        syslog(LOG_DEBUG,"node known\n");
     }else{
-        printf("node unknown\n");
+        syslog(LOG_DEBUG,"node unknown\n");
         dbn = nodes_getFreeNode();
         if( dbn == NULL ){
-            printf("mgt.c: warning: got no new node!\n");
+            syslog(LOG_WARNING,"mgt.c: warning: got no new node!\n");
             return dbn;     //FIXME don't fail silently
         }
-        printf("copying id %s\n",id);
+        syslog(LOG_DEBUG,"copying id %s\n",id);
         strncpy(dbn->id,id,MAX_ID);
-        printf("adding node %s\n",dbn->id);
+        syslog(LOG_DEBUG,"adding node %s\n",dbn->id);
         nodes_addNode(dbn);
     }
     if( busadr ){
         dbn->busadr = busadr;
-        printf("using fixed bus addr %d\n",busadr);
+        syslog(LOG_DEBUG,"using fixed bus addr %d\n",busadr);
     }else{
         dbn->busadr = busmgt_getFreeBusAdr();
     }
     dbn->type = type;
     address6_createAddress(dbn);
-    printf("activating node\n");
+    syslog(LOG_DEBUG,"activating node\n");
     nodes_activateNode(dbn);
     return dbn;
 }
@@ -84,7 +85,7 @@ static void mgt_checkTimeout(void)
         struct node *n = nodes_getNode(i);
         if( n->state == NODE_IDENTIFY || n->state == NODE_NORMAL ){
             if( n->timeout-- == 0 ){
-                printf("removing %s\n",n->id);
+                syslog(LOG_INFO,"removing %s\n",n->id);
                 net_removeSockets(n);
                 address6_removeAddress(n);
                 n->type = TYPE_NONE;

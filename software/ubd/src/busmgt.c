@@ -1,6 +1,7 @@
 #include <glib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "packet.h"
 #include "ubpacket.h"
@@ -30,7 +31,7 @@ gint busmgt_getFreeBusAdr()
         if( nodes_getNodeByBusAdr(i) == NULL )
             return i;
     }
-    printf("busmgt.c: warning: found no free address!\n");
+    syslog(LOG_WARNING,"busmgt.c: warning: found no free address!\n");
     return -1;
 }
 
@@ -53,20 +54,20 @@ void busmgt_inpacket(struct ubpacket* p)
             memcpy(id, p->data+7, p->len-7);
             id[p->len-7] = 0;
 
-            printf("busmgt: got discover from %s\n", id);
+            syslog(LOG_INFO,"busmgt: got discover from %s\n", id);
 
             //n = nodes_getNodeById(id);
             //if( n == NULL ){
-                printf("busmgt: creating new node\n");
+                syslog(LOG_DEBUG,"busmgt: creating new node\n");
                 n = mgt_createNode(TYPE_NODE, id);
                 if( n == NULL){
-                    printf("busmgt: no free nodes available. please wait.\n");
+                    syslog(LOG_WARNING,"busmgt: no free nodes available. please wait.\n");
                     return;
                 }
                 g_assert(n->busadr != 0);
-                printf("busmgt: new bus address: %u\n",n->busadr);
+                syslog(LOG_DEBUG,"busmgt: new bus address: %u\n",n->busadr);
             //}else{
-            //    printf("busmgt: old bus address: %u\n",n->busadr);
+            //    syslog(LOG_DEBUG,"busmgt: old bus address: %u\n",n->busadr);
             //}
 
             //TODO: check if it is possible for the bus to query
@@ -85,17 +86,17 @@ void busmgt_inpacket(struct ubpacket* p)
                 return;
             memcpy(id, p->data+1, p->len-1);
             id[p->len-1] = 0;
-            printf("busmgt: got identify from %s\n", id);
+            syslog(LOG_INFO,"busmgt: got identify from %s\n", id);
 
             n = nodes_getNodeById(id);
             if( n == NULL ){
-                printf("busmgt: unkown node\n");
+                syslog(LOG_WARNING,"busmgt: unkown node\n");
                 busmgt_sendReset(p->src);
                 return;
             }
             //send the OK if we have our interface ready
             if( n->netup == TRUE){
-                printf("busmgt: node known\n");
+                syslog(LOG_DEBUG,"busmgt: node known\n");
                 busmgt_sendMulticastGroups(n);
                 busmgt_sendOK(p->src);
                 //n->state = NODE_IDENTIFY;
@@ -104,7 +105,7 @@ void busmgt_inpacket(struct ubpacket* p)
                 n->busup = TRUE;
                 nodes_activateNode(n);
             }else{
-                printf("IPv6 interface not up yet\n");
+                syslog(LOG_INFO,"IPv6 interface not up yet\n");
             }
 
         break;
@@ -129,18 +130,18 @@ void busmgt_inpacket(struct ubpacket* p)
             memcpy(classes, p->data+1, 4);
             memcpy(id, p->data+5, p->len-5);
             id[p->len-5] = 0;
-            printf("busmgt: bridge id %s\n", id);
+            syslog(LOG_INFO,"busmgt: bridge id %s\n", id);
             mgt_createBridge(id);
             n = nodes_getNodeByBusAdr(p->src);
 
-            printf("bus addr of new node is %d\n",n->busadr);
+            syslog(LOG_DEBUG,"bus addr of new node is %d\n",n->busadr);
             busmgt_setClasses(n, classes, sizeof(classes));
             busmgt_sendMulticastGroups(n);
             busmgt_sendOK(p->src);
             n->state = NODE_NORMAL;
             n->timeout = config.nodetimeout;
             n->busup = TRUE;
-            printf("bus is up\n");
+            syslog(LOG_INFO,"bus is up\n");
         break;
     };
 }
@@ -148,21 +149,21 @@ void busmgt_inpacket(struct ubpacket* p)
 //add an address to a multicast group
 void busmgt_addToMulticast(uint8_t adr, uint8_t mcast)
 {
-    printf("Adding node %d to multicast group %d\n",adr,mcast);
+    syslog(LOG_INFO,"Adding node %d to multicast group %d\n",adr,mcast);
     uint8_t data[] = {mcast};
     busmgt_sendCmdData(adr,'1',data,sizeof(data));
 }
 
 void busmgt_setName(uint8_t adr, char *name)
 {
-    printf("Setting name of %u to %s\n",adr,name);
+    syslog(LOG_DEBUG,"Setting name of %u to %s\n",adr,name);
     //include the trailing 0
     busmgt_sendCmdData(adr,'s',(uint8_t*)name,strlen(name)+1);
 }
 
 static void busmgt_sendReset(uint8_t adr)
 {
-    printf("Sending reset to %u\n", adr);
+    syslog(LOG_INFO,"Sending reset to %u\n", adr);
     struct ubpacket p;
     p.dest = adr;
     p.len = 1;
@@ -174,7 +175,7 @@ static void busmgt_sendReset(uint8_t adr)
 
 static void busmgt_setQueryInterval(uint8_t adr, uint16_t interval)
 {
-    printf("Setting query interval of %u to %u\n", adr,interval);
+    syslog(LOG_DEBUG,"Setting query interval of %u to %u\n", adr,interval);
     uint8_t data[] = {adr,interval>>8,interval&0xFF};
     busmgt_sendCmdData(UB_ADDRESS_BRIDGE,'q',data,sizeof(data));
 }
@@ -197,10 +198,10 @@ static void busmgt_setAddress(uint8_t adr, gchar *id)
 //send an OK to the address and request the software version
 static void busmgt_sendOK(uint8_t adr)
 {
-    printf("Sending OK to %u\n",adr);
+    syslog(LOG_DEBUG,"Sending OK to %u\n",adr);
     busmgt_sendCmd(adr,'O');
 
-    printf("Getting version from  %u\n",adr);
+    syslog(LOG_DEBUG,"Getting version from  %u\n",adr);
     busmgt_sendCmd(adr,'V');
 
 }
@@ -208,10 +209,10 @@ static void busmgt_sendOK(uint8_t adr)
 static void busmgt_sendMulticastGroups(struct node *n)
 {
     int i;
-    printf("sending multicast groups\n");
+    syslog(LOG_DEBUG,"sending multicast groups\n");
     for(i=0; i<32; i++){
         if( n->groups[i] != -1 ){
-            printf("adding multicast address %d\n",n->groups[i]);
+            syslog(LOG_DEBUG,"adding multicast address %d\n",n->groups[i]);
             uint8_t d = n->groups[i];
             busmgt_sendCmdData(n->busadr,'A',&d,1);
         }
@@ -234,7 +235,7 @@ void busmgt_sendCmdData(uint8_t adr, uint8_t cmd,
     p.data[0] = cmd;
 
     if( p.len > sizeof(p.data)){
-        printf("busmgt_sendCmdData(): packet to big!\n");
+        syslog(LOG_WARNING,"busmgt_sendCmdData(): packet to big!\n");
         //TODO: log and report this error.
         return;
     }
@@ -254,7 +255,7 @@ void busmgt_streamData(struct node *n, guchar *buf, gint len,
     packet.dest = n->busadr;
     packet.len = len;
     if( packet.len > sizeof(packet.data)){
-        printf("busmgt_sendCmdData(): packet to big!\n");
+        syslog(LOG_WARNING,"busmgt_sendCmdData(): packet to big!\n");
         //TODO: log this error
         //TODO: fragment packet?
         return;

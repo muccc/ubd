@@ -1,4 +1,5 @@
 #include <glib.h>
+#include <syslog.h>
 #include "nodes.h"
 #include "mgt.h"
 
@@ -49,7 +50,7 @@ struct node *nodes_getFreeNode(void)
             return &nodes[i];
         }
     }
-    printf("nodes.c: warning: no free node found!\n");
+    syslog(LOG_WARNING,"nodes.c: warning: no free node found!\n");
     return NULL;
 }
 
@@ -57,7 +58,7 @@ void nodes_addNode(struct node *newnode)
 {
     //just assume that the node is already in our list
     //and mark it as in use
-    printf("adding node %s to list\n",
+    syslog(LOG_DEBUG,"adding node %s to list\n",
                             newnode->id);
     newnode->free = FALSE;
     nodes_setNameFromID(newnode);
@@ -98,7 +99,7 @@ struct node *nodes_getNodeById(gchar *id)
         }
     }
 
-    printf("nodes.c: warning: getnodebyid: node %s not found\n",id);
+    syslog(LOG_WARNING,"nodes.c: warning: getnodebyid: node %s not found\n",id);
     return NULL;
 }
 
@@ -113,7 +114,7 @@ struct node *nodes_getNodeByBusAdr(gint adr)
         }
     }
 
-    printf("nodes.c: warning: getnodebybusadr: node %d not found\n",
+    syslog(LOG_WARNING,"nodes.c: warning: getnodebybusadr: node %d not found\n",
             adr);
     return NULL;
 }
@@ -133,22 +134,22 @@ struct node *nodes_getNodeByNetAdr(GInetAddress *addr)
         }
     }
 
-    printf("nodes.c: warning: getnodebynetadr: node not found\n");
+    syslog(LOG_WARNING,"nodes.c: warning: getnodebynetadr: node not found\n");
     return NULL;
 }
 
 void nodes_activateNode(struct node *node)
 {
     g_assert(node->free == FALSE);
-    //printf("nodes.c: warning: trying to activate a free node!\n");
+    //syslog(LOG_WARNING,"nodes.c: warning: trying to activate a free node!\n");
     node->active = TRUE;
 }
 
 void nodes_deactivateNode(struct node *node)
 {
     g_assert(node->free == FALSE);
-    //    printf("nodes.c: warning: trying to");
-    //    printf("deactivate a free node!\n");
+    //    syslog(LOG_WARNING,"nodes.c: warning: trying to");
+    //    syslog(LOG_WARNING,"deactivate a free node!\n");
     node->active = FALSE;
 }
 
@@ -168,7 +169,7 @@ void nodes_setNameFromID(struct node *n)
         strcpy(n->domain,++s);
     }else{
         //there was no domain in the id
-        printf("ill formated id for this node: %s\n",n->id);
+        syslog(LOG_WARNING,"ill formated id for this node: %s\n",n->id);
         n->domain[0] = 0;
     }
     if( n->avahiname[0] == 0 ){

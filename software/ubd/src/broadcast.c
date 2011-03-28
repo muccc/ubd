@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <syslog.h>
 
 #include "debug.h"
 #include "address6.h"
@@ -30,7 +31,7 @@ gboolean broadcast_addService(gint service)
     if( g_hash_table_lookup(table, GINT_TO_POINTER(service)) != NULL )
         return TRUE;
 
-    printf("net_createSockets: Creating broadcast udp socket on port %u\n", port);
+    syslog(LOG_DEBUG,"net_createSockets: Creating broadcast udp socket on port %u\n", port);
     GSocketAddress * sa = g_inet_socket_address_new(addr,port);
 
     GSocket *socket = g_socket_new(G_SOCKET_FAMILY_IPV6,
@@ -41,7 +42,7 @@ gboolean broadcast_addService(gint service)
     g_assert(socket != NULL);
 
     if( g_socket_bind(socket, sa, TRUE, &err) == FALSE ){
-        fprintf(stderr, "net_createSockets: Error while binding udp socket: %s\n", err->message);
+        syslog(LOG_WARNING, "net_createSockets: Error while binding udp socket: %s\n", err->message);
         g_error_free(err);
         return FALSE;
     }
@@ -66,28 +67,28 @@ gboolean broadcast_read(GSocket *socket, GIOCondition condition,
         len = g_socket_receive_from(socket,&src,(gchar*)buf,
                                 sizeof(buf),NULL,NULL);
         if( len > 0 ){
-            printf("udp_read: Received:");
+            syslog(LOG_DEBUG,"udp_read: Received:");
             debug_hexdump(buf,len);
-            printf("\n");
+            syslog(LOG_DEBUG,"\n");
             bus_sendToClass(class, buf, len);
         }else{
-            printf("udp_read: Error while receiving: len=%d\n",len);
+            syslog(LOG_WARNING,"udp_read: Error while receiving: len=%d\n",len);
         }
     }else{
-        printf("udp_read: Received ");
+        syslog(LOG_DEBUG,"udp_read: Received ");
         if( condition == G_IO_ERR ){
-            printf("G_IO_ERR\n");
+            syslog(LOG_DEBUG,"G_IO_ERR\n");
         }else if( condition == G_IO_HUP ){ 
-            printf("G_IO_HUP\n");
+            syslog(LOG_DEBUG,"G_IO_HUP\n");
         }else if( condition == G_IO_OUT ){ 
-            printf("G_IO_OUT\n");
+            syslog(LOG_DEBUG,"G_IO_OUT\n");
         }else if( condition == G_IO_PRI ){ 
-            printf("G_IO_PRI\n");
+            syslog(LOG_DEBUG,"G_IO_PRI\n");
         }else if( condition == G_IO_NVAL ){ 
-            printf("G_IO_NVAL\ndropping source\n");
+            syslog(LOG_DEBUG,"G_IO_NVAL\ndropping source\n");
             return FALSE;
         }else{
-            printf("unkown condition = %d\n",condition);
+            syslog(LOG_WARNING,"unkown condition = %d\n",condition);
         }
     }
     return TRUE;

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <syslog.h>
 #include "address6db.h"
 #include "nodes.h"
 
@@ -26,18 +27,18 @@ gboolean db_isIPKnown(GInetAddress *addr)
     gint count = nodes_getNodeCount();
     for(i=0;i<count;i++){
         struct node *n = nodes_getNode(i);
-        printf("checking node %d\n",i);
+        syslog(LOG_DEBUG,"checking node %d\n",i);
         if( n->netadr != NULL ){
-            //printf("found used ip\n");
+            //syslog(LOG_DEBUG,"found used ip\n");
             if( memcmp( g_inet_address_to_bytes(n->netadr),
                 g_inet_address_to_bytes(addr),16) == 0 ){
-                printf("ip %s used by node %s\n",tmp,n->id);
+                syslog(LOG_DEBUG,"ip %s used by node %s\n",tmp,n->id);
                 g_free(tmp);
                 return TRUE;
             }
         }
     }
-    printf("ip %s unknown\n",tmp);
+    syslog(LOG_DEBUG,"ip %s unknown\n",tmp);
     g_free(tmp);
     return FALSE;
 }
@@ -64,7 +65,7 @@ GInetAddress *address6db_getFreeAddr(gchar *id)
     addr = g_inet_address_new_from_bytes(addrbuf,G_SOCKET_FAMILY_IPV6);
     
     gchar *tmp = g_inet_address_to_string(addr);
-    printf("using address: %s\n",tmp);
+    syslog(LOG_DEBUG,"using address: %s\n",tmp);
     g_free(tmp);
     return addr;
 }
@@ -89,7 +90,7 @@ GInetAddress* address6db_getMulticastAddr(gchar *groupname){
     addr = g_inet_address_new_from_bytes(addrbuf,G_SOCKET_FAMILY_IPV6);
     
     gchar *tmp = g_inet_address_to_string(addr);
-    printf("using address: %s\n",tmp);
+    syslog(LOG_DEBUG,"using address: %s\n",tmp);
     g_free(tmp);
     return addr;
 }

@@ -1,6 +1,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <stdio.h>
+#include <syslog.h>
 
 #include "address6.h"
 #include "address6db.h"
@@ -24,7 +25,7 @@ void address6_init(GInetAddress *base, GInetAddress *multicastbase)
 
 void address6_createAddress(struct node *n)
 {
-    printf("adding address for %s\n",n->id);
+    syslog(LOG_INFO,"adding address for %s\n",n->id);
     if( n->netadr == NULL ){
         n->netadr = address6db_getFreeAddr(n->id);
 	g_assert(n->netadr);

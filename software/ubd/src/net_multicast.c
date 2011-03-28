@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <syslog.h>
+
 #include "address6db.h"
 #include "config.h"
 
@@ -26,7 +28,7 @@ GSocket *multicast_createSocket(gchar *groupname, guint port,
     g_assert(socket != NULL);
 
     if( g_socket_bind(socket, *sa, TRUE, &err) == FALSE ){
-        fprintf(stderr, "net_createSockets: Error while binding udp socket: %s\n", err->message);
+        syslog(LOG_ERR, "net_createSockets: Error while binding udp socket: %s\n", err->message);
         g_error_free(err);
         g_object_unref(*sa);
         g_object_unref(socket);
@@ -37,7 +39,7 @@ GSocket *multicast_createSocket(gchar *groupname, guint port,
     struct ipv6_mreq mreq;
     mreq.ipv6mr_interface = if_nametoindex(config.interface);
     gchar *tmp = g_inet_address_to_string(addr);
-    printf("using address: %s\n",tmp);
+    syslog(LOG_DEBUG,"using address: %s\n",tmp);
     getaddrinfo(tmp, NULL, NULL, &resmulti);
     g_free(tmp);
     mreq.ipv6mr_multiaddr = ((struct sockaddr_in6 *)resmulti->ai_addr)->sin6_addr;

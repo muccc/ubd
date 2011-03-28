@@ -22,9 +22,12 @@
 #include "config.h"
 #include "avahi.h"
 #include "broadcast.h"
+#include "daemon.h"
 
 int main (void)
 {
+    openlog("ubd",LOG_PID | LOG_PERROR ,LOG_DAEMON);
+    daemon_init();
 
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
@@ -35,23 +38,23 @@ int main (void)
     groups_init();
     xml_init("ubdconfig.xml");
     if( config.interface == NULL ){
-        fprintf(stderr, "Please specify an interface to use.\n");
+        syslog(LOG_ERR, "Please specify an interface to use.\n");
         return -1;
     }
 
     if( config.base == NULL ){
-        fprintf(stderr, "Please specify a base address to use.\n");
+        syslog(LOG_ERR, "Please specify a base address to use.\n");
         return -1;
     }
 
     if( config.multicastbase == NULL ){
-        fprintf(stderr, "Please specify a multicast base address to use.\n");
+        syslog(LOG_ERR, "Please specify a multicast base address to use.\n");
         return -1;
     }
     broadcast_init();
     if( net_init(config.interface, 
                         config.base, config.multicastbase) ){
-        fprintf(stderr, "Failed to set up network.\n"
+        syslog(LOG_ERR, "Failed to set up network.\n"
                 "Interface=%s\nBaseaddress=%s\n"
                 "\nAborting.\n",
                 config.interface, config.base);
@@ -62,7 +65,7 @@ int main (void)
     mgt_init();
 
     if( serial_open(config.device) ){
-        printf( "Failed to open serial device %s\n"
+        syslog(LOG_ERR, "Failed to open serial device %s\n"
                 "Aborting.\n", config.device);
         return -1;
     }
@@ -73,6 +76,9 @@ int main (void)
     busmgt_init();
     cmdparser_init();
 
+    openlog("ubd", LOG_PID, LOG_DAEMON);
+    daemon_close_stderror();
+    
     g_main_loop_run(mainloop);
     return 0;
 }

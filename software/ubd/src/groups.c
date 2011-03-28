@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <gio/gio.h>
+#include <syslog.h>
+
 #include "groups.h"
 #include "debug.h"
 #include "bus.h"
@@ -20,33 +22,33 @@ gboolean groups_read(GSocket *socket, GIOCondition condition,
     GSocketAddress * src;
     struct multicastgroup *g = user_data;
     gssize len;    
-    printf("foobar\n");
+    syslog(LOG_DEBUG,"foobar\n");
     if( condition == G_IO_IN ){
         len = g_socket_receive_from(socket,&src,(gchar*)buf,
                                 sizeof(buf),NULL,NULL);
         if( len > 0 ){
-            printf("group_read: Received:");
+            syslog(LOG_DEBUG,"group_read: Received:");
             debug_hexdump(buf,len);
-            printf("\n");
+            syslog(LOG_DEBUG,"\n");
             bus_sendToAddress(g->busadr, buf, len, g->class, FALSE);
         }else{
-            printf("group_read: Error while receiving: len=%d\n",len);
+            syslog(LOG_WARNING,"group_read: Error while receiving: len=%d\n",len);
         }
     }else{
-        printf("group_read: Received ");
+        syslog(LOG_DEBUG,"group_read: Received ");
         if( condition == G_IO_ERR ){
-            printf("G_IO_ERR\n");
+            syslog(LOG_DEBUG,"G_IO_ERR\n");
         }else if( condition == G_IO_HUP ){ 
-            printf("G_IO_HUP\n");
+            syslog(LOG_DEBUG,"G_IO_HUP\n");
         }else if( condition == G_IO_OUT ){ 
-            printf("G_IO_OUT\n");
+            syslog(LOG_DEBUG,"G_IO_OUT\n");
         }else if( condition == G_IO_PRI ){ 
-            printf("G_IO_PRI\n");
+            syslog(LOG_DEBUG,"G_IO_PRI\n");
         }else if( condition == G_IO_NVAL ){ 
-            printf("G_IO_NVAL\ndropping source\n");
+            syslog(LOG_DEBUG,"G_IO_NVAL\ndropping source\n");
             return FALSE;
         }else{
-            printf("unkown condition = %d\n",condition);
+            syslog(LOG_DEBUG,"unkown condition = %d\n",condition);
         }
     }
     return TRUE;
@@ -63,7 +65,7 @@ void groups_init(void)
 void groups_addGroup(gchar *groupname, gchar *hostname, gchar *classname)
 {
     if( groups_getGroupByName(groupname) != NULL ){
-        printf("groups.c: warning: group already exists\n");
+        syslog(LOG_WARNING,"groups.c: warning: group already exists\n");
         return;
     }
 
@@ -93,17 +95,17 @@ void groups_addGroup(gchar *groupname, gchar *hostname, gchar *classname)
             groups[g].source = source;
             groups[g].sa = sa;
             groupcount++;
-            printf("groups.c: added new group %s as %d\n", groupname,
+            syslog(LOG_INFO,"groups.c: added new group %s as %d\n", groupname,
                     groups[g].busadr);
 
             avahi_registerMulticastGroup(&groups[g]);
         }else{
             //TODO:log error
-            printf("groups.c: warning: could not create socket\n");
+            syslog(LOG_WARNING,"groups.c: warning: could not create socket\n");
         }
     }else{
         //TODO: log error
-        printf("groups.c: warning: reached MAX_GROUPS\n");
+        syslog(LOG_WARNING,"groups.c: warning: reached MAX_GROUPS\n");
     }
 }
 

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <syslog.h>
 
 #include "debug.h"
 #include "address6.h"
@@ -27,19 +28,19 @@ gint net_init(gchar* interface, gchar* baseaddress, gchar *multicastbase)
 
     net_base = g_inet_address_new_from_string(baseaddress);
     if( net_base == NULL ){
-        fprintf(stderr, "net_init: Could not parse base address");
+        syslog(LOG_ERR, "net_init: Could not parse base address");
         return -1;
     }
     struct node n;
     n.netadr = net_base;
     n.ubnetd = NULL;
-    printf("creating base address...\n");
+    syslog(LOG_DEBUG,"creating base address...\n");
     interface_createAddress(&n);
     usleep(3000*1000);
-    printf("done\n");
+    syslog(LOG_DEBUG,"done\n");
     net_multicastbase = g_inet_address_new_from_string(multicastbase);
     if( net_multicastbase == NULL ){
-        fprintf(stderr, "net_init: Could not parse multicast base address");
+        syslog(LOG_ERR, "net_init: Could not parse multicast base address");
         return -1;
     }   
     address6_init(net_base, net_multicastbase);
@@ -47,13 +48,13 @@ gint net_init(gchar* interface, gchar* baseaddress, gchar *multicastbase)
 
     GSocketAddress * sa = g_inet_socket_address_new(net_base,2323);
     //set up data tcp listener
-    printf("net_init: Creating tcp socket on port 2323\n");
+    syslog(LOG_DEBUG,"net_init: Creating tcp socket on port 2323\n");
     GSocketService *gss = g_socket_service_new();
     //TODO: save a reference to the gss somewhere
     if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
         G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &e)
             == FALSE ){
-        fprintf(stderr, "net_init: error while creating socket listener: %s\n",
+        syslog(LOG_WARNING, "net_init: error while creating socket listener: %s\n",
                 e->message);
         g_error_free(e);
     }
@@ -71,7 +72,7 @@ static gboolean net_createUDPSocket(struct node *n, guint classid)
     GInetAddress *addr = n->netadr;
     guint port = 2300+n->classes[classid];
 
-    printf("net_createSockets: Creating udp socket on port %u\n", port);
+    syslog(LOG_DEBUG,"net_createSockets: Creating udp socket on port %u\n", port);
 
     GSocketAddress * sa = g_inet_socket_address_new(addr,port);
 
@@ -84,7 +85,7 @@ static gboolean net_createUDPSocket(struct node *n, guint classid)
     g_assert(socket != NULL);
 
     if( g_socket_bind(socket, sa, TRUE, &err) == FALSE ){
-        fprintf(stderr, "net_createSockets: Error while binding udp socket: %s\n", err->message);
+        syslog(LOG_WARNING, "net_createSockets: Error while binding udp socket: %s\n", err->message);
         g_error_free(err);
         return FALSE;
     }
@@ -107,17 +108,17 @@ static gboolean net_createUDPSocket(struct node *n, guint classid)
 static void net_removeUDPSocket(struct node *n, guint classid)
 {
     GError *err = NULL;
-    printf("net_removeSockets: Closing udp socket\n");
+    syslog(LOG_DEBUG,"net_removeSockets: Closing udp socket\n");
     g_source_destroy(n->udpsockets[classid].source);
     g_source_unref(n->udpsockets[classid].source);
 
     //gboolean rc = g_socket_shutdown(n->udp, FALSE, FALSE, &err);
     gboolean rc = g_socket_close(n->udpsockets[classid].socket, &err);
     if( rc  == TRUE ){
-        printf("success\n");
+        syslog(LOG_DEBUG,"success\n");
     }else{
         //TODO: log error
-        fprintf(stderr, "error in g_socket_close: %s\n", err->message);
+        syslog(LOG_WARNING, "error in g_socket_close: %s\n", err->message);
         g_error_free(err);
     }
     g_object_unref(n->udpsockets[classid].socket);
@@ -128,7 +129,7 @@ static gboolean net_createTCPSocket(struct node *n, guint classid)
     guint port = 2300+n->classes[classid];
     GError * err = NULL;
     GInetAddress *addr = n->netadr;
-    printf("net_createSockets: Creating tcp socket listener "
+    syslog(LOG_DEBUG,"net_createSockets: Creating tcp socket listener "
            "on port %u\n", port);
 
     GSocketAddress *sa = g_inet_socket_address_new(addr,port);
@@ -137,7 +138,7 @@ static gboolean net_createTCPSocket(struct node *n, guint classid)
     if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), sa,
         G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &err)
             == FALSE ){
-        fprintf(stderr, "net_createSockets: Error while creating"
+        syslog(LOG_WARNING, "net_createSockets: Error while creating"
                         "socket listener: %s\n", err->message);
         g_error_free(err);
         g_object_unref(gss);
@@ -168,7 +169,7 @@ void net_createSockets(struct node *n)
 {
     GInetAddress *addr = n->netadr;
     gchar *tmp = g_inet_address_to_string(addr);
-    printf("net_createSockets: Creating sockets on ip: %s\n",tmp);
+    syslog(LOG_DEBUG,"net_createSockets: Creating sockets on ip: %s\n",tmp);
     g_free(tmp);
 
     guint i;
@@ -180,7 +181,7 @@ void net_createSockets(struct node *n)
         }
     }
 
-    printf("net_createSockets: Creating tcp management socket listener on port 2324\n");
+    syslog(LOG_DEBUG,"net_createSockets: Creating tcp management socket listener on port 2324\n");
     GError * err = NULL;
     GSocketAddress * samgt = g_inet_socket_address_new(addr,2324);
     GSocketService *gss = g_socket_service_new();
@@ -188,7 +189,7 @@ void net_createSockets(struct node *n)
     if( g_socket_listener_add_address(G_SOCKET_LISTENER(gss), samgt,
         G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, NULL, NULL, &err)
             == FALSE ){
-        fprintf(stderr, "net_createSockets: Error while creating socket listener: %s\n", err->message);
+        syslog(LOG_WARNING, "net_createSockets: Error while creating socket listener: %s\n", err->message);
         g_error_free(err);
         g_object_unref(gss);
         return;
@@ -200,7 +201,7 @@ void net_createSockets(struct node *n)
                                         &(n->mgtsocket));
     g_socket_service_start(gss);
 
-    printf("net_createSockets: activating network for this node\n");
+    syslog(LOG_DEBUG,"net_createSockets: activating network for this node\n");
    
     avahi_registerServices(n);
     n->netup = TRUE;
@@ -209,7 +210,7 @@ void net_createSockets(struct node *n)
 void net_removeSockets(struct node *n)
 {
     avahi_removeServices(n);
-    printf("net_removeSockets: Closing sockets of node %s\n",n->id);
+    syslog(LOG_DEBUG,"net_removeSockets: Closing sockets of node %s\n",n->id);
 
     guint i;
     for(i=0; i<sizeof(n->classes); i++){

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <syslog.h>
 
 #include "debug.h"
 #include "bus.h"
@@ -23,32 +24,32 @@ gboolean udp_read(GSocket *socket, GIOCondition condition,
         len = g_socket_receive_from(socket,&src,(gchar*)buf,
                                 sizeof(buf),NULL,NULL);
         if( len > 0 ){
-            printf("udp_read: Received:");
+            syslog(LOG_DEBUG,"udp_read: Received:");
             debug_hexdump(buf,len);
-            printf("\n");
+            syslog(LOG_DEBUG,"\n");
             if( user_data != NULL ){
                 bus_sendToID(n->id, buf, len, classid, FALSE);
             }else{
                 //UDP data to the mgt port is ignored
             }
         }else{
-            printf("udp_read: Error while receiving: len=%d\n",len);
+            syslog(LOG_WARNING,"udp_read: Error while receiving: len=%d\n",len);
         }
     }else{
-        printf("udp_read: Received ");
+        syslog(LOG_DEBUG,"udp_read: Received ");
         if( condition == G_IO_ERR ){
-            printf("G_IO_ERR\n");
+            syslog(LOG_DEBUG,"G_IO_ERR\n");
         }else if( condition == G_IO_HUP ){ 
-            printf("G_IO_HUP\n");
+            syslog(LOG_DEBUG,"G_IO_HUP\n");
         }else if( condition == G_IO_OUT ){ 
-            printf("G_IO_OUT\n");
+            syslog(LOG_DEBUG,"G_IO_OUT\n");
         }else if( condition == G_IO_PRI ){ 
-            printf("G_IO_PRI\n");
+            syslog(LOG_DEBUG,"G_IO_PRI\n");
         }else if( condition == G_IO_NVAL ){ 
-            printf("G_IO_NVAL\ndropping source\n");
+            syslog(LOG_DEBUG,"G_IO_NVAL\ndropping source\n");
             return FALSE;
         }else{
-            printf("unkown condition = %d\n",condition);
+            syslog(LOG_DEBUG,"unkown condition = %d\n",condition);
         }
     }
     return TRUE;
