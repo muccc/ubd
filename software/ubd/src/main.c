@@ -27,8 +27,7 @@
 
 int main (int argc, char *argv[])
 {
-    //openlog("ubd",LOG_PID | LOG_PERROR ,LOG_DAEMON);
-    openlog("ubd", LOG_PID, LOG_DAEMON);
+    openlog("ubd",LOG_PID | LOG_PERROR ,LOG_DAEMON);
 
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
@@ -37,12 +36,13 @@ int main (int argc, char *argv[])
 
     nodes_init();
     groups_init();
-    if( argc < 1 ){
+    if( argc < 2 ){
         xml_init("/etc/ubdconfig.xml");
     }else{
         xml_init(argv[1]);
     }
     daemon_init();
+    openlog("ubd", LOG_PID , LOG_DAEMON);
     if( config.interface == NULL ){
         syslog(LOG_ERR, "Please specify an interface to use.\n");
         return -1;

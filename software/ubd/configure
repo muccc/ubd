@@ -3902,12 +3902,11 @@ $as_echo "yes" >&6; }
 fi
 
 
-
 #AC_CHECK_LIB(gthread-2.0, g_thread_init)
 #AC_CHECK_LIB(mxml, mxmlLoadFile)
 #PKG_CHECK_MODULES(XML, mxml)
 #CFLAGS = "$CFLAGS $(XML_CFLAGS)"
-#LDFLAGS= "$LDFLAGS $(XML_LIBS)"
+LDFLAGS="$LDFLAGS -lbsd"
 ac_config_headers="$ac_config_headers config.h"
 
 ac_config_files="$ac_config_files Makefile src/Makefile"
