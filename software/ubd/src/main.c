@@ -32,17 +32,22 @@ int main (int argc, char *argv[])
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
     GMainLoop * mainloop = g_main_loop_new(NULL,FALSE);
+    
+    config_init();
     avahi_init(mainloop);
 
     nodes_init();
     groups_init();
     if( argc < 2 ){
         xml_init("/etc/ubdconfig.xml");
+        daemon_init();
+        openlog("ubd", LOG_PID , LOG_DAEMON);
+        daemon_close_stderror();
     }else{
         xml_init(argv[1]);
     }
-    daemon_init();
-    openlog("ubd", LOG_PID , LOG_DAEMON);
+
+
     if( config.interface == NULL ){
         syslog(LOG_ERR, "Please specify an interface to use.\n");
         return -1;
@@ -82,9 +87,6 @@ int main (int argc, char *argv[])
     busmgt_init();
     cmdparser_init();
 
-    //openlog("ubd", LOG_PID, LOG_DAEMON);
-    daemon_close_stderror();
-    
     g_main_loop_run(mainloop);
     return 0;
 }

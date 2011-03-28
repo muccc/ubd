@@ -172,7 +172,6 @@ int serial_open (char * device)
 {
     fd = open(device, O_RDWR|O_NOCTTY);// |O_SYNC);//|O_NONBLOCK);
     if( fd == -1 ){
-        syslog(LOG_ERR,"Failed to open serial device %s\n", device);
         return -1;
     }
     struct termios tio;

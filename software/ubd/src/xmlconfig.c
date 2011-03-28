@@ -165,26 +165,50 @@ void xml_parsebase(void)
 {
     mxml_node_t *network = mxmlFindElement(
         tree, tree, "network", NULL, NULL, MXML_DESCEND);
-    config.interface = xml_getAttribute(
-            network,"interface");
-    config.base = xml_getAttribute(
-            network,"base");
-    config.multicastbase = xml_getAttribute(
-            network,"multicastbase");
+    if( network != NULL ){
+        config.interface = xml_getAttribute(
+                network,"interface");
+        config.base = xml_getAttribute(
+                network,"base");
+        config.multicastbase = xml_getAttribute(
+                network,"multicastbase");
+    }
+
     mxml_node_t *serial = mxmlFindElement(
         tree, tree, "serial", NULL, NULL, MXML_DESCEND);
-    config.device = xml_getAttribute(
-                    serial, "device");
-    gchar *rate = xml_getAttribute(
-                serial, "rate");
-    config.rate = g_ascii_strtoull(rate,NULL,10);
+    if( serial != NULL ){
+        config.device = xml_getAttribute(
+                        serial, "device");
+        gchar *rate = xml_getAttribute(
+                    serial, "rate");
+        if( rate != NULL ){
+            config.rate = g_ascii_strtoull(rate,NULL,10);
+        }
+    }
 
     mxml_node_t *bus = mxmlFindElement(
         tree, tree, "bus", NULL, NULL, MXML_DESCEND);
-
-    gchar *timeout = xml_getAttribute(
+    if( bus != NULL ){
+        gchar *timeout = xml_getAttribute(
                 bus, "timeout");
-    config.nodetimeout = g_ascii_strtoull(timeout,NULL,10);
+        if( timeout != NULL ){
+            config.nodetimeout = g_ascii_strtoull(timeout,NULL,10);
+        }
+    }
+
+    mxml_node_t *syslog = mxmlFindElement(
+        tree, tree, "syslog", NULL, NULL, MXML_DESCEND);
+    if( syslog != NULL ){
+        gchar *sysloglevel = xml_getAttribute(
+                    syslog, "level");
+        if( sysloglevel != NULL ){
+            if( strcmp(sysloglevel,"INFO") == 0 ){
+                config.sysloglevel = LOG_INFO;
+            }else if( strcmp(sysloglevel,"WARNING") == 0 ){
+                config.sysloglevel = LOG_WARNING;
+            }
+        }
+    }
 }
 
 void xml_parsegroupsandnodes(void)

@@ -9,7 +9,9 @@ struct ubconfig {
     gchar *device;
     gint rate;
     gint nodetimeout;
+    gint sysloglevel;
 };
 
 extern struct ubconfig config;
+void config_init(void);
 #endif
