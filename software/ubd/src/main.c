@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <gio/gio.h>
+#include <syslog.h>
 
 #include "ubpacket.h"
 #include "serial.h"
@@ -24,10 +25,10 @@
 #include "broadcast.h"
 #include "daemon.h"
 
-int main (void)
+int main (int argc, char *argv[])
 {
-    openlog("ubd",LOG_PID | LOG_PERROR ,LOG_DAEMON);
-    daemon_init();
+    //openlog("ubd",LOG_PID | LOG_PERROR ,LOG_DAEMON);
+    openlog("ubd", LOG_PID, LOG_DAEMON);
 
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
@@ -36,7 +37,12 @@ int main (void)
 
     nodes_init();
     groups_init();
-    xml_init("ubdconfig.xml");
+    if( argc < 1 ){
+        xml_init("/etc/ubdconfig.xml");
+    }else{
+        xml_init(argv[1]);
+    }
+    daemon_init();
     if( config.interface == NULL ){
         syslog(LOG_ERR, "Please specify an interface to use.\n");
         return -1;
@@ -76,7 +82,7 @@ int main (void)
     busmgt_init();
     cmdparser_init();
 
-    openlog("ubd", LOG_PID, LOG_DAEMON);
+    //openlog("ubd", LOG_PID, LOG_DAEMON);
     daemon_close_stderror();
     
     g_main_loop_run(mainloop);
