@@ -6,9 +6,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <libutil.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "ubnetd.h"
-#include "interface.h"
 
 gchar *interface;
 /*
@@ -121,8 +124,31 @@ static gpointer connection_handler(gpointer p)
 int main(int argc, char *argv[])
 {
     openlog("ubnetd",LOG_PID | LOG_PERROR ,LOG_DAEMON);
+
+    /* Our process ID and Session ID */
+    pid_t pid, sid;
+    
+    struct pidfh *pfh;
+    pid_t otherpid;
+
+    pfh = pidfile_open("/var/run/ubnetd.pid", 0600, &otherpid);
+    if( pfh == NULL ){
+        if( errno == EEXIST ){
+            syslog(LOG_ERR,"Other daemon allready running.");
+            exit(EXIT_FAILURE);
+        }
+        syslog(LOG_ERR,"Cannot open or create  pidfile.");
+    }
+
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
+    
+
+    if( argc < 2){
+        syslog(LOG_ERR, "Please specify an interface to use.");
+        exit(EXIT_FAILURE);
+    }
+
     GInetAddress *lo = g_inet_address_new_loopback(
                             G_SOCKET_FAMILY_IPV6);
     g_assert(lo);
@@ -130,15 +156,8 @@ int main(int argc, char *argv[])
     GSocketAddress *sa = g_inet_socket_address_new(
                             lo,
                             42);
-    g_assert(sa);
 
-    if( argc < 2){
-        printf("Please specify an interface ");
-        printf("to use.\n");
-        return -1;
-    }
-    openlog("ubnetd",LOG_PID ,LOG_DAEMON);
-    interface_init(argv[1]);
+    g_assert(sa);
     interface = argv[1];
     GError * e = NULL;
     GSocket *ss = g_socket_new(G_SOCKET_FAMILY_IPV6,
@@ -146,28 +165,66 @@ int main(int argc, char *argv[])
                             G_SOCKET_PROTOCOL_TCP,
                             &e);
     if( e != NULL ){
-        syslog(LOG_WARNING,
+        syslog(LOG_ERR,
             "Error while creating socket: %s\n", e->message);
         g_error_free(e);
-        return -1;
+        exit(EXIT_FAILURE);
     }
    
     g_socket_bind(ss, sa, TRUE, &e);
     if( e != NULL ){
-        syslog(LOG_WARNING,
+        syslog(LOG_ERR,
             "Error while binding socket to port: %s\n", e->message);
         g_error_free(e);
-        return -1;
+        exit(EXIT_FAILURE);
     }
     
     g_socket_listen(ss, &e);
      if( e != NULL ){
-        syslog(LOG_WARNING,
+        syslog(LOG_ERR,
             "Cannot listen on socket: %s\n", e->message);
         g_error_free(e);
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
+    /* Fork off the parent process */
+    pid = fork();
+    if (pid < 0) {
+        syslog(LOG_ERR, "Could not fork child.");
+        exit(EXIT_FAILURE);
+    }
+    /* If we got a good PID, then
+        we can exit the parent process. */
+    if (pid > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
+    /* Change the file mode mask */
+    umask(0);
+    
+    pidfile_write(pfh);
+
+    /* Open any logs here */        
+            
+    /* Create a new SID for the child process */
+    sid = setsid();
+    if (sid < 0) {
+            /* Log the failure */
+            exit(EXIT_FAILURE);
+    }
+    
+    /* Change the current working directory */
+    if ((chdir("/")) < 0) {
+            /* Log the failure */
+            exit(EXIT_FAILURE);
+    }
+    
+    /* Close out the standard file descriptors */
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    openlog("ubnetd",LOG_PID ,LOG_DAEMON);
     while(TRUE){
         syslog(LOG_DEBUG,"Waiting for connections\n");
         GSocket *s = g_socket_accept(ss, NULL, &e);        
