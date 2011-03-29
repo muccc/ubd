@@ -16,7 +16,7 @@ void daemon_init(void)
     pid_t pid, sid;
     
     struct pidfh *pfh;
-    pid_t otherpid, childpid;
+    pid_t otherpid;
 
     pfh = pidfile_open("/var/run/ubd.pid", 0600, &otherpid);
     if( pfh == NULL ){

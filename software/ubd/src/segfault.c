@@ -10,6 +10,9 @@
 
 void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 {
+    signal = 0;
+    arg = NULL;
+
     syslog(LOG_ERR, "Caught segfault at address %p\n", si->si_addr);
     abort();
 }

@@ -24,6 +24,7 @@
 #include "avahi.h"
 #include "broadcast.h"
 #include "daemon.h"
+#include "segfault.h"
 
 int main (int argc, char *argv[])
 {
