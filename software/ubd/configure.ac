@@ -2,6 +2,9 @@ AC_INIT([ubd],[1.0],[schneider@blinkenlichts.net])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 CFLAGS="$CFLAGS -g -Wall -Wextra"
+
+AC_CHECK_HEADER(libutil.h,LDFLAGS="$LDFLAGS -lbsd",
+  AC_MSG_ERROR(libutil.h not found. Please install libbsd-dev.))
 PKG_CHECK_MODULES(GLIB, glib-2.0 > 2.0.0,
   [LIBS="$LIBS $GLIB_LIBS" CFLAGS="$CFLAGS $GLIB_CFLAGS"],
     AC_MSG_ERROR(Cannot find glib: Is glib-config in path?))
@@ -17,12 +20,6 @@ PKG_CHECK_MODULES(AVAHIGLIB, avahi-glib >= 0.6.22,
 PKG_CHECK_MODULES(AVAHICLIENT, avahi-client >= 0.6.22,
     [LIBS="$LIBS $AVAHICLIENT_LIBS" CFLAGS="$CFLAGS $AVAHICLIENT_CFLAGS"])
 
-
-#AC_CHECK_LIB(gthread-2.0, g_thread_init)
-#AC_CHECK_LIB(mxml, mxmlLoadFile)
-#PKG_CHECK_MODULES(XML, mxml)
-#CFLAGS = "$CFLAGS $(XML_CFLAGS)"
-LDFLAGS="$LDFLAGS -lbsd"
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
  Makefile
