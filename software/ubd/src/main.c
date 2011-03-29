@@ -40,46 +40,50 @@ int main (int argc, char *argv[])
     groups_init();
     if( argc < 2 ){
         xml_init("/etc/ubdconfig.xml");
-        daemon_init();
-        openlog("ubd", LOG_PID , LOG_DAEMON);
-        daemon_close_stderror();
     }else{
         xml_init(argv[1]);
     }
 
-
     if( config.interface == NULL ){
-        syslog(LOG_ERR, "Please specify an interface to use.\n");
+        syslog(LOG_ERR, "Please specify an interface to use.");
         return -1;
     }
 
     if( config.base == NULL ){
-        syslog(LOG_ERR, "Please specify a base address to use.\n");
+        syslog(LOG_ERR, "Please specify a base address to use.");
         return -1;
     }
 
     if( config.multicastbase == NULL ){
-        syslog(LOG_ERR, "Please specify a multicast base address to use.\n");
+        syslog(LOG_ERR, "Please specify a multicast base address to use.");
         return -1;
     }
+
     broadcast_init();
+
     if( net_init(config.interface, 
                         config.base, config.multicastbase) ){
-        syslog(LOG_ERR, "Failed to set up network.\n"
-                "Interface=%s\nBaseaddress=%s\n"
-                "\nAborting.\n",
+        syslog(LOG_ERR, "Failed to set up network. "
+                "Interface=%s Baseaddress=%s "
+                "Aborting.",
                 config.interface, config.base);
         return -1;
     }
 
-    xml_parsegroupsandnodes();
-    mgt_init();
-
     if( serial_open(config.device) ){
-        syslog(LOG_ERR, "Failed to open serial device %s\n"
-                "Aborting.\n", config.device);
+        syslog(LOG_ERR, "Failed to open serial device %s. "
+                "Aborting.", config.device);
         return -1;
     }
+
+    if( argc < 2 ){
+        daemon_init();
+        openlog("ubd", LOG_PID , LOG_DAEMON);
+        daemon_close_stderror();
+    }
+
+    xml_parsegroupsandnodes();
+    mgt_init();
 
     //activate bridge
     serial_switch();
