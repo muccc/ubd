@@ -17,8 +17,11 @@ void segfault_sigaction(int signal, siginfo_t *si, void *arg)
 void segfault_init(void)
 {
     struct sigaction sa;
+    struct rlimit limits;
+    limits.rlim_cur = RLIM_INFINITY;
+    limits.rlim_max = RLIM_INFINITY;
 
-    setrlimit(RLIMIT_CORE,RLIM_INFINITY);
+    setrlimit(RLIMIT_CORE,&limits);
 
     memset(&sa, 0, sizeof(sigaction));
     sigemptyset(&sa.sa_mask);
