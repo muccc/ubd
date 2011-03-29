@@ -23,7 +23,7 @@ gint bus_sendToID(gchar *id, guchar *buf, gint len, guint classid,
 { 
     struct ubpacket packet;
     struct node* n = nodes_getNodeById(id);
-    g_assert(n != NULL);
+    ub_assert(n != NULL);
 
     packet.dest = n->busadr;
     packet.class = n->classes[classid];
@@ -42,7 +42,7 @@ gint bus_streamToID(gchar *id, guchar *buf, gint len, guint classid,
 {
     struct ubpacket packet;
     struct node* n = nodes_getNodeById(id);
-    g_assert(n != NULL);
+    ub_assert(n != NULL);
 
     packet.dest = n->busadr;
     packet.class = n->classes[classid];

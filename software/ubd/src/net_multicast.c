@@ -13,6 +13,7 @@
 
 #include "address6db.h"
 #include "config.h"
+#include "debug.h"
 
 GSocket *multicast_createSocket(gchar *groupname, guint port,
                                  GSocketAddress **sa)
@@ -25,7 +26,7 @@ GSocket *multicast_createSocket(gchar *groupname, guint port,
                         G_SOCKET_TYPE_DATAGRAM,
                         G_SOCKET_PROTOCOL_UDP,
                         NULL);
-    g_assert(socket != NULL);
+    ub_assert(socket != NULL);
 
     if( g_socket_bind(socket, *sa, TRUE, &err) == FALSE ){
         syslog(LOG_ERR, "net_createSockets: Error while binding udp socket: %s\n", err->message);

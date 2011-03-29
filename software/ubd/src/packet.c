@@ -100,7 +100,7 @@ gpointer packet_writerThread(gpointer data)
     while( 1 ){
         struct messagestream * msg = (struct messagestream *)
                                 g_async_queue_pop(packet_out);
-        g_assert(msg != NULL);
+        ub_assert(msg != NULL);
         
         struct ubpacket * p = (struct ubpacket *)msg->msg.data;
         debug_packet("packet_writerThread",p);
@@ -122,7 +122,7 @@ gpointer packet_writerThread(gpointer data)
 
         gpointer status = g_async_queue_timed_pop(packet_status,&timeout);
         //TODO: this assert is bad as this could happen
-        g_assert(status != NULL);
+        ub_assert(status != NULL);
 
         if( status == (gpointer)PACKET_ABORT ){
             //TODO: add log
@@ -156,7 +156,7 @@ static gboolean packet_inpacket(gpointer data)
     }else{
         syslog(LOG_DEBUG,"There is no handler registerd for packet type %s\n",buf);
     }*/
-    g_assert(data != NULL);
+    ub_assert(data != NULL);
     struct packetstream *ps = (struct packetstream *)data;
     if( ps->type == PACKET_PACKET )
         debug_packet("packet_inpacket",&ps->p);
@@ -198,7 +198,7 @@ void packet_streamPacket(struct node * n, struct ubpacket *p,
 
     struct messagestream * outmsg = g_new(struct messagestream,1);
     //the packet has to fit into the msg buffer
-    g_assert((guint)(p->len + UB_PACKET_HEADER) <= sizeof(outmsg->msg.data));
+    ub_assert((guint)(p->len + UB_PACKET_HEADER) <= sizeof(outmsg->msg.data));
     p->src = 1;
     p->flags &= UB_PACKET_MGT | UB_PACKET_NOACK;
 

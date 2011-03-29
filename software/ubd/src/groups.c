@@ -87,7 +87,7 @@ void groups_addGroup(gchar *groupname, gchar *hostname, gchar *classname)
             groups[g].class = class;
             GSource *source = g_socket_create_source(socket,
                                 G_IO_IN, NULL);
-            g_assert(source != NULL);
+            ub_assert(source != NULL);
             g_source_set_callback(source, (GSourceFunc)groups_read,
                                   &groups[g], NULL);
             g_source_attach(source, g_main_context_default());

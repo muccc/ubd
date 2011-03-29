@@ -4,14 +4,15 @@
 #include <syslog.h>
 #include "address6db.h"
 #include "nodes.h"
+#include "debug.h"
 
 GInetAddress *baseaddress;
 GInetAddress *multicastbaseaddress;
 
 void address6db_init(GInetAddress *base, GInetAddress *multicastbase)
 {
-    g_assert(base);
-    g_assert(multicastbase);
+    ub_assert(base);
+    ub_assert(multicastbase);
     baseaddress = g_inet_address_new_from_bytes(
                     g_inet_address_to_bytes(base),
                     G_SOCKET_FAMILY_IPV6);

@@ -24,7 +24,7 @@ void tcp_init(void)
 
 static void tcp_queueNewCommand(gpointer data)
 {
-    g_assert(data != NULL);
+    ub_assert(data != NULL);
     struct nodebuffer *nb = data;
     syslog(LOG_DEBUG,"tcp_cmd: new command for node %d\n", nb->n->busadr);
     bus_streamToID(nb->n->id, (guchar*)nb->cmd, nb->cmdlen, nb->classid,
@@ -33,7 +33,7 @@ static void tcp_queueNewCommand(gpointer data)
 
 static void tcp_queueNewMgt(gpointer data)
 {
-    g_assert(data != NULL);
+    ub_assert(data != NULL);
     struct nodebuffer *nb = data;
     syslog(LOG_DEBUG,"tcp_cmd: new mgt for node %d\n", nb->n->busadr);
     busmgt_streamData(nb->n, (guchar*)nb->cmd, nb->cmdlen,
@@ -71,7 +71,7 @@ void tcp_writeCharacterEncoded(GOutputStream *out,
 
 static void tcp_reply(gpointer data)
 {
-    g_assert(data != NULL);
+    ub_assert(data != NULL);
     struct packetstream *ps = (struct packetstream *)data;
     //well these calls wil fail if the remote closed
     //the connection before we could answer
@@ -94,7 +94,7 @@ static void tcp_reply(gpointer data)
 
 static void tcp_parse(struct nodebuffer *nb, guchar data)
 {
-    g_assert(nb != NULL);
+    ub_assert(nb != NULL);
     syslog(LOG_DEBUG,"state = %d data = %d\n",nb->state,data);
     switch(nb->state){
         case 0:
@@ -131,7 +131,7 @@ static void tcp_parse(struct nodebuffer *nb, guchar data)
         case 3:
             nb->cmd[nb->cmdlen++] = data;
             if( --nb->cmdbinlen == 0 ){
-                g_assert(nb->callback != NULL);
+                ub_assert(nb->callback != NULL);
                 nb->callback(nb);
                 nb->state = 0;
             }
@@ -188,7 +188,7 @@ gboolean tcp_listener(GSocketService    *service,
     source_object = NULL;
     struct socketdata *sd = user_data;
     struct nodebuffer *nodebuf = g_new0(struct nodebuffer,1);
-    g_assert(nodebuf != NULL);
+    ub_assert(nodebuf != NULL);
     syslog(LOG_DEBUG,"new listener\n");
     if( user_data ){
         syslog(LOG_DEBUG,"socketdata is set\n");
@@ -215,7 +215,7 @@ gboolean tcp_listener(GSocketService    *service,
         nodebuf->callback = tcp_queueNewMgt;
     }else{
         syslog(LOG_ERR,"tcp_listener: should not happen\n");
-        g_assert(FALSE);
+        ub_assert(FALSE);
     }
     g_input_stream_read_async(nodebuf->in, nodebuf->buf,
             sizeof(nodebuf->buf), G_PRIORITY_DEFAULT, NULL,

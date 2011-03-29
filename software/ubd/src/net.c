@@ -82,7 +82,7 @@ static gboolean net_createUDPSocket(struct node *n, guint classid)
                         G_SOCKET_PROTOCOL_UDP,
                         NULL);
 
-    g_assert(socket != NULL);
+    ub_assert(socket != NULL);
 
     if( g_socket_bind(socket, sa, TRUE, &err) == FALSE ){
         syslog(LOG_WARNING, "net_createSockets: Error while binding udp socket: %s\n", err->message);
@@ -91,7 +91,7 @@ static gboolean net_createUDPSocket(struct node *n, guint classid)
     }
 
     GSource *source = g_socket_create_source(socket, G_IO_IN, NULL);
-    g_assert(source != NULL);
+    ub_assert(source != NULL);
     g_source_set_callback(source, (GSourceFunc)udp_read,
             &(n->udpsockets[classid]) , NULL);
     g_source_attach(source, g_main_context_default());

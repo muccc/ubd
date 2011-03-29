@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <libutil.h>
 
 #include "debug.h"
 #include "packet.h"
@@ -49,3 +56,14 @@ void debug_packet(gchar *reporter, struct ubpacket* p)
     syslog(LOG_DEBUG,"\n");
 }
 
+
+void ub_assertion_message_expr        (const char     *domain,
+                                         const char     *file,
+                                         int             line,
+                                         const char     *func, 
+                                         const char     *expr)
+{
+    syslog(LOG_ERR,"assertion failed. domain=%s file=%s line=%d func=%s expr=%s",
+        domain, file, line, func, expr);
+    exit(-1);
+}

@@ -24,8 +24,8 @@ static void listen_iterate(gpointer data, struct packetstream *ps)
 
 void listen_newMessage(struct packetstream *ps)
 {
-    g_assert(ps != NULL);
-    g_assert(ps->n != NULL);
+    ub_assert(ps != NULL);
+    ub_assert(ps->n != NULL);
     guint i;
     guint classid = 0;
     //guint classid = ps->p.classid;

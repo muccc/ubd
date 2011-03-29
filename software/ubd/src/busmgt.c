@@ -64,7 +64,7 @@ void busmgt_inpacket(struct ubpacket* p)
                     syslog(LOG_WARNING,"busmgt: no free nodes available. please wait.\n");
                     return;
                 }
-                g_assert(n->busadr != 0);
+                ub_assert(n->busadr != 0);
                 syslog(LOG_DEBUG,"busmgt: new bus address: %u\n",n->busadr);
             //}else{
             //    syslog(LOG_DEBUG,"busmgt: old bus address: %u\n",n->busadr);

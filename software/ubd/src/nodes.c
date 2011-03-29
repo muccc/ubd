@@ -2,6 +2,7 @@
 #include <syslog.h>
 #include "nodes.h"
 #include "mgt.h"
+#include "debug.h"
 
 struct node nodes[MAX_NODE];
 
@@ -140,14 +141,14 @@ struct node *nodes_getNodeByNetAdr(GInetAddress *addr)
 
 void nodes_activateNode(struct node *node)
 {
-    g_assert(node->free == FALSE);
+    ub_assert(node->free == FALSE);
     //syslog(LOG_WARNING,"nodes.c: warning: trying to activate a free node!\n");
     node->active = TRUE;
 }
 
 void nodes_deactivateNode(struct node *node)
 {
-    g_assert(node->free == FALSE);
+    ub_assert(node->free == FALSE);
     //    syslog(LOG_WARNING,"nodes.c: warning: trying to");
     //    syslog(LOG_WARNING,"deactivate a free node!\n");
     node->active = FALSE;
@@ -159,13 +160,13 @@ void nodes_deactivateNode(struct node *node)
 void nodes_setNameFromID(struct node *n)
 {
     //n->name is of size n->id
-    g_assert(sizeof(n->name) >= sizeof(n->id));
+    ub_assert(sizeof(n->name) >= sizeof(n->id));
     strcpy(n->name,n->id);
     char *s = strchr(n->name,',');
 
     if( s != NULL){
         *s = 0;
-        g_assert(sizeof(n->domain) >= sizeof(n->id));
+        ub_assert(sizeof(n->domain) >= sizeof(n->id));
         strcpy(n->domain,++s);
     }else{
         //there was no domain in the id

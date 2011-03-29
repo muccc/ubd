@@ -123,7 +123,7 @@ void xml_parseNode(mxml_node_t *node)
 
     if( address != NULL && strlen(address) != 0 ){
         n->netadr = g_inet_address_new_from_string(address);
-        //g_assert(n->netadr != NULL);
+        //ub_assert(n->netadr != NULL);
     }else{
         //the address will be chosen automagically
         n->netadr = NULL;

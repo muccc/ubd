@@ -21,6 +21,7 @@
 #include "nodes.h"
 #include "classes.h"
 #include "groups.h"
+#include "debug.h"
 
 const AvahiPoll *poll_api;
 AvahiGLibPoll *glib_poll;
@@ -51,7 +52,7 @@ static void address_group_callback(AvahiEntryGroup *group,
         AvahiEntryGroupState state, void *userdata) {
 
     /* Called whenever the entry group state changes */
-    g_assert(userdata);
+    ub_assert(userdata);
     struct node *n = userdata;
     gchar *name = n->hostname;
 
@@ -88,7 +89,7 @@ static void entry_group_callback(AvahiEntryGroup *group,
         AvahiEntryGroupState state, void *userdata) {
 
     /* Called whenever the entry group state changes */
-    g_assert(userdata);
+    ub_assert(userdata);
     struct socketdata *sd = userdata;
     gchar *name = sd->avahiservicename;
 
@@ -134,7 +135,7 @@ static void multicast_group_callback(AvahiEntryGroup *group,
         AvahiEntryGroupState state, void *userdata)
 {
     /* Called whenever the entry group state changes */
-    g_assert(userdata);
+    ub_assert(userdata);
     struct multicastgroup *g = userdata;
     gchar *name = g->avahiservicename;
 
@@ -215,13 +216,13 @@ void avahi_addService(struct node *n, guint classid)
 
     guint class = n->classes[classid];
     struct socketdata *sd = &(n->tcpsockets[classid]);
-    g_assert(sd->avahiservicename == NULL);
+    ub_assert(sd->avahiservicename == NULL);
     sd->avahiservicename = avahi_strdup(classes_getTcpServiceName(class));
 
-    g_assert(sd->avahiservicegroup == NULL);
+    ub_assert(sd->avahiservicegroup == NULL);
     sd->avahiservicegroup =
             avahi_entry_group_new(client, entry_group_callback, sd);
-    g_assert(sd->avahiservicegroup != NULL);
+    ub_assert(sd->avahiservicegroup != NULL);
 
     if( (ret = avahi_entry_group_add_service(
                 sd->avahiservicegroup,
@@ -243,13 +244,13 @@ void avahi_addService(struct node *n, guint classid)
     }
 
     sd = &(n->udpsockets[classid]);
-    g_assert(sd->avahiservicename == NULL);
+    ub_assert(sd->avahiservicename == NULL);
     sd->avahiservicename = avahi_strdup(classes_getUdpServiceName(class));
 
-    g_assert(sd->avahiservicegroup == NULL);
+    ub_assert(sd->avahiservicegroup == NULL);
     sd->avahiservicegroup =
             avahi_entry_group_new(client, entry_group_callback, sd);
-    g_assert(sd->avahiservicegroup != NULL);
+    ub_assert(sd->avahiservicegroup != NULL);
 
     if( (ret = avahi_entry_group_add_service(
                 sd->avahiservicegroup,
@@ -297,7 +298,7 @@ void avahi_removeService(struct node *n, guint classid)
 void avahi_registerServices(struct node *n)
 {
     guint i;
-    g_assert(n->avahiaddressgroup != NULL);
+    ub_assert(n->avahiaddressgroup != NULL);
 
     for(i=0; i<sizeof(n->classes); i++){
         if( n->classes[i] != 0 ){
@@ -310,7 +311,7 @@ void avahi_registerServices(struct node *n)
 void avahi_removeServices(struct node *n)
 {
     guint i;
-    g_assert(n->avahiaddressgroup != NULL);
+    ub_assert(n->avahiaddressgroup != NULL);
 
     syslog(LOG_DEBUG,"removing services for node %s", n->id);
 
@@ -332,7 +333,7 @@ void avahi_registerNode(struct node *n)
     avahi_address_parse(address, AVAHI_PROTO_UNSPEC , &a);
     g_free(address);
     
-    g_assert(n->avahiaddressgroup == NULL);
+    ub_assert(n->avahiaddressgroup == NULL);
     n->avahiaddressgroup =
             avahi_entry_group_new(client, address_group_callback, n);
     if( (ret = avahi_entry_group_add_address(
@@ -350,7 +351,7 @@ void avahi_registerNode(struct node *n)
             avahi_strerror(ret));
         while(1);
     }
-    g_assert(n->avahiaddressgroup != NULL);
+    ub_assert(n->avahiaddressgroup != NULL);
 }
 
 void avahi_removeNode(struct node *n)
@@ -371,10 +372,10 @@ void avahi_registerMulticastGroup(struct multicastgroup *g)
     avahi_address_parse(address, AVAHI_PROTO_UNSPEC , &a);
     g_free(address);
     
-    g_assert(g->avahientrygroup == NULL);
+    ub_assert(g->avahientrygroup == NULL);
     g->avahientrygroup =
             avahi_entry_group_new(client, multicast_group_callback, g);
-    g_assert(g->avahientrygroup != NULL);
+    ub_assert(g->avahientrygroup != NULL);
     if( (ret = avahi_entry_group_add_address(
                 g->avahientrygroup,
                 AVAHI_IF_UNSPEC,
@@ -386,7 +387,7 @@ void avahi_registerMulticastGroup(struct multicastgroup *g)
     }
 
     guint class = g->class;
-    g_assert(g->avahiservicename == NULL);
+    ub_assert(g->avahiservicename == NULL);
     g->avahiservicename = avahi_strdup(classes_getUdpServiceName(class));
 
     if( (ret = avahi_entry_group_add_service(

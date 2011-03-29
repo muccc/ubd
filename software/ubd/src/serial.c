@@ -97,7 +97,7 @@ static uint16_t serial_in(uint8_t data)
             fill = 0;
             return 0;
         }else if( data == SERIAL_END){
-            g_assert(fill != -1);
+            ub_assert(fill != -1);
             tmp = fill;
             fill = -1;
             return tmp;
@@ -131,7 +131,7 @@ void serial_readMessage(struct message * msg)
                     return;
                 }else{
                     //TODO: log this error
-                    g_assert( sizeof(msg->data) >= len);
+                    ub_assert( sizeof(msg->data) >= len);
                 }
             }
         }else if( rc == 0){
