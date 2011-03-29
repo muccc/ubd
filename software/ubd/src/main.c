@@ -28,6 +28,7 @@
 int main (int argc, char *argv[])
 {
     openlog("ubd",LOG_PID | LOG_PERROR ,LOG_DAEMON);
+    segfault_init();
 
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
