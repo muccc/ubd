@@ -95,8 +95,8 @@ class UBNode:
                         rc += s.recv(count-len(rc))
                     return rc
                 else:
-                    print "unknown error while reading response"
-                    return ''
+                    print "remote closed the connection"
+                    raise socket.error
         except socket.timeout:
             print "timeout while reading response"
             return False
