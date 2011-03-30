@@ -220,6 +220,7 @@ gboolean tcp_listener(GSocketService    *service,
         nodebuf->callback = tcp_queueNewCommand; 
     }else if( service == nodebuf->n->mgtsocket.socketservice ){
         nodebuf->callback = tcp_queueNewMgt;
+        listen_register(nodebuf->n, nodebuf->classid, nodebuf->out);
     }else{
         syslog(LOG_ERR,"tcp_listener: should not happen\n");
         ub_assert(FALSE);
