@@ -19,7 +19,7 @@ void listen_unregister(struct node *n, guint classid, GOutputStream *out)
 
 static void listen_iterate(gpointer data, struct packetstream *ps)
 {
-    tcp_writeCharacterEncoded(data,ps->p.data, ps->p.len);
+    tcp_writeCharacterEncoded(data,ps->p.data, ps->p.len, TRUE);
 }
 
 void listen_newMessage(struct packetstream *ps)

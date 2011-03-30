@@ -41,16 +41,19 @@ static void tcp_queueNewMgt(gpointer data)
 }
 
 static void tcp_writeBinaryEncoded(GOutputStream *out,
-                                    guchar *data, gint len)
+                               guchar *data, gint len, gboolean unsolicited)
 {
-    g_output_stream_write(out, "B", 1, NULL, NULL);
+    if( unsolicited == TRUE )
+        g_output_stream_write(out, "b", 1, NULL, NULL);
+    else
+        g_output_stream_write(out, "B", 1, NULL, NULL);
     guchar tmp = len;
     g_output_stream_write(out, &tmp, 1, NULL, NULL);
     g_output_stream_write(out, data, len, NULL, NULL);
 }
 
 void tcp_writeCharacterEncoded(GOutputStream *out,
-                                        guchar *data, gint len)
+                               guchar *data, gint len, gboolean unsolicited)
 {
     //find newlines in the data
     //they must not be transmitted in the encoded data
@@ -59,13 +62,17 @@ void tcp_writeCharacterEncoded(GOutputStream *out,
     gint i;
     for( i=0; i<len; i++ ){
         if( data[i] == '\r' || data[i] == '\n' ){
-            tcp_writeBinaryEncoded(out, data, len);
+            tcp_writeBinaryEncoded(out, data, len, unsolicited);
             return;
         }
     }
     //Write the header
-    g_output_stream_write(out, "C", 1, NULL, NULL);
+    if( unsolicited == TRUE )
+        g_output_stream_write(out, "c", 1, NULL, NULL);
+    else
+        g_output_stream_write(out, "C", 1, NULL, NULL);
     g_output_stream_write(out, data, i, NULL, NULL);
+    g_output_stream_write(out, "\r", 1, NULL, NULL);
     g_output_stream_write(out, "\n", 1, NULL, NULL);
 }
 
@@ -88,7 +95,7 @@ static void tcp_reply(gpointer data)
     if( ps->type == PACKET_PACKET ){
         syslog(LOG_DEBUG,"tcp_reply: PACKET_PACKET len=%d\n", ps->p.len);
         //g_output_stream_write(ps->data, ps->p.data, ps->p.len, NULL, NULL);
-        tcp_writeCharacterEncoded(ps->data, ps->p.data, ps->p.len);
+        tcp_writeCharacterEncoded(ps->data, ps->p.data, ps->p.len,FALSE);
     }
 }
 
