@@ -5,7 +5,7 @@ import uberbus.moodlamp
 
 t = 1
 lamp = sys.argv[1]
-s = uberbus.moodlamp.Moodlamp(lamp)
+s = uberbus.moodlamp.Moodlamp(lamp, True)
 
 def new_color(color):
     c = color.get_current_color()

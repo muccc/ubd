@@ -12,7 +12,5 @@ t = float(sys.argv[5])
 a = uberbus.moodlamp.Moodlamp(lamp)
 a.connect();
 
-if a.timedfade(r,g,b,t):
-    sys.exit(0)
-sys.exit(1)
+print a.timedfade(r,g,b,t)
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import uberbus.moodlamp
-import uberbus.switch
+import uberbus.hid
 import time
 import sys
 import threading
@@ -10,11 +10,11 @@ from pygame.mixer import music
 
 
 lamps = sys.argv[1]
-switch = sys.argv[2]
+hidname = sys.argv[2]
 lamp = sys.argv[3]
 
 a = uberbus.moodlamp.Moodlamp(lamps,True)
-s = uberbus.switch.Switch(switch)
+s = uberbus.hid.HID(hidname)
 l = uberbus.moodlamp.Moodlamp(lamp)
 
 state = 'b'
@@ -48,26 +48,22 @@ def setcolors():
             time.sleep(.4)
 
 thread.start_new_thread(setcolors,())
-while True:
-    a.connect()
-    s.connect()
-    l.connect()
-    s.listen()
-
-    while True:
-        #time.sleep(1)
-        #continue
-        rc = s.receiveStatus()
-        if rc == 'b0':
-            state = 'b0'
-            #a.timedfade(0,0,255,1)
-        elif rc == 'B0':
+a.connect()
+s.connect()
+l.connect()
+class HIDCallback(uberbus.hid.HIDCallback):
+    def onButtonPressed(self, node, button):
+        global state, r, g, b
+        if button == 0:
             color = l.getcolor()
             r = ord(color[0])
             g = ord(color[1])
             b = ord(color[2])
             state = 'r1'
-            #a.timedfade(255,0,0,1)
-    except:
-        print "error in connection"
-        time.sleep(5)
+    def onButtonReleased(self, node, button):
+        global state
+        if button == 0:
+            state = 'b0'
+            
+s.listen(HIDCallback())
+
