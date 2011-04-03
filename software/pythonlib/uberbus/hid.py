@@ -13,6 +13,10 @@ class HID(ubnode.UBNode):
         cmd = "s%c"%(pin+0x30)
         return self.sendCommand(cmd)
 
+    def lcd(self, x, y, text):
+        cmd = 'D%c%c%s'%(x+0x30,y+0x30,text)
+        return self.sendCommand(cmd)
+
 class HIDCallback:
     def newUnsolicited(self, node, data):
         print "hid callback:", list(data)
