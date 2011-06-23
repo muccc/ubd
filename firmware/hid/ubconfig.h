@@ -4,8 +4,8 @@
 
 /*#define UB_ENABLEBRIDGE 1*/
 #define UB_ENABLESLAVE  1
-#define UB_ENABLERF     1
-//#define UB_ENABLERS485  1
+//#define UB_ENABLERF     1
+#define UB_ENABLERS485  1
 
 #define UB_MAXMULTICAST 8
 
@@ -56,6 +56,10 @@ typedef uint8_t ubaddress_t;
 //rs485 config
 #define RS485_BITRATE       115200
 #define RS485_ISR_EDGE      PCINT2_vect
+#define RS485_MASK_EDGE     PCMSK2
+#define RS485_PIN_EDGE      PCINT20
+#define RS485_PCIF_EDGE     PCIF2
+#define RS485_PCIE_EDGE     PCIE2
 
 #define RS485_DE_PIN        PC2
 #define RS485_DE_PORT       PORTC
