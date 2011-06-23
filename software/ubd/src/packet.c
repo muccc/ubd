@@ -122,13 +122,25 @@ gpointer packet_writerThread(gpointer data)
 
         gpointer status = g_async_queue_timed_pop(packet_status,&timeout);
         //TODO: this assert is bad as this could happen
-        ub_assert(status != NULL);
+        //ub_assert(status != NULL);
 
         if( status == (gpointer)PACKET_ABORT ){
             //TODO: add log
             syslog(LOG_INFO,"PACKET WAS ABORTED\n");
         }else if( status == (gpointer)PACKET_DONE ){
             //syslog(LOG_DEBUG,"packet done\n");
+        }else if( status == NULL){
+            syslog(LOG_INFO,"packet timed out\n");
+            if( nextnode ){
+                struct packetstream *ps =
+                    g_new(struct packetstream,1);
+                ps->type = PACKET_ABORT;
+                ps->data = nextnode->nextdata;
+                ps->callback = nextnode->nextcallback;
+                g_idle_add(packet_inpacket, ps);
+                nextnode->currentcallback =
+                    nextnode->nextcallback = NULL;
+            }
         }
     }
 }
