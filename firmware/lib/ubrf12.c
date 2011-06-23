@@ -13,11 +13,9 @@ struct RF12_stati
     unsigned char New:1;
 };
 
-volatile unsigned char ubrf12_checkcrc = 1;
-
 struct RF12_stati RF12_status;
 volatile unsigned char RF12_Index = 0;
-unsigned char RF12_Data[RF12_DataLength+10];	// +10 == paket overhead
+unsigned char RF12_Data[RF12_DataLength+10];	// +10 == packet overhead
 unsigned char RF12_channel;
 
 ISR(RF_SIGNAL, ISR_NOBLOCK)
