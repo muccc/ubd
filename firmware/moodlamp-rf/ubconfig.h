@@ -16,7 +16,7 @@ typedef uint8_t ubaddress_t;
 
 #define UB_INTERVAL         500
 #define UB_CLASSES          {23,0,0,0}
-#define UB_INITIALNODENAME  "newnode,example.com"
+#define UB_INITIALNODENAME  "newbridge,example.com"
 
 
 #define UB_PACKET_TIMEOUT   100
@@ -54,6 +54,13 @@ typedef uint8_t ubaddress_t;
 #define UB_QUERYMAX     30
 #define RS485_BITRATE       115200
 #define RS485_ISR_EDGE      PCINT3_vect
+#define RS485_MASK_EDGE     PCMSK3
+#define RS485_PIN_EDGE      PCINT28
+#define RS485_PCIF_EDGE     PCIF3
+#define RS485_PCIE_EDGE     PCIE3
+
+
+
 
 #define RS485_DE_PIN        PC4
 #define RS485_DE_PORT       PORTC

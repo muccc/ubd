@@ -248,7 +248,6 @@ ISR(UART0_TRANSMIT_INTERRUPT)//, ISR_NOBLOCK)
 
 ISR(USART0_TX_vect)//, ISR_NOBLOCK)
 {
-    //return;
 #ifdef UB_ENABLEBRIDGE
     if( ubconfig.rs485master ){
         rs485master_txend();
@@ -430,16 +429,14 @@ ISR(RS485_ISR_EDGE, ISR_NOBLOCK)
 
 inline void rs485uart_edgeDisable(void)
 {
-    PCMSK3 &= ~(1<<PCINT24);
-    //there might be a flag allready set
-    PCIFR |= (1<<PCIF3);
-    //PORTA &= ~(1<<PA0);
+    RS485_MASK_EDGE &= ~(1<<RS485_PIN_EDGE);
+    //there might be a flag already set
+    PCIFR |= (1<<RS485_PCIF_EDGE);
 }
 
 inline void rs485uart_edgeEnable(void)
 {
-    PCICR |= (1<<PCIE3);
-    PCMSK3 |= (1<<PCINT24);
-    //PORTA |= (1<<PA0);
+    PCICR |= (1<<RS485_PCIE_EDGE);
+    RS485_MASK_EDGE |= (1<<RS485_PIN_EDGE);
 }
 
