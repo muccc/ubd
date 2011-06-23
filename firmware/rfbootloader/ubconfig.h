@@ -21,9 +21,9 @@ typedef uint8_t ubaddress_t;
 #define UB_NODEMAX      128
 
 #define UB_INTERVAL         100
-#define UB_CLASS_OUTPUT     11
-#define UB_CLASSES          {UB_CLASS_OUTPUT,0,0,0}
-#define UB_INITIALNODENAME  "newoutput3,example.com"
+#define UB_CLASS_BOOTLOADER 1
+#define UB_CLASSES          {UB_CLASS_BOOTLOADER,0,0,0}
+#define UB_INITIALNODENAME  "bootloader,example.com"
 
 #define UB_PACKET_TIMEOUT   100
 #define UB_RF_TIMEOUT       100

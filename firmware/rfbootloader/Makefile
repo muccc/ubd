@@ -69,7 +69,7 @@ FORMAT = ihex
 
 
 # Target file name (without extension).
-TARGET = hid
+TARGET = rfbootloader
 
 
 # Object files directory
