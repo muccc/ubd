@@ -61,6 +61,7 @@ void spi_init(void)
 unsigned short ubrf12_trans(unsigned short d)
 {
     //Don't block other interrupts(pwm)
+    uint8_t eimsk = RF_EIMSK;
     RF_EIMSK &= ~(1<<RF_EXTINT);
 
     uint16_t retval = 0;
@@ -75,7 +76,7 @@ unsigned short ubrf12_trans(unsigned short d)
     retval |= SPDR;
     sbi(RF_PORT, CS);
 
-    RF_EIMSK |= (1<<RF_EXTINT);
+    RF_EIMSK = eimsk;
     return retval;
 }
 
