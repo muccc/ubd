@@ -5,7 +5,7 @@
              multicastbase="ff18::" />
     <serial device="/dev/ttyUSB0" rate="115200" />
     <bus timeout="120" />
-    <syslog level="debug">
+    <syslog level="debug" />
     <nodes>
         <node id="foo,example.com" hostname="foolamp">
             <group name="room1-lamps"/>
