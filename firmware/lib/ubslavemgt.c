@@ -7,7 +7,6 @@
 #include "ubslavemgt.h"
 #include "ubaddress.h"
 
-#include "settings.h"
 
 enum slavemgtstate {
     DISCOVER,
@@ -69,16 +68,6 @@ uint8_t ubslavemgt_process(struct ubpacket_t * p)
         case 'R':
             ubadr_removeMulticast(data[1]);
         break;
-        /*case 'g':
-            p = packet_getSendBuffer();
-            p->dest = UB_ADDRESS_BROADCAST;
-            p->flags = 0;
-            p->data[0] = 'M';
-            p->data[1] = 'N';
-            settings_readid(p->data+2);
-            p->len = strlen((char*)p->data);
-            ubpacket_send();
-       break;*/
     }
     return 2;
 }

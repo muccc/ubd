@@ -4,7 +4,6 @@
 #include "ubconfig.h"
 #include "ubrf.h"
 #include "ubstat.h"
-#include "settings.h"
 #include "ubtimer.h"
 #include "ub.h"
 #include "udebug.h"
