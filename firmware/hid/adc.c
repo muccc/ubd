@@ -6,8 +6,8 @@
 void adc_init(void)
 {
     //ADMUX = (1<<REFS1) | (1<<REFS0);    //internal 2.56V
-    //ADMUX = (1<<REFS0);    //avcc
-    ADMUX = 0;    //external
+    ADMUX = (1<<REFS0);    //avcc
+    //ADMUX = 0;    //external
     //ADC on, single conversation, 150khz
     ADCSRA = (1<<ADEN) | (1<<ADSC) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0);
     adc_getChannel(0);

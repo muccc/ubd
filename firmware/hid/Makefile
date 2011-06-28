@@ -98,7 +98,8 @@ SRC = $(TARGET).c \
 	../lib/usart.c \
 	../lib/serial_handler.c \
 	../lib/ubleds.c \
-	timer0.c
+	timer0.c \
+	lcd.c
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
 
@@ -319,6 +320,7 @@ endif
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
 AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
+AVRDUDE_FLAGS += -F
 
 #Full swing crystal oscillator
 AVRDUDE_LFUSE_FLAGS = -B 10 -U lfuse:w:0xe7:m
