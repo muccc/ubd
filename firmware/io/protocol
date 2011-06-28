@@ -1,0 +1,24 @@
+DigitalOutput class:
+Internal:
+List in eeprom: PORT,PIN,PinName,Name,Active,ResetValue
+
+Get number of outputs: N
+Get output info <n>: PinName,Name,Active,ResetValue,value
+
+Set output name <n|PinName|Name> <name>
+Set output active <n|PinName|Name> <active>
+Set Output reset value <n|PinName|Name> <value>
+Set Output <n|PinName|Name> <value>
+
+DigitalInput class:
+Internal:
+List in eeprom: PORT,PIN,PinName,Name,PullupEnable,InterruptEnable
+
+Get number of inputs: N
+Get input info <n>: PinName,Name,PullupEnable,InterruptEnable,value
+Get input <n|PinName|Name>: <value>
+
+Set input name <n|PinName|Name> <name>
+Set input pullup enabled <n|PinName|Name> <enabled>
+Set input interrupt enabled <n|PinName|Name> <enabled>
+Interrupt: I <n> <value>
