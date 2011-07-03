@@ -38,7 +38,7 @@ class Moodlamp(ubnode.UBNode):
 
         cmd = "g"
         if self.sendCommand(cmd):
-            return self.readResponse(self.socket)
+            return self.getMessage()
         else:
             return False
 
