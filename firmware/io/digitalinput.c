@@ -11,15 +11,15 @@ struct inputport{
     uint8_t *pinreg;
     uint8_t *portreg;
     uint8_t pin;
-    uint8_t *interruptreg;
-    uint8_t interruptbit;
+    //uint8_t *interruptreg;
+    //uint8_t interruptbit;
     uint8_t pinname[20];
     uint8_t name[20];
     uint8_t pullup;
     uint8_t interrupt;
 };
 
-#define INPUTCOUNT 2 
+#define INPUTCOUNT 4 
 struct inputportsconfig{
     uint8_t version;
     struct inputport ports[INPUTCOUNT];
@@ -27,9 +27,11 @@ struct inputportsconfig{
 
 struct inputportsconfig inputconfig_record EEMEM;
 struct inputportsconfig inputconfig =
-{1,
-{{(uint8_t*)&PINB,(uint8_t*)&PCMSK0,0,(uint8_t*)&PORTB,PB1,"PB1","PB1",1,0},
-{(uint8_t*)&PIND,(uint8_t*)&PCMSK0,0,(uint8_t*)&PORTD,PD4,"PD4","PD4",1,0}}
+{5,
+{{(uint8_t*)&PINB,/*(uint8_t*)&PCMSK0,0,*/(uint8_t*)&PORTB,PB1,"PB1","PB1",1,0},
+{(uint8_t*)&PINC,/*(uint8_t*)&PCMSK0,0,*/(uint8_t*)&PORTC,PC0,"PC0","PC0",1,1},
+{(uint8_t*)&PINC,/*(uint8_t*)&PCMSK0,0,*/(uint8_t*)&PORTC,PC1,"PC1","PC1",1,0},
+{(uint8_t*)&PINC,/*(uint8_t*)&PCMSK0,0,*/(uint8_t*)&PORTC,PC6,"PC6","PC6",1,0}}
 };
 
 uint8_t lastvalue[INPUTCOUNT];
@@ -38,7 +40,7 @@ uint8_t lastvalue[INPUTCOUNT];
 uint8_t out = OUT_NONE;
 
 uint8_t outinterrupt_value;
-uint8_t outinterrupt_pin;
+uint8_t *outinterrupt_name;
 
 void digitalinput_init()
 {
@@ -62,7 +64,7 @@ void digitalinput_process(void)
                 if( v != lastvalue[i] ){
                     //TODO: send packet
                     outinterrupt_value = v;
-                    outinterrupt_pin = i;
+                    outinterrupt_name = inputconfig.ports[i].name;
                     lastvalue[i] = v;
                     out = OUT_INTERRUPT;
                     break;
@@ -78,7 +80,7 @@ void digitalinput_process(void)
                 p->header.dest = UB_ADDRESS_MASTER;
                 p->header.flags = UB_PACKET_UNSOLICITED;
                 p->header.class = UB_CLASS_DIGITALINPUT;
-                sprintf((char*)p->data,"I %u %u",outinterrupt_pin, outinterrupt_value);
+                sprintf((char*)p->data,"I %s %u",outinterrupt_name, outinterrupt_value);
                 p->header.len = strlen((char*)p->data);
                 ubpacket_send();
             }else{
