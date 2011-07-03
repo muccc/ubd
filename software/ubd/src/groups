@@ -1,0 +1,17 @@
+groups get ipv6 multucast addresses
+
+new node connects:
+check if multicast address is already announced
+    no:
+        create group and start announcing
+    yes:
+        do nothing
+    start listening on specific multicast ip:port
+
+node disconnects:
+    stop announcing multicast group
+
+multicast groups stops beeing announced:
+    wait random time
+    try to announce the group
+
