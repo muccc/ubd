@@ -80,7 +80,6 @@ OBJDIR = .
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = $(TARGET).c \
-	adc.c \
 	../lib/ub.c \
 	../lib/ubaddress.c \
 	../lib/ubtimer.c \
