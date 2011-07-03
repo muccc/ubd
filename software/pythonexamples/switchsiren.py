@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import uberbus.moodlamp
-import uberbus.hid
+import uberbus.digitalinput
 import time
 import sys
 import threading
@@ -10,11 +10,11 @@ from pygame.mixer import music
 
 
 lamps = sys.argv[1]
-hidname = sys.argv[2]
+inputname = sys.argv[2]
 lamp = sys.argv[3]
 
 a = uberbus.moodlamp.Moodlamp(lamps,True)
-s = uberbus.hid.HID(hidname)
+di = uberbus.digitalinput.DigitalInput(inputname)
 l = uberbus.moodlamp.Moodlamp(lamp)
 
 state = 'b'
@@ -49,21 +49,21 @@ def setcolors():
 
 thread.start_new_thread(setcolors,())
 a.connect()
-s.connect()
+di.connect()
 l.connect()
-class HIDCallback(uberbus.hid.HIDCallback):
-    def onButtonPressed(self, node, button):
+
+class DigitalInputCallback(uberbus.digitalinput.DigitalInputCallback):
+    def onInput(self, node, pin, pinstate):
         global state, r, g, b
-        if button == 0:
+        if pin == 'alarm' and pinstate == 0:
             color = l.getcolor()
             r = ord(color[0])
             g = ord(color[1])
             b = ord(color[2])
             state = 'r1'
-    def onButtonReleased(self, node, button):
-        global state
-        if button == 0:
+        elif pin == 'alarm' and pinstate == 1:
             state = 'b0'
             
-s.listen(HIDCallback())
+di.listen(DigitalInputCallback())
+di.checkForever()
 
