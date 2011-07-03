@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding='UTF-8'?>
 <ubdconfig version="1">
-    <network interface="eth1"
-             base="2001:a60:10ff:c401::1:1"
+    <network interface="lo"
+             base="::2"
              multicastbase="ff18::" />
     <serial device="/dev/ttyUSB0" rate="115200" />
     <bus timeout="120" />
