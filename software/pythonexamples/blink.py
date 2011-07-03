@@ -4,7 +4,7 @@ import time
 import sys
 
 lamp = sys.argv[1]
-a = uberbus.moodlamp.Moodlamp(lamp)
+a = uberbus.moodlamp.Moodlamp(lamp,True)
 t = float(sys.argv[2])
 
 a.connect();
