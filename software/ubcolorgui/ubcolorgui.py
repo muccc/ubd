@@ -47,9 +47,10 @@ class UBColorGui(object):
     def mlfound(self, interface, protocol, name, stype, domain, flags):
         print "Found service '%s' type '%s' domain '%s' " % (name, stype, domain)
 
-        self.server.ResolveService(interface, protocol, name, stype,
-            domain, avahi.PROTO_UNSPEC, dbus.UInt32(0),
-            reply_handler=self.service_resolved, error_handler=self.print_error)
+        self.combobox.append_text("%s.local" % name)
+#        self.server.ResolveService(interface, protocol, name, stype,
+#            domain, avahi.PROTO_UNSPEC, dbus.UInt32(0),
+#            reply_handler=self.service_resolved, error_handler=self.print_error)
 
     def service_resolved(self, *args):
         print 'service resolved'
