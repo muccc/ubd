@@ -34,6 +34,8 @@ hidname = sys.argv[1]
 lamps = sys.argv[2:]
 
 hid = uberbus.hid.HID(hidname)
+hid.connect(True)
+
 hid.lcd(0,1,'White Mode Group')
 mode = 1
 s = 1

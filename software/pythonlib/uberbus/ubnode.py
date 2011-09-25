@@ -3,8 +3,7 @@ import select
 import parser
 import Queue
 import time
-import dispatcher
-
+import gobject
 class UBNode(parser.Parser):
     """
     A base class for uberbus nodes.
@@ -13,6 +12,9 @@ class UBNode(parser.Parser):
     to communicate with uberbus nodes.
 
     """
+    udptype = '_unknown._udp'
+    tcptype = '_unknown._tcp'
+
     def __init__(self, address, port, udp = False):
         """
         Create a new uberbus node object.
@@ -32,7 +34,7 @@ class UBNode(parser.Parser):
         self.udp = udp
 
         self.receivetimeout = 10
-        self.keepconnection = True
+        self.keepconnection = False
 
         self.socket = None
         self.timeout =None
@@ -41,19 +43,27 @@ class UBNode(parser.Parser):
         self.callbacks = []
         self.aborted = False
         self.lasttry = 0
+        self.cc_timer = None
+        self.iowatch = None
 
     def setKeepConnection(self, keep):
         self.keepconection = keep
 
-    def connect(self):
+    def connect(self, reconnect = False):
         """ Open a connection to the node.
 
+        retry:  Try to reconnect periodically
         Return value: None
 
         Exceptions: Throws exceptions if the connection failed.
         
         """
-        self.openSocket()
+        if not reconnect:
+            self.openSocket()
+        elif not self.cc_timer:
+            self.keepconnection = True
+            self.checkConnection()
+            self.cc_timer = gobject.timeout_add(1000, self.cc_callback)
 
     def disconnect(self):
         """ Close the connection to the node.
@@ -61,20 +71,31 @@ class UBNode(parser.Parser):
         Return value: None
         
         """
+        if self.keepconnection:
+            self.keepconnection = False
+        if self.cc_timer:
+            glib.source_remove(self.cc_timer)
+            self.cc_timer = None
         self.closeSocket()
+
+    def cc_callback(self):
+        self.checkConnection()
+        return True
 
     def openSocket(self):
         if self.udp:
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         else:
             if time.time() - self.lasttry >= self.timeout:
+                self.lasttry = time.time()
                 self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
                 self.socket.connect((self.address,self.port))
                 self.socket.settimeout(0)
-                self.lasttry = time.time()
+                self.addWatch()
 
     def closeSocket(self):
         if not self.udp and self.socket:
+            self.iowatch = None
             self.socket.close()
             self.socket = None
 
@@ -86,8 +107,8 @@ class UBNode(parser.Parser):
         Listen to messages from the node.
 
         Nodes can send messages which are not in response to commands.
-        To receive theses messages listen() has to be called.
-        Messages can then be read using readRespnse()
+        When a new message arrives callbackobjectnewUnsolicited() will
+        be called with the message as parameter.
 
         Returns noting.
 
@@ -100,13 +121,12 @@ class UBNode(parser.Parser):
         self.closeSocket()
 
     def checkConnection(self):
-        if not self.socket:
-            if self.keepconnection:
-                try:
-                    self.openSocket()
-                except Exception, inst:
-                    print "checkConnection():",inst
-                    self.socket = None
+        if not self.socket and self.keepconnection:
+            try:
+                self.openSocket()
+            except Exception, inst:
+                print "checkConnection():",inst
+                self.socket = None
         return not self.socket == None
             
     def parseData(self, data):
@@ -137,7 +157,6 @@ class UBNode(parser.Parser):
             if len(r) > 0:
                 # will return something
                 data = self.socket.recv(1)
-                
                 if len(data) == 0:
                     # the connection is closed
                     self.eof()
@@ -199,7 +218,7 @@ class UBNode(parser.Parser):
             if m:
                 return m
             else:
-                #this call block until something is found
+                #this call blocks until something is found
                 rc = self.receive(block = False)
                 if rc == parser.TIMEOUT or rc == False:
                     # When a timeout happens no reply is anticipated
@@ -211,30 +230,44 @@ class UBNode(parser.Parser):
             for callback in self.callbacks:
                 callback.newUnsolicited(self, m)
 
+    def addWatch(self):
+        if not self.iowatch:
+            #print "adding watch"
+            self.iowatch = gobject.io_add_watch(self.socket, gobject.IO_IN, self.incomming)
+
+    def incomming(self, source, condition):
+        data = source.recv(1024)
+        print 'recv', list(data)
+        if len(data) > 0:
+            self.parseData(data)
+            self.process()
+            return True
+        else:
+            self.eof()
+            return False
+
     def setTimeout(self, timeout):
         self.timeout = timeout
-        if self.dispatcher:
-            self.dispatcher.setTimeout(timeout)
+#        if self.dispatcher:
+#            self.dispatcher.setTimeout(timeout)
 
-    def setTimer(self, time, callback):
-        self.time = time
-        self.callback = callback
-        if self.dispatcher:
-            self.disptacher.setTimer(time, callback)
-
-    def checkOnce(self):
-        if self.dispatcher == None:
-            self.dispatcher = dispatcher.Dispatcher()
-            self.dispatcher.addNode(self)
-            if self.timeout:
-                self.dispatcher.setTimeout(self.timeout)
-            if self.time:
-                self.dispatcher.setTimer(self.time, self.callback)
-        self.dispatcher.checkOnce()
-
+#    def setTimer(self, time, callback):
+#        self.time = time
+#        self.callback = callback
+#        if self.dispatcher:
+#            self.disptacher.setTimer(time, callback)
+#    def checkOnce(self):
+#        if self.dispatcher == None:
+#            self.dispatcher = dispatcher.Dispatcher()
+#            self.dispatcher.addNode(self)
+#            if self.timeout:
+#                self.dispatcher.setTimeout(self.timeout)
+#            if self.time:
+#                self.dispatcher.setTimer(self.time, self.callback)
+#        self.dispatcher.checkOnce()
+#
     def checkForever(self):
-        while not self.aborted:
-            self.checkOnce()
+        gobject.MainLoop().run()
 
     def abort(self):
         self.aborted = True

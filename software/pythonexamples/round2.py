@@ -4,7 +4,9 @@ import time
 import sys
 import random
 
-lamps = ['lamp63.local','lamp64.local','lamp62.local','lamp65.local','lamp6A.local','lamp69.local','lamp67.local','lamp68.local','lamp66.local','kueche.local']
+#lamps = ['lamp63.local','lamp64.local','lamp62.local','lamp65.local','lamp6A.local','lamp69.local','lamp67.local','lamp68.local','lamp66.local','kueche.local']
+lamps = ['racklampe5.local', 'racklampe6.local', 'racklampe7.local', 'racklampe0.local', 'racklampe2.local', 'racklampe3.local', 'racklampe4.local', 'racklampe1.local', ]
+#lamps = ['laborlampe0.local', 'laborlampe1.local', 'laborlampe2.local', 'laborlampe3.local', 'laborlampe4.local', 'laborlampe5.local', 'laborlampe6.local', 'laborlampe7.local', 'laborlampe8.local', 'laborlampe9.local', 'laborlampe10.local', 'laborlampe11.local','laborlampe12.local','laborlampe13.local']
 
 
 def getOffset(pos, offset):

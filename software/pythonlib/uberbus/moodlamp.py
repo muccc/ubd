@@ -1,8 +1,12 @@
 import socket
 import ubnode
+import ubresolver
 
 class Moodlamp(ubnode.UBNode):
     """ Class for moodlamps connected to the uberbus. """
+    udptype = '_moodlamp._udp'
+    tcptype = '_moodlamp._tcp'
+
     def __init__(self, address, udp = False):
         """
         Create a moodlamp object.
@@ -88,6 +92,12 @@ class Moodlamp(ubnode.UBNode):
     def getVersion(self):
         cmd = 'V'
         if self.sendCommand(cmd):
-            return self.readResponse(self.socket)
+            return self.getMessage()
         else:
             return False
+
+
+class MoodlampResolver(ubresolver.UBResolver):
+    def __init__(self, udp=False):
+        ubresolver.UBResolver.__init__(self,Moodlamp,udp)
+

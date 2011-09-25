@@ -15,17 +15,8 @@ class HIDCallback(uberbus.hid.HIDCallback):
 def timer():
     print time.time(), "ontimer"
 
-#hid.connect()
+hid.connect(True)
+
 hid.listen(HIDCallback())
-
-#d = uberbus.dispatcher.Dispatcher()
-#d.addNode(hid)
-#d.setTimer(5, timer)
-#d.checkForever()
-
 hid.setTimer(20, time)
 hid.checkForever()
-#while True:
-    #hid.checkOnce()
-#    time.sleep(1)
-#    hid.set(1)
