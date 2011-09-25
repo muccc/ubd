@@ -1,5 +1,8 @@
+#!/usr/bin/python
 import irclib
 import uberbus.moodlamp
+import uberbus.switch
+import time
 
 #irc = irclib.IRC()
 #server = irc.server()
@@ -21,9 +24,9 @@ class uberbusbot(irclib.SimpleIRCClient):
     def setcolor(self, target, argument):
         print target
         t = argument.split(' ')
-        print t
         try:
             if t[0] == '!set':
+                print t
                 print "got !set"
                 if len(t) < 2:
                     return
@@ -47,12 +50,20 @@ class uberbusbot(irclib.SimpleIRCClient):
                 l = uberbus.moodlamp.Moodlamp(lamp)
                 l.connect()
                 r = l.getcolor()
-                self.connection.privmsg(target,list(r))
+                self.connection.privmsg(target,[ord(i) for i in r])
+            elif t[0] == "!alarm":
+                switch = uberbus.switch.Switch("laboralarm.local")
+                switch.set("alarm")
+                self.connection.privmsg(target,'alarmiere das Labor!')
+                time.sleep(10)
+                switch.clear("alarm")
         except Exception as e:
             self.connection.privmsg(target,e)
             print e
     def on_welcome(self, connection, event):
         self.join("#uberbus")
+        self.join("#santa")
+        self.join("#ccc")
     def join(self, channel):
         print "joining", channel
         self.connection.join(channel)
