@@ -3,6 +3,7 @@ import uberbus.moodlamp
 import uberbus.hid
 import time
 import sys
+import gobject
 
 #lamps = ['wipptischlampen.local', 'wipplampelampen.local', 'wipplampen.local']
 #lamps = ['kuechenzeile.local', 'kuechelampen.local']
@@ -31,7 +32,8 @@ def hsvToRGB(h, s, v):
     }[hi]
 
 hidname = sys.argv[1]
-lamps = sys.argv[2:]
+#lamps = sys.argv[2:]
+lamps = []
 
 hid = uberbus.hid.HID(hidname)
 hid.connect(True)
@@ -44,16 +46,18 @@ h = 0
 
 r = g = b = 0
 lamp = 0
-hid.lcd(0,0,lamps[lamp])
+hid.lcd(0,0,"Resolving...")
+
 class HIDCallback(uberbus.hid.HIDCallback):
     def onButtonPressed(self, node, button):
         global lamp, lamps, mode
         if button == 0:
             hid.clear(7-lamp)
             lamp += 1
-            if lamp == len(lamps):
+            if lamp >= len(lamps):
                 lamp = 0
-            hid.lcd(0,0,lamps[lamp])
+            if lamp < len(lamps):
+                hid.lcd(0,0,lamps[lamp])
         elif button == 1:
             if mode == 1:
                 mode = 2
@@ -88,7 +92,27 @@ class HIDCallback(uberbus.hid.HIDCallback):
         a.connect()
         a.timedfade(int(r*255),int(g*255),int(b*255),.5)
 
+def hidtimer():
+    if mode == 2:
+        hid.lcd(0,1,'Off   Mode Group')
+    elif mode == 1:
+        hid.lcd(0,1,'White Mode Group')
+    hid.lcd(0,0,lamps[lamp])
 
-hid.listen(HIDCallback())
+class Resolver(uberbus.moodlamp.MoodlampResolver):
+    def newNode(self, node, address, multicast):
+        global lamps
+        if multicast == True:
+            lamps.append(node)
+            if len(lamps) == 1:
+                hid.lcd(0,0,node)
+                
+    def removedNode(self, node):
+        if node in lamps:
+            lamps.remove(node)
+
+Resolver(udp=True)
+hid.listen(HIDCallback()) 
+gobject.timeout_add(60000, hidtimer)
 hid.checkForever()
 
