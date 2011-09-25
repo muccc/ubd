@@ -98,6 +98,7 @@ def hidtimer():
     elif mode == 1:
         hid.lcd(0,1,'White Mode Group')
     hid.lcd(0,0,lamps[lamp])
+    return True
 
 class Resolver(uberbus.moodlamp.MoodlampResolver):
     def newNode(self, node, address, multicast):
