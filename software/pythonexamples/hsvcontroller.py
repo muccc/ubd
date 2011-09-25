@@ -80,7 +80,7 @@ class HIDCallback(uberbus.hid.HIDCallback):
         a.connect()
         a.timedfade(int(r*255),int(g*255),int(b*255),.5)
 
-hid.conncet(True)
+hid.connect(True)
 hid.listen(HIDCallback())
 hid.checkForever()
 
