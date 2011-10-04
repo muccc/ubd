@@ -7,7 +7,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
-#include <libutil.h>
 
 #include "debug.h"
 #include "packet.h"

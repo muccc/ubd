@@ -6,12 +6,35 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <syslog.h>
-#include <libutil.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #include "ubnetd.h"
+
+#define BUF_SIZE 100
+#include <fcntl.h>
+
+/* Lock a file region (private; public interfaces below) */
+
+static int
+lockReg(int fd, int cmd, int type, int whence, int start, off_t len)
+{
+    struct flock fl;
+
+    fl.l_type = type;
+    fl.l_whence = whence;
+    fl.l_start = start;
+    fl.l_len = len;
+
+    return fcntl(fd, cmd, &fl);
+}
+
+static int                     /* Lock a file region using nonblocking F_SETLK */
+lockRegion(int fd, int type, int whence, int start, int len)
+{
+    return lockReg(fd, F_SETLK, type, whence, start, len);
+}
 
 gchar *interface;
 /*
@@ -127,19 +150,17 @@ int main(int argc, char *argv[])
 
     /* Our process ID and Session ID */
     pid_t pid, sid;
-    
-    struct pidfh *pfh;
-    pid_t otherpid;
+    int fd;
+    char buf[BUF_SIZE];
+    char *pidFile = "/var/run/ubnetd.pid";
+    //char *progName = "ubnetd";
 
-    pfh = pidfile_open("/var/run/ubnetd.pid", 0600, &otherpid);
-    if( pfh == NULL ){
-        if( errno == EEXIST ){
-            syslog(LOG_ERR,"Other daemon allready running.");
+    fd = open(pidFile, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    if (fd == -1){
+            syslog(LOG_ERR,"Could not open PID file /var/run/ubnetd.pid");
             exit(EXIT_FAILURE);
-        }
-        syslog(LOG_ERR,"Cannot open or create  pidfile.");
     }
-
+ 
     if (!g_thread_supported ()) g_thread_init (NULL);
     g_type_init();
     
@@ -201,8 +222,28 @@ int main(int argc, char *argv[])
 
     /* Change the file mode mask */
     umask(0);
-    
-    pidfile_write(pfh);
+ 
+    if (lockRegion(fd, F_WRLCK, SEEK_SET, 0, 0) == -1) {
+        if (errno  == EAGAIN || errno == EACCES){
+            syslog(LOG_ERR,"PID file '/var/run/ubnetd.pid' is locked; probably "
+                     "'ubnetd' is already running");
+            exit(EXIT_FAILURE);
+        }else{
+            syslog(LOG_ERR,"Unable to lock PID file '/var/run/ubnetd.pid'");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if (ftruncate(fd, 0) == -1){
+        syslog(LOG_ERR,"Could not truncate PID file '/var/run/ubnetd.pid'");
+        exit(EXIT_FAILURE);
+    }
+
+    snprintf(buf, BUF_SIZE, "%ld\n", (long) getpid());
+    if (write(fd, buf, strlen(buf)) != strlen(buf)){
+        syslog(LOG_ERR,"Writing to PID file '/var/run/ubnetd.pid'");
+        exit(EXIT_FAILURE);
+    }
 
     /* Open any logs here */        
             
