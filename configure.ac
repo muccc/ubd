@@ -3,8 +3,8 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 CFLAGS="$CFLAGS -g -Wall -Wextra"
 
-AC_CHECK_HEADER(libutil.h,LDFLAGS="$LDFLAGS -lbsd",
-  AC_MSG_ERROR(libutil.h not found. Please install libbsd-dev.))
+#AC_CHECK_HEADER(libutil.h,LDFLAGS="$LDFLAGS -lbsd",
+#  AC_MSG_ERROR(libutil.h not found. Please install libbsd-dev.))
 PKG_CHECK_MODULES(GLIB, glib-2.0 > 2.0.0,
   [LIBS="$LIBS $GLIB_LIBS" CFLAGS="$CFLAGS $GLIB_CFLAGS"],
     AC_MSG_ERROR(Cannot find glib: Is glib-config in path?))
