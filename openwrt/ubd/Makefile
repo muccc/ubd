@@ -5,7 +5,7 @@ include $(TOPDIR)/rules.mk
 PKG_REV:=c9637eed0c5e7d679fae958c6816de2584eeff53
 PKG_NAME:=ubd
 PKG_VERSION:=0.2
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -46,12 +46,10 @@ define Build/Compile
 endef
 
 define Package/ubd/install
- $(INSTALL_DIR) $(1)/usr/sbin
-# $(INSTALL_BIN) $(PKG_BUILD_DIR)/src/blink $(1)/usr/sbin/
-# $(INSTALL_BIN) $(PKG_BUILD_DIR)/src/blinktcp $(1)/usr/sbin/
-# $(INSTALL_BIN) $(PKG_BUILD_DIR)/src/setname $(1)/usr/sbin/
-# $(INSTALL_BIN) $(PKG_BUILD_DIR)/src/ubd $(1)/usr/sbin/
-# $(INSTALL_BIN) $(PKG_BUILD_DIR)/src/ubnetd $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/setname $(1)/usr/sbin/setname
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/ubd $(1)/usr/sbin/ubd
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/ubnetd $(1)/usr/sbin/ubnetd
 endef
 
 $(eval $(call BuildPackage,ubd))
