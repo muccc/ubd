@@ -1,1 +1,0 @@
-python flash.py -A write -m eeprom -d "\x$1"
