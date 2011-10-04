@@ -3903,6 +3903,7 @@ else
 $as_echo "yes" >&6; }
 	LIBS="$LIBS $AVAHICLIENT_LIBS" CFLAGS="$CFLAGS $AVAHICLIENT_CFLAGS"
 fi
+CFLAGS="$CFLAGS -ldbus-1 -lz"
 
 ac_config_headers="$ac_config_headers config.h"
 
