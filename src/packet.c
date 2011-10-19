@@ -182,11 +182,13 @@ static gboolean packet_inpacket(gpointer data)
     }else if( ps->type == PACKET_PACKET && ps->p.flags & UB_PACKET_MGT ){
         syslog(LOG_DEBUG,"for bus mgt\n");
         busmgt_inpacket(&ps->p);
-    }else if( ps->type == PACKET_PACKET ){
+    }else if( ps->type == PACKET_PACKET && ps->n != NULL ){
         syslog(LOG_DEBUG,"unsolicited data.\n");
         listen_newMessage(ps);
     }else if( ps->type != PACKET_PACKET ){
         syslog(LOG_INFO,"unsolicited status information. not processed.\n");
+    }else if( ps->n == NULL ){
+        syslog(LOG_WARNING,"got unprocessed data from an unknown node\n");
     }else{
         syslog(LOG_INFO,"should not happen\n");
         while(1);

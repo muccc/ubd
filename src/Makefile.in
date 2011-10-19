@@ -53,7 +53,7 @@ am_ubd_OBJECTS = main.$(OBJEXT) serial.$(OBJEXT) debug.$(OBJEXT) \
 	config.$(OBJEXT) net_tcp.$(OBJEXT) net_udp.$(OBJEXT) \
 	listen.$(OBJEXT) avahi.$(OBJEXT) classes.$(OBJEXT) \
 	broadcast.$(OBJEXT) net_multicast.$(OBJEXT) daemon.$(OBJEXT) \
-	segfault.$(OBJEXT)
+	segfault.$(OBJEXT) glib-watch.$(OBJEXT) glib-malloc.$(OBJEXT)
 ubd_OBJECTS = $(am_ubd_OBJECTS)
 ubd_LDADD = $(LDADD)
 am_ubnetd_OBJECTS = ubnetd.$(OBJEXT)
@@ -77,14 +77,11 @@ AMTAR = @AMTAR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
-AVAHICLIENT_CFLAGS = @AVAHICLIENT_CFLAGS@
-AVAHICLIENT_LIBS = @AVAHICLIENT_LIBS@
-AVAHIGLIB_CFLAGS = @AVAHIGLIB_CFLAGS@
-AVAHIGLIB_LIBS = @AVAHIGLIB_LIBS@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -92,13 +89,13 @@ DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 GIO_CFLAGS = @GIO_CFLAGS@
 GIO_LIBS = @GIO_LIBS@
 GLIB_CFLAGS = @GLIB_CFLAGS@
 GLIB_LIBS = @GLIB_LIBS@
-GTHREAD_CFLAGS = @GTHREAD_CFLAGS@
-GTHREAD_LIBS = @GTHREAD_LIBS@
+GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -170,7 +167,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ubd_SOURCES = main.c serial.c debug.c net.c packet.c busmgt.c ubpacket.h serial.h debug.h net.h packet.h busmgt.h ubconfig.h message.h address6db.c address6db.h interface.c interface.h address6.h address6.c bus.c bus.h mgt.h mgt.c cmd.c cmd.h cmdparser.c cmdparser.h xmlconfig.c xmlconfig.h groups.c groups.h nodes.h nodes.c config.h config.c net_tcp.c net_tcp.h net_udp.c net_udp.h listen.c listen.h avahi.c avahi.h classes.c classes.h broadcast.c broadcast.h net_multicast.c net_multicast.h daemon.c daemon.h segfault.c segfault.h
+ubd_SOURCES = main.c serial.c debug.c net.c packet.c busmgt.c ubpacket.h serial.h debug.h net.h packet.h busmgt.h ubconfig.h message.h address6db.c address6db.h interface.c interface.h address6.h address6.c bus.c bus.h mgt.h mgt.c cmd.c cmd.h cmdparser.c cmdparser.h xmlconfig.c xmlconfig.h groups.c groups.h nodes.h nodes.c config.h config.c net_tcp.c net_tcp.h net_udp.c net_udp.h listen.c listen.h avahi.c avahi.h classes.c classes.h broadcast.c broadcast.h net_multicast.c net_multicast.h daemon.c daemon.h segfault.c segfault.h avahi-glib/glib-watch.h avahi-glib/glib-watch.c avahi-glib/glib-malloc.h avahi-glib/glib-malloc.c
 ubnetd_SOURCES = ubnetd.c ubnetd.h
 all: all-am
 
@@ -268,6 +265,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/daemon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glib-malloc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glib-watch.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/groups.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/interface.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/listen.Po@am__quote@
@@ -297,6 +296,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+glib-watch.o: avahi-glib/glib-watch.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT glib-watch.o -MD -MP -MF $(DEPDIR)/glib-watch.Tpo -c -o glib-watch.o `test -f 'avahi-glib/glib-watch.c' || echo '$(srcdir)/'`avahi-glib/glib-watch.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/glib-watch.Tpo $(DEPDIR)/glib-watch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='avahi-glib/glib-watch.c' object='glib-watch.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o glib-watch.o `test -f 'avahi-glib/glib-watch.c' || echo '$(srcdir)/'`avahi-glib/glib-watch.c
+
+glib-watch.obj: avahi-glib/glib-watch.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT glib-watch.obj -MD -MP -MF $(DEPDIR)/glib-watch.Tpo -c -o glib-watch.obj `if test -f 'avahi-glib/glib-watch.c'; then $(CYGPATH_W) 'avahi-glib/glib-watch.c'; else $(CYGPATH_W) '$(srcdir)/avahi-glib/glib-watch.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/glib-watch.Tpo $(DEPDIR)/glib-watch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='avahi-glib/glib-watch.c' object='glib-watch.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o glib-watch.obj `if test -f 'avahi-glib/glib-watch.c'; then $(CYGPATH_W) 'avahi-glib/glib-watch.c'; else $(CYGPATH_W) '$(srcdir)/avahi-glib/glib-watch.c'; fi`
+
+glib-malloc.o: avahi-glib/glib-malloc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT glib-malloc.o -MD -MP -MF $(DEPDIR)/glib-malloc.Tpo -c -o glib-malloc.o `test -f 'avahi-glib/glib-malloc.c' || echo '$(srcdir)/'`avahi-glib/glib-malloc.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/glib-malloc.Tpo $(DEPDIR)/glib-malloc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='avahi-glib/glib-malloc.c' object='glib-malloc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o glib-malloc.o `test -f 'avahi-glib/glib-malloc.c' || echo '$(srcdir)/'`avahi-glib/glib-malloc.c
+
+glib-malloc.obj: avahi-glib/glib-malloc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT glib-malloc.obj -MD -MP -MF $(DEPDIR)/glib-malloc.Tpo -c -o glib-malloc.obj `if test -f 'avahi-glib/glib-malloc.c'; then $(CYGPATH_W) 'avahi-glib/glib-malloc.c'; else $(CYGPATH_W) '$(srcdir)/avahi-glib/glib-malloc.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/glib-malloc.Tpo $(DEPDIR)/glib-malloc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='avahi-glib/glib-malloc.c' object='glib-malloc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o glib-malloc.obj `if test -f 'avahi-glib/glib-malloc.c'; then $(CYGPATH_W) 'avahi-glib/glib-malloc.c'; else $(CYGPATH_W) '$(srcdir)/avahi-glib/glib-malloc.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

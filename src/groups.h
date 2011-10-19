@@ -19,7 +19,7 @@ struct multicastgroup{
     GSource         *source;
     //the multicast address on the bus
     gint            busadr;
-    AvahiEntryGroup *avahientrygroup;
+    AvahiSEntryGroup *avahientrygroup;
     char            *avahiservicename;
 };
 

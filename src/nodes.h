@@ -19,7 +19,7 @@ struct socketdata{
     GSocketAddress *socketaddress;
     guint classid;
     GSList          *listeners;
-    AvahiEntryGroup *avahiservicegroup;
+    AvahiSEntryGroup *avahiservicegroup;
     gchar           *avahiservicename;
 };
 
@@ -49,7 +49,7 @@ struct node{
 
     //unicast address of the node
     GInetAddress    *netadr;
-    AvahiEntryGroup *avahiaddressgroup;
+    AvahiSEntryGroup *avahiaddressgroup;
     gboolean        netup;
 
     //connection to the ubnetd used to create

@@ -8,12 +8,11 @@
 #include <gio/gio.h>
 #include "config.h"
 
-#include <avahi-client/client.h>
-#include <avahi-client/publish.h>
 #include <avahi-common/error.h>
 #include <avahi-common/timeval.h>
-#include <avahi-glib/glib-watch.h>
-#include <avahi-glib/glib-malloc.h>
+#include "avahi-glib/glib-watch.h"
+#include "avahi-glib/glib-malloc.h"
+#include <avahi-core/publish.h>
 #include "nodes.h"
 //#include "groups.h"
 struct multicastgroup;

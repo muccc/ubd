@@ -1,27 +1,366 @@
 <?xml version="1.0" encoding='UTF-8'?>
 <ubdconfig version="1">
-    <network interface="lo"
-             base="::2"
+    <network interface="eth0"
+             base="2001:7f0:3003:b00b::1:1"
              multicastbase="ff18::" />
+   
     <serial device="/dev/ttyUSB0" rate="115200" />
     <bus timeout="120" />
-    <syslog level="debug" />
     <nodes>
-        <node id="foo,example.com" hostname="foolamp">
-            <group name="room1-lamps"/>
+        <node id="lamp11,muc.ccc.de" hostname="hbf0">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
         </node>
-        <node id="bar,example.com">
-            <group name="room2-lamps"/>
-            <group name="sofa"/>
+        <node id="lamp1F,muc.ccc.de" hostname="hbf1">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
         </node>
-        <node id="baz,example.com">
-            <group name="room1-lamps"/>
-            <group name="sofa"/>
+        <node id="lamp31,muc.ccc.de" hostname="hbf2">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+            <group name="hbftable-lamps"/>
         </node>
+        <node id="lamp34,muc.ccc.de" hostname="hbf3">
+            <group name="hbf-lamps"/>
+            <group name="hbftable-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp35,muc.ccc.de" hostname="hbf4">
+            <group name="hbf-lamps"/>
+            <group name="hbftable-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp52,muc.ccc.de" hostname="hbf5">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp13,muc.ccc.de" hostname="hbf6">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp14,muc.ccc.de" hostname="hbf7">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp15,muc.ccc.de" hostname="hbf8">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp17,muc.ccc.de" hostname="hbf9">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp2F,muc.ccc.de" hostname="hbf10">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+         <node id="lamp3F,muc.ccc.de" hostname="hbf11">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+         <node id="lamp4A,muc.ccc.de" hostname="hbf12">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+         <node id="lamp4F,muc.ccc.de" hostname="hbf13">
+            <group name="hbf-lamps"/>
+            <group name="hbftable-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+         <node id="lamp54,muc.ccc.de" hostname="hbf14">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+          <node id="lamp5F,muc.ccc.de" hostname="hbf15">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+          <node id="lamp68,muc.ccc.de" hostname="hbf16">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+          <node id="lamp6C,muc.ccc.de" hostname="hbf17">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+           <node id="lamp3A,muc.ccc.de" hostname="hbf18">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+           <node id="lamp66,muc.ccc.de" hostname="hbf19">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+           <node id="lamp50,muc.ccc.de" hostname="hbf20">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+           <node id="lamp67,muc.ccc.de" hostname="hbf21">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+           <node id="lamp5B,muc.ccc.de" hostname="hbf22">
+            <group name="hbf-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+
+        <node id="kueche,local" hostname="kuechenzeile">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp19,muc.ccc.de" hostname="kueche0">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp38,muc.ccc.de" hostname="kueche2">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp3C,muc.ccc.de" hostname="kueche3">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp3D,muc.ccc.de" hostname="kueche4">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp40,muc.ccc.de" hostname="kueche5">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp4E,muc.ccc.de" hostname="kueche6">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp71,muc.ccc.de" hostname="kueche7">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp72,muc.ccc.de" hostname="kueche8">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp5A,muc.ccc.de" hostname="kueche9">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp63,muc.ccc.de" hostname="kueche10">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp6A,muc.ccc.de" hostname="kueche11">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp6E,muc.ccc.de" hostname="kueche12">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp58,muc.ccc.de" hostname="kueche13">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp69,muc.ccc.de" hostname="kueche14">
+            <group name="kuechen-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+
+        <node id="lamp12,muc.ccc.de" hostname="wipptisch1">
+            <group name="wipp-lamps"/>
+            <group name="wipptable-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp1A,muc.ccc.de" hostname="wipptisch2">
+            <group name="wipp-lamps"/>
+            <group name="wipptable-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp29,muc.ccc.de" hostname="wipptisch3">
+            <group name="wipp-lamps"/>
+            <group name="wipptable-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp2E,muc.ccc.de" hostname="wipptisch4">
+            <group name="wipp-lamps"/>
+            <group name="wipptable-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp32,muc.ccc.de" hostname="wipptisch0">
+            <group name="wipp-lamps"/>
+            <group name="wipptable-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp3B,muc.ccc.de" hostname="wipplampe3">
+            <group name="wipp-lamps"/>
+            <group name="wipplamp-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp3E,muc.ccc.de" hostname="wipplampe2">
+            <group name="wipp-lamps"/>
+            <group name="wipplamp-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp44,muc.ccc.de" hostname="wipplampe1">
+            <group name="wipp-lamps"/>
+            <group name="wipplamp-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp49,muc.ccc.de" hostname="wipplampe0">
+            <group name="wipp-lamps"/>
+            <group name="wipplamp-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp46,muc.ccc.de" hostname="wipplampe4">
+            <group name="wipp-lamps"/>
+            <group name="wipplamp-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+         <node id="lamp59,muc.ccc.de" hostname="wipplampe5">
+            <group name="wipp-lamps"/>
+            <group name="wipplamp-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+         <node id="lamp5D,muc.ccc.de" hostname="wipplampe6">
+            <group name="wipp-lamps"/>
+            <group name="wipplamp-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+         <node id="lamp60,muc.ccc.de" hostname="wipplampe7">
+            <group name="wipp-lamps"/>
+            <group name="wipplamp-lamps"/>
+            <group name="all-lamps"/>
+          <node id="lamp5E,muc.ccc.de" hostname="wipplampe8">
+            <group name="wipp-lamps"/>
+            <group name="wipplamp-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+       </node>
+ 
+        <node id="lamp23,muc.ccc.de" hostname="maxilampe0">
+            <group name="maxi-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp27,muc.ccc.de" hostname="maxilampe1">
+            <group name="maxi-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp4B,muc.ccc.de" hostname="maxilampe2">
+            <group name="maxi-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp70,muc.ccc.de" hostname="maxilampe3">
+            <group name="maxi-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp56,muc.ccc.de" hostname="maxilampe4">
+            <group name="maxi-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp57,muc.ccc.de" hostname="maxilampe5">
+            <group name="maxi-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp18,muc.ccc.de" hostname="racklampe0">
+            <group name="rack-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp25,muc.ccc.de" hostname="racklampe1">
+            <group name="rack-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp28,muc.ccc.de" hostname="racklampe2">
+            <group name="rack-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp2B,muc.ccc.de" hostname="racklampe3">
+            <group name="rack-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp41,muc.ccc.de" hostname="racklampe4">
+            <group name="rack-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp4D,muc.ccc.de" hostname="racklampe5">
+            <group name="rack-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp53,muc.ccc.de" hostname="racklampe6">
+            <group name="rack-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp1B,muc.ccc.de" hostname="racklampe7">
+            <group name="rack-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp16,muc.ccc.de" hostname="laborlampe0">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp1C,muc.ccc.de" hostname="laborlampe1">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp6B,muc.ccc.de" hostname="laborlampe2">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp20,muc.ccc.de" hostname="laborlampe3">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp21,muc.ccc.de" hostname="laborlampe4">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp24,muc.ccc.de" hostname="laborlampe5">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp26,muc.ccc.de" hostname="laborlampe6">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp2C,muc.ccc.de" hostname="laborlampe7">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp2D,muc.ccc.de" hostname="laborlampe8">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp37,muc.ccc.de" hostname="laborlampe9">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp45,muc.ccc.de" hostname="laborlampe10">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp51,muc.ccc.de" hostname="laborlampe11">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp6F,muc.ccc.de" hostname="laborlampe12">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+        <node id="lamp5C,muc.ccc.de" hostname="laborlampe13">
+            <group name="labor-lamps"/>
+            <group name="all-lamps"/>
+        </node>
+
+
     </nodes>
     <groups>
-        <group name="room1-lamps" hostname="Room1Lamps"  class="moodlamp" />
-        <group name="room2-lamps" hostname="room2-lamps" class="moodlamp" />
-        <group name="sofa"        hostname="sofa"        class="moodlamp" />
+        <group name="hbf-lamps" hostname="HauptbahnhofLampen" class="moodlamp" />
+        <group name="hbftable-lamps" hostname="HbfTischLampen" class="moodlamp" />
+        <group name="kuechen-lamps" hostname="KuecheLampen" class="moodlamp" />
+        <group name="wipp-lamps" hostname="WippLampen" class="moodlamp" />
+        <group name="maxi-lamps" hostname="MaxiLampen" class="moodlamp" />
+        <group name="wipptable-lamps" hostname="WippTischLampen" class="moodlamp" />
+        <group name="wipplamp-lamps" hostname="WippLampeLampen" class="moodlamp" />
+        <group name="all-lamps" hostname="AlleLampen" class="moodlamp" />
+        <group name="rack-lamps" hostname="RackLampen" class="moodlamp" />
+        <group name="labor-lamps" hostname="LaborLampen" class="moodlamp" />
     </groups>
 </ubdconfig>
