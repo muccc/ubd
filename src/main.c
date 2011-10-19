@@ -72,11 +72,11 @@ int main (int argc, char *argv[])
         return -1;
     }
 
-    //if( serial_open(config.device) ){
-    //    syslog(LOG_ERR, "Failed to open serial device %s. "
-    //            "Aborting.", config.device);
-    //    return -1;
-    //}
+    if( serial_open(config.device) ){
+        syslog(LOG_ERR, "Failed to open serial device %s. "
+                "Aborting.", config.device);
+        return -1;
+    }
 
     if( argc < 2 ){
         daemon_init();
@@ -85,7 +85,6 @@ int main (int argc, char *argv[])
     }
 
     xml_parsegroupsandnodes();
-    g_main_loop_run(mainloop);
     mgt_init();
 
     //activate bridge
