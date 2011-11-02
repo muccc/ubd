@@ -5,7 +5,7 @@ CFLAGS="$CFLAGS -g -Wall -Wextra"
 
 #AC_CHECK_HEADER(libutil.h,LDFLAGS="$LDFLAGS -lbsd",
 #  AC_MSG_ERROR(libutil.h not found. Please install libbsd-dev.))
-AC_CHECK_HEADER(avahi-core/core.h,LIBS="$LIBS -lavahi-core",
+AC_CHECK_HEADER(avahi-core/core.h,LIBS="$LIBS -lavahi-core -lavahi-common",
   AC_MSG_ERROR(avahi-core/core.h not found. Please install libbsd-dev.))
 
 PKG_CHECK_MODULES(GLIB, glib-2.0 > 2.0.0,
