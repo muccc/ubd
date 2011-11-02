@@ -2,10 +2,10 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_REV:=c9637eed0c5e7d679fae958c6816de2584eeff53
+PKG_REV:=f5a142130d338e59142aba008daf3b101187b7ba
 PKG_NAME:=ubd
 PKG_VERSION:=0.2
-PKG_RELEASE:=6
+PKG_RELEASE:=8
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -19,7 +19,7 @@ PKG_SOURCE_URL:=https://github.com/schneider42/ubd.git
 #PKG_REMOVE_FILES=aclocal.m4
 
 include $(INCLUDE_DIR)/package.mk
-
+TARGET_CFLAGS += -L$(STAGING_DIR)/usr/lib/libiconv-full/lib -lz
 define Package/ubd
  SECTION:=base
  CATEGORY:=Network
@@ -27,7 +27,7 @@ define Package/ubd
  TITLE:=The ubd is a home automation project of the muccc
  URL:=https://wiki.muc.ccc.de/uberbus:start
  MAINTAINER:=Franz Nord <fnord@127.0.0.1>
- DEPENDS:=+mxml +glib2 +libavahi-client +zlib
+ DEPENDS:= +libiconv-full +mxml +glib2 +libavahi +zlib
 endef
 
 define Package/ubd/description
