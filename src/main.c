@@ -21,7 +21,6 @@
 #include "xmlconfig.h"
 #include "groups.h"
 #include "config.h"
-#include "avahi.h"
 #include "broadcast.h"
 #include "daemon.h"
 #include "segfault.h"
@@ -36,7 +35,6 @@ int main (int argc, char *argv[])
     GMainLoop * mainloop = g_main_loop_new(NULL,FALSE);
     
     config_init();
-    avahi_init(mainloop);
 
     nodes_init();
     groups_init();
