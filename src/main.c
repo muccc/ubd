@@ -70,13 +70,14 @@ int main (int argc, char *argv[])
         return -1;
     }
 
-    if( serial_open(config.device) ){
+    if( !config.demo && serial_open(config.device) ){
         syslog(LOG_ERR, "Failed to open serial device %s. "
                 "Aborting.", config.device);
         return -1;
     }
 
     if( argc < 2 ){
+        printf("deamonizing\n");
         daemon_init();
         openlog("ubd", LOG_PID , LOG_DAEMON);
         daemon_close_stderror();
@@ -86,7 +87,8 @@ int main (int argc, char *argv[])
     mgt_init();
 
     //activate bridge
-    serial_switch();
+    if( !config.demo )
+        serial_switch();
     packet_init();     
     busmgt_init();
     cmdparser_init();

@@ -8,4 +8,5 @@ void config_init(void)
     config.nodetimeout = 120;
     config.rate = 115200;
     config.sysloglevel = LOG_DEBUG;
+    config.demo = 0;
 }
