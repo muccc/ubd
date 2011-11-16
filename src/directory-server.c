@@ -124,6 +124,8 @@ static void dirserver_announce(const char *service_type,
     if( service_type ) printf(" service-type=%s", service_type);
     if( protocol ) printf(" protocol=%s", protocol);
     printf(" local_only=%s\n", local_only?"true":"false");
+    char *response = "{\"cmd\":\"directory\", \"url\":\"http://example.com:2300\"}";
+    g_socket_send_to(dirserversocket, sa, response, strlen(response), NULL, NULL);
 }
 
 static enum commandlist dirserver_parseCommand(const char *cmd)
