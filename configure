@@ -560,6 +560,8 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+JSON_LIBS
+JSON_CFLAGS
 MXML_LIBS
 MXML_CFLAGS
 GIO_LIBS
@@ -667,7 +669,9 @@ GLIB_LIBS
 GIO_CFLAGS
 GIO_LIBS
 MXML_CFLAGS
-MXML_LIBS'
+MXML_LIBS
+JSON_CFLAGS
+JSON_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1306,6 +1310,8 @@ Some influential environment variables:
   GIO_LIBS    linker flags for GIO, overriding pkg-config
   MXML_CFLAGS C compiler flags for MXML, overriding pkg-config
   MXML_LIBS   linker flags for MXML, overriding pkg-config
+  JSON_CFLAGS C compiler flags for JSON, overriding pkg-config
+  JSON_LIBS   linker flags for JSON, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -3262,7 +3268,7 @@ else
 fi
 
 
-CFLAGS="$CFLAGS -g -Wall -Wextra"
+CFLAGS="$CFLAGS -g -Wall -Wextra -std=c99"
 
 
 
@@ -3522,6 +3528,7 @@ $as_echo "yes" >&6; }
 	LIBS="$LIBS $GIO_LIBS" CFLAGS="$CFLAGS $GIO_CFLAGS"
 fi
 
+
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for MXML" >&5
 $as_echo_n "checking for MXML... " >&6; }
@@ -3610,6 +3617,98 @@ else
 $as_echo "yes" >&6; }
 	LIBS="$LIBS $MXML_LIBS" CFLAGS="$CFLAGS $MXML_CFLAGS"
 fi
+
+
+pkg_failed=no
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for JSON" >&5
+$as_echo_n "checking for JSON... " >&6; }
+
+if test -n "$JSON_CFLAGS"; then
+    pkg_cv_JSON_CFLAGS="$JSON_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"json >= 0.9\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "json >= 0.9") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_JSON_CFLAGS=`$PKG_CONFIG --cflags "json >= 0.9" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$JSON_LIBS"; then
+    pkg_cv_JSON_LIBS="$JSON_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"json >= 0.9\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "json >= 0.9") 2>&5
+  ac_status=$?
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_JSON_LIBS=`$PKG_CONFIG --libs "json >= 0.9" 2>/dev/null`
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        JSON_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "json >= 0.9" 2>&1`
+        else
+	        JSON_PKG_ERRORS=`$PKG_CONFIG --print-errors "json >= 0.9" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$JSON_PKG_ERRORS" >&5
+
+	as_fn_error $? "Package requirements (json >= 0.9) were not met:
+
+$JSON_PKG_ERRORS
+
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
+installed software in a non-standard prefix.
+
+Alternatively, you may set the environment variables JSON_CFLAGS
+and JSON_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details." "$LINENO" 5
+elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables JSON_CFLAGS
+and JSON_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
+See \`config.log' for more details" "$LINENO" 5 ; }
+else
+	JSON_CFLAGS=$pkg_cv_JSON_CFLAGS
+	JSON_LIBS=$pkg_cv_JSON_LIBS
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	LIBS="$LIBS $JSON_LIBS" CFLAGS="$CFLAGS $JSON_CFLAGS"
+fi
+
+
 #PKG_CHECK_MODULES(GTHREAD, gthread-2.0,
 #    [LIBS="$LIBS $GTHREAD_LIBS" CFLAGS="$CFLAGS $GTHREAD_CFLAGS"])
 

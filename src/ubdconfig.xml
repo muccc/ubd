@@ -6,6 +6,8 @@
     <serial device="/dev/ttyUSB0" rate="115200" />
     <bus timeout="120" />
     <simulation mode="demo" />
+    <directory client="enabled" remotedirectory="directory.example.com" 
+               server="enabled" directoryname="ubdirectory" />
     <nodes>
         <node id="foo,example.com" hostname="foolamp">
             <group name="room1-lamps"/>

@@ -213,22 +213,29 @@ void xml_parsebase(void)
     mxml_node_t *simulation = mxmlFindElement(
         tree, tree, "simulation", NULL, NULL, MXML_DESCEND);
     if( simulation != NULL ){
-        printf("found simulation tag\n");
         gchar *level = xml_getAttribute(
                     simulation, "mode");
         if( level != NULL ){
             if( strcmp(level,"off") == 0 ){
-                printf("demo=0\n");
                 config.demo = 0;
             }else if( strcmp(level,"demo") == 0 ){
-                printf("demo=1\n");
                 config.demo = 1;
             }
-        }else{
-            printf("found no mode attribute\n");
         }
-    }else{
-        printf("no simulation tag\n");
+    }
+
+    mxml_node_t *directory = mxmlFindElement(
+        tree, tree, "directory", NULL, NULL, MXML_DESCEND);
+    if( simulation != NULL ){
+        gchar *server = xml_getAttribute(
+                    directory, "server");
+        if( server != NULL ){
+            if( strcmp(server,"disabled") == 0 ){
+                config.dirserver = 0;
+            }else if( strcmp(server,"enabled") == 0 ){
+                config.dirserver = 1;
+            }
+        }
     }
 }
 

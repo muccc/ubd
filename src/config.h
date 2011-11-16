@@ -11,6 +11,7 @@ struct ubconfig {
     gint nodetimeout;
     gint sysloglevel;
     gint demo;
+    gint dirserver;
 };
 
 extern struct ubconfig config;

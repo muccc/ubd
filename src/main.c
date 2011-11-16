@@ -24,6 +24,7 @@
 #include "broadcast.h"
 #include "daemon.h"
 #include "segfault.h"
+#include "directory-server.h"
 
 int main (int argc, char *argv[])
 {
@@ -82,6 +83,9 @@ int main (int argc, char *argv[])
         openlog("ubd", LOG_PID , LOG_DAEMON);
         daemon_close_stderror();
     }
+    
+    if( config.dirserver )
+        dirserver_init();
 
     xml_parsegroupsandnodes();
     mgt_init();

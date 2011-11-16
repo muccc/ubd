@@ -9,4 +9,5 @@ void config_init(void)
     config.rate = 115200;
     config.sysloglevel = LOG_DEBUG;
     config.demo = 0;
+    config.dirserver = 0;
 }
