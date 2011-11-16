@@ -3268,7 +3268,7 @@ else
 fi
 
 
-CFLAGS="$CFLAGS -g -Wall -Wextra -std=c99"
+CFLAGS="$CFLAGS -g -Wall -Wextra -std=gnu99"
 
 
 

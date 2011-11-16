@@ -1,7 +1,7 @@
 AC_INIT([ubd],[1.0],[schneider@blinkenlichts.net])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
-CFLAGS="$CFLAGS -g -Wall -Wextra -std=c99"
+CFLAGS="$CFLAGS -g -Wall -Wextra -std=gnu99"
 
 PKG_CHECK_MODULES(GLIB, glib-2.0 > 2.0.0,
   [LIBS="$LIBS $GLIB_LIBS" CFLAGS="$CFLAGS $GLIB_CFLAGS"],
