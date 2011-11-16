@@ -27,6 +27,9 @@ GSocket *multicast_createSocket(gchar *groupname, guint port,
                         G_SOCKET_PROTOCOL_UDP,
                         NULL);
     ub_assert(socket != NULL);
+    
+    int on = 1;
+    setsockopt(g_socket_get_fd(socket), SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 
     if( g_socket_bind(socket, *sa, TRUE, &err) == FALSE ){
         syslog(LOG_ERR, "net_createSockets: Error while binding udp socket: %s\n", err->message);
