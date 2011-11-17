@@ -22,6 +22,7 @@ static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
 static void dirserver_announce(const char *service_type,
                                const char *protocol,
                                const gboolean local_only);
+static void dirserver_updateService( struct json_object *json);
 static enum commandlist dirserver_parseCommand(const char *cmd);
 static gboolean dirserv_tcp_listener(GSocketService    *service,
                         GSocketConnection *connection,
@@ -89,7 +90,8 @@ void dirserver_init(gchar* baseaddress)
     g_object_unref(sa);
 }
 
-static const char *dirserver_getJsonString(struct json_object *json, const char *field, const char *dflt)
+static const char *dirserver_getJsonString(struct json_object *json,
+                                    const char *field, const char *dflt)
 {
     struct json_object *json_tmp;
     json_tmp = json_object_object_get(json, field);
@@ -101,7 +103,21 @@ static const char *dirserver_getJsonString(struct json_object *json, const char 
     return dflt;
 }
 
-static gboolean dirserver_getJsonBool(struct json_object *json, const char *field, const gboolean dflt)
+static gboolean dirserver_getJsonBool(struct json_object *json,
+                                    const char *field, const gboolean dflt)
+{
+    struct json_object *json_tmp;
+    json_tmp = json_object_object_get(json, field);
+    if( json_tmp != NULL &&
+        !is_error(json_tmp) &&
+        json_object_get_type(json_tmp) == json_type_int ){
+        return json_object_get_int(json_tmp);
+    }
+    return dflt;
+}
+
+static int32_t dirserver_getJsonInt(struct json_object *json,
+                                    const char *field, const int32_t dflt)
 {
     struct json_object *json_tmp;
     json_tmp = json_object_object_get(json, field);
@@ -138,11 +154,24 @@ static void dirserver_newMCData(const char *data)
                                dirserver_getJsonString(json, "protocol",NULL),
                                dirserver_getJsonBool(json, "local-only",FALSE));
             break;
-            default:
+        case UPDATE_SERVICE:
+            dirserver_updateService(json);
+            break;
+        case NO_COMMAND:
             break;
     };
 
     json_object_put(json);
+}
+
+static void dirserver_updateService( struct json_object *json)
+{
+    const char *service = dirserver_getJsonString(json,"service", NULL);
+    const char *url = dirserver_getJsonString(json,"url", NULL);
+    const char *id = dirserver_getJsonString(json,"id", NULL);
+    int32_t port = dirserver_getJsonInt(json,"port", 0);
+    if( service == NULL || url == NULL || id == NULL || port < 1 )
+        return;
 }
 
 static void dirserver_announce(const char *service_type,
