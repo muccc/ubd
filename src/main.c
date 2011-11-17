@@ -85,7 +85,7 @@ int main (int argc, char *argv[])
     }
     
     if( config.dirserver )
-        dirserver_init();
+        dirserver_init(config.base);
 
     xml_parsegroupsandnodes();
     mgt_init();
