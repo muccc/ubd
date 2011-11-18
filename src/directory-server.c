@@ -184,26 +184,32 @@ static void dirserver_newMCData(const char *data)
     json_object_put(json);
 }
 
-static void dirserver_deleteService(const char *id)
+static void dirserver_deleteService(const char *key)
 {
-    struct service *service = g_hash_table_lookup(services, id);
+    struct service *service = g_hash_table_lookup(services, key);
     if( service == NULL ){
         syslog(LOG_DEBUG,"dirserver_deleteService: id unknown");
         return;
     }
-    syslog(LOG_DEBUG,"dirserver_deleteService: deleting %s", id);
+    syslog(LOG_DEBUG,"dirserver_deleteService: deleting %s", key);
     g_free(service->json);
-    g_hash_table_remove(services, id); 
+    g_hash_table_remove(services, key);
 }
 
 static void dirserver_deleteServiceCmd(struct json_object *json)
 {
     const char *id = dirserver_getJsonString(json,"id", NULL);
+    const char *protocol = dirserver_getJsonString(json,"protocol", NULL);
+    const char *service_type = dirserver_getJsonString(json,"service-type", NULL);
     if( id == NULL ) syslog(LOG_DEBUG,"dirserver_deleteService: invalid id");
+    if( protocol == NULL ) syslog(LOG_DEBUG,"dirserver_deleteService: invalid protocl");
+    if( service_type == NULL ) syslog(LOG_DEBUG,"dirserver_deleteService: invalid service-type");
     
-    if( id == NULL )
+    if( id == NULL || protocol == NULL || service_type == NULL)
         return;
-    dirserver_deleteService(id);    
+    char *key = g_strdup_printf("%s%s%s", id, service_type, protocol);
+    dirserver_deleteService(key);
+    g_free(key);
 }
 
 static void dirserver_updateServiceCmd(struct json_object *json)
@@ -212,26 +218,31 @@ static void dirserver_updateServiceCmd(struct json_object *json)
     const char *url = dirserver_getJsonString(json,"url", NULL);
     const char *id = dirserver_getJsonString(json,"id", NULL);
     const char *name = dirserver_getJsonString(json,"name", NULL);
+    const char *protocol = dirserver_getJsonString(json,"protocol", NULL);
     int32_t port = dirserver_getJsonInt(json,"port", 0);
 
     if( service_type == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid service-type");
     if( url == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid url");
     if( id == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid id");
     if( name == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid name");
+    if( protocol == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid protocl");
     if( port < 1 || port > 65635) syslog(LOG_DEBUG,"dirserver_updateService: invalid port");
     if( service_type == NULL || url == NULL || id == NULL
-        || name == NULL || port < 1 || port > 65635 ){
+        || name == NULL || port < 1 || port > 65635 || protocol == NULL){
         syslog(LOG_DEBUG,"dirserver_updateService: invalid fields");
         return;
     }
-    syslog(LOG_DEBUG, "update for service %s", id);
-    struct service *service = g_hash_table_lookup(services, id);
+
+    char *key = g_strdup_printf("%s%s%s", id, service_type, protocol);
+    syslog(LOG_DEBUG, "update for service %s", key);
+
+    struct service *service = g_hash_table_lookup(services, key);
     if( service == NULL ){
         syslog(LOG_DEBUG,"dirserver_updateService: adding new service");
         service = g_new0(struct service,1);
         service->json = g_strdup(json_object_to_json_string(json));
         service->ttl = config.dirttl;
-        g_hash_table_insert(services, g_strdup(id), service);
+        g_hash_table_insert(services, g_strdup(key), service);
     }else{
         service->ttl = config.dirttl; 
         if(strcmp(service->json, json_object_to_json_string(json)) != 0 ){
@@ -242,6 +253,7 @@ static void dirserver_updateServiceCmd(struct json_object *json)
             service->json = g_strdup(json_object_to_json_string(json));
         }
     }
+    g_free(key);
 }
 
 static void dirserver_announce(const char *service_type,

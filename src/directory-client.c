@@ -25,7 +25,7 @@ static GSocket *dirclientsocket;
 
 void dirclient_init(void)
 {
-    g_timeout_add_seconds(30,dirclient_tick,NULL);
+    g_timeout_add_seconds(15,dirclient_tick,NULL);
     //services = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     services = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
 
