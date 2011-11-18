@@ -1,9 +1,3 @@
 This is the uberbus deamon
 
-lauch:
-
-ubd <interface> <base address> <serial interface>
-
-Example:
-
-ubd lo ::1 /dev/ttyUSB0
+See https://wiki.muc.ccc.de/uberbus:ubd for more information
