@@ -269,11 +269,10 @@ static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
                                         gpointer user_data)
 {
     uint8_t buf[1500];
-    GSocketAddress *src;
     user_data = NULL;
     gssize len;    
     if( condition == G_IO_IN ){
-        len = g_socket_receive_from(socket,&src,(gchar*)buf,
+        len = g_socket_receive_from(socket,NULL,(gchar*)buf,
                                 sizeof(buf)-1,NULL,NULL);
         if( len > 0 ){
             syslog(LOG_DEBUG,"dirserver_read: Received:");
