@@ -16,6 +16,10 @@ struct dirservconnection {
     GInputStream *in;
 };
 
+struct service {
+    char *json;
+    uint32_t ttl;
+};
 
 void dirserver_init(gchar* baseaddress);
 

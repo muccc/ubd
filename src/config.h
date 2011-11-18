@@ -12,6 +12,7 @@ struct ubconfig {
     gint sysloglevel;
     gint demo;
     gint dirserver;
+    gint dirttl;
 };
 
 extern struct ubconfig config;

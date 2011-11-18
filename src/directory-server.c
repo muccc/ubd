@@ -13,6 +13,7 @@
 #include "bus.h"
 #include "classes.h"
 #include "net_multicast.h"
+#include "config.h"
 
 static GSocketAddress *sa;
 static GSocket *dirserversocket;
@@ -22,15 +23,19 @@ static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
 static void dirserver_announce(const char *service_type,
                                const char *protocol,
                                const gboolean local_only);
-static void dirserver_updateService( struct json_object *json);
+
+static void dirserver_updateServiceCmd(struct json_object *json);
+static void dirserver_deleteServiceCmd(struct json_object *json);
+static void dirserver_deleteService(const char *id);
+
 static enum commandlist dirserver_parseCommand(const char *cmd);
-static gboolean dirserv_tcp_listener(GSocketService    *service,
+static gboolean dirserver_tcp_listener(GSocketService    *service,
                         GSocketConnection *connection,
                         GObject           *source_object,
                         gpointer           user_data);
- 
+static gboolean dirserver_tick(gpointer data);
 enum commandlist {
-NO_COMMAND, DISCOVER_DIRECTORY, UPDATE_SERVICE
+NO_COMMAND, DISCOVER_DIRECTORY, UPDATE_SERVICE, DELETE_SERVICE
 };
 
 struct command {
@@ -41,14 +46,19 @@ struct command {
 struct command commands[] = 
 {
 {"discover-directory", DISCOVER_DIRECTORY},
-{"update-service", UPDATE_SERVICE}
+{"update-service", UPDATE_SERVICE},
+{"delete-service", DELETE_SERVICE}
 };
 
 #define COMMAND_COUNT (sizeof(commands)/sizeof(struct command))
 
+static GHashTable *services;
+
 void dirserver_init(gchar* baseaddress)
 {
     syslog(LOG_DEBUG,"dirserver_init: starting directory server");
+    services = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
     dirserversocket = multicast_createSocket("directoryserver", 2323, &sa);
     if( socket != NULL){
         syslog(LOG_DEBUG,"dirserver_init: socket open");
@@ -84,10 +94,12 @@ void dirserver_init(gchar* baseaddress)
             "dirserver_init: error while creating socket listener: %s\n",e->message);
         g_error_free(e);
     }
-    g_signal_connect(gss, "incoming", G_CALLBACK(dirserv_tcp_listener),NULL);
-    g_socket_service_start(gss);
- 
+    g_signal_connect(gss, "incoming", G_CALLBACK(dirserver_tcp_listener),NULL);
+    g_socket_service_start(gss); 
     g_object_unref(sa);
+
+
+    g_timeout_add_seconds(1,dirserver_tick,NULL);
 }
 
 static const char *dirserver_getJsonString(struct json_object *json,
@@ -110,8 +122,8 @@ static gboolean dirserver_getJsonBool(struct json_object *json,
     json_tmp = json_object_object_get(json, field);
     if( json_tmp != NULL &&
         !is_error(json_tmp) &&
-        json_object_get_type(json_tmp) == json_type_int ){
-        return json_object_get_int(json_tmp);
+        json_object_get_type(json_tmp) == json_type_boolean ){
+        return json_object_get_boolean(json_tmp)?TRUE:FALSE;
     }
     return dflt;
 }
@@ -123,8 +135,8 @@ static int32_t dirserver_getJsonInt(struct json_object *json,
     json_tmp = json_object_object_get(json, field);
     if( json_tmp != NULL &&
         !is_error(json_tmp) &&
-        json_object_get_type(json_tmp) == json_type_boolean ){
-        return json_object_get_boolean(json_tmp)?TRUE:FALSE;
+        json_object_get_type(json_tmp) == json_type_int ){
+        return json_object_get_int(json_tmp);
     }
     return dflt;
 }
@@ -133,21 +145,27 @@ static int32_t dirserver_getJsonInt(struct json_object *json,
 static void dirserver_newMCData(const char *data)
 {
     struct json_object *json_tmp;
-
     struct json_object *json = json_tokener_parse(data);
+
     ub_assert(json != NULL);
-    if( is_error(json) )
+    if( is_error(json) ){
+        syslog(LOG_DEBUG,"dirserver_newMCData: invalid json");
         return;
-    
+    }
     json_tmp = json_object_object_get(json, "cmd");
-    if( json_tmp == NULL || is_error(json_tmp) )
+    if( json_tmp == NULL || is_error(json_tmp) ){
+        syslog(LOG_DEBUG,"dirserver_newMCData: no cmd field in json");
         return;
-    if( json_object_get_type(json_tmp) != json_type_string )
+    }
+    if( json_object_get_type(json_tmp) != json_type_string ){
+        syslog(LOG_DEBUG,"dirserver_newMCData: no cmd field is not a string");
         return;
-    
+    }
+
     enum commandlist cmd = dirserver_parseCommand(
             json_object_get_string(json_tmp));
-    
+    json_object_object_del(json, "cmd");
+
     switch( cmd ){
         case DISCOVER_DIRECTORY:
             dirserver_announce(dirserver_getJsonString(json, "service-type",NULL),
@@ -155,8 +173,10 @@ static void dirserver_newMCData(const char *data)
                                dirserver_getJsonBool(json, "local-only",FALSE));
             break;
         case UPDATE_SERVICE:
-            dirserver_updateService(json);
+            dirserver_updateServiceCmd(json);
             break;
+        case DELETE_SERVICE:
+            dirserver_deleteServiceCmd(json);
         case NO_COMMAND:
             break;
     };
@@ -164,14 +184,63 @@ static void dirserver_newMCData(const char *data)
     json_object_put(json);
 }
 
-static void dirserver_updateService( struct json_object *json)
+static void dirserver_deleteService(const char *id)
 {
-    const char *service = dirserver_getJsonString(json,"service", NULL);
+    struct service *service = g_hash_table_lookup(services, id);
+    if( service == NULL ){
+        syslog(LOG_DEBUG,"dirserver_deleteService: id unknown");
+        return;
+    }
+    syslog(LOG_DEBUG,"dirserver_deleteService: deleting %s", id);
+    g_free(service->json);
+    g_hash_table_remove(services, id); 
+}
+static void dirserver_deleteServiceCmd(struct json_object *json)
+{
+    const char *id = dirserver_getJsonString(json,"id", NULL);
+    if( id == NULL ) syslog(LOG_DEBUG,"dirserver_deleteService: invalid id");
+    
+    if( id == NULL )
+        return;
+    dirserver_deleteService(id);    
+}
+
+static void dirserver_updateServiceCmd(struct json_object *json)
+{
+    const char *service_type = dirserver_getJsonString(json,"service-type", NULL);
     const char *url = dirserver_getJsonString(json,"url", NULL);
     const char *id = dirserver_getJsonString(json,"id", NULL);
+    const char *name = dirserver_getJsonString(json,"name", NULL);
     int32_t port = dirserver_getJsonInt(json,"port", 0);
-    if( service == NULL || url == NULL || id == NULL || port < 1 )
+
+    if( service_type == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid service-type");
+    if( url == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid url");
+    if( id == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid id");
+    if( name == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid name");
+    if( port < 1 || port > 65635) syslog(LOG_DEBUG,"dirserver_updateService: invalid port");
+    if( service_type == NULL || url == NULL || id == NULL
+        || name == NULL || port < 1 || port > 65635 ){
+        syslog(LOG_DEBUG,"dirserver_updateService: invalid fields");
         return;
+    }
+    syslog(LOG_DEBUG, "update for service %s", id);
+    struct service *service = g_hash_table_lookup(services, id);
+    if( service == NULL ){
+        syslog(LOG_DEBUG,"dirserver_updateService: adding new service");
+        service = g_new0(struct service,1);
+        service->json = g_strdup(json_object_to_json_string(json));
+        service->ttl = config.dirttl;
+        g_hash_table_insert(services, g_strdup(id), service);
+    }else{
+        service->ttl = config.dirttl; 
+        if(strcmp(service->json, json_object_to_json_string(json)) != 0 ){
+            syslog(LOG_DEBUG,"dirserver_updateService: updating service");
+            syslog(LOG_DEBUG,"old=%s new=%s",
+                    service->json, json_object_to_json_string(json));
+            g_free(service->json);
+            service->json = g_strdup(json_object_to_json_string(json));
+        }
+    }
 }
 
 static void dirserver_announce(const char *service_type,
@@ -194,6 +263,7 @@ static enum commandlist dirserver_parseCommand(const char *cmd)
     }
     return NO_COMMAND;
 }
+
 
 static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
                                         gpointer user_data)
@@ -236,8 +306,40 @@ static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
     return TRUE;
 }
 
+static inline void writeString(GOutputStream *out, char *s)
+{
+    g_output_stream_write(out, s, strlen(s), NULL, NULL);
+}
+
+static void writeServices(GOutputStream *out)
+{
+    writeString(out,"{");
+    gboolean first = TRUE;
+
+    GHashTableIter iter;
+    char *id;
+    struct service *service;
+
+    g_hash_table_iter_init (&iter, services);
+    while( g_hash_table_iter_next (&iter, (void**)&id, (void**)&service) ){
+        if( !first)
+            writeString(out,",");
+        first = FALSE;
+        writeString(out,"\"service\":");
+        writeString(out,service->json);
+    }
+    writeString(out,"}");
+}
+
+static void dirserver_finish(GOutputStream *out,
+                            GAsyncResult *res, GSocketConnection *connection){
+    res = NULL; out = NULL; connection=NULL;
+    //XXX: No unref needed?
+    //g_object_unref(connection);
+}
+
 #if 0
-void dirserv_tcp_listener_read(GInputStream *in, GAsyncResult *res,
+void dirserver_tcp_listener_read(GInputStream *in, GAsyncResult *res,
                             struct dirservconnection *dsconnection)
 {
     GError * e = NULL;
@@ -253,7 +355,7 @@ void dirserv_tcp_listener_read(GInputStream *in, GAsyncResult *res,
         //keep the stream open
         g_input_stream_read_async(in, dsconnection->buf, sizeof(dsconnection->buf),
             G_PRIORITY_DEFAULT, NULL,
-            (GAsyncReadyCallback) dirserv_tcp_listener_read, dsconnection); 
+            (GAsyncReadyCallback) dirserver_tcp_listener_read, dsconnection); 
     }else if( len == 0){
         syslog(LOG_DEBUG,"tcp_listener_read: connection closed\n");
         g_object_unref(dsconnection->connection);
@@ -264,14 +366,14 @@ void dirserv_tcp_listener_read(GInputStream *in, GAsyncResult *res,
 }
 #endif
 
-static gboolean dirserv_tcp_listener(GSocketService    *service,
+static gboolean dirserver_tcp_listener(GSocketService    *service,
                         GSocketConnection *connection,
                         GObject           *source_object,
                         gpointer           user_data){
     service=NULL;
     source_object = NULL;
     user_data = NULL;
-    syslog(LOG_DEBUG,"new listener\n");
+    //syslog(LOG_DEBUG,"new listener\n");
 
 #if 0    
     struct dirservconnection *dsconnection = g_new0(struct dirservconnection,1);
@@ -280,23 +382,59 @@ static gboolean dirserv_tcp_listener(GSocketService    *service,
     dsconnection->out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
     dsconnection->in = g_io_stream_get_input_stream(G_IO_STREAM(connection));
 #endif
-
+    g_tcp_connection_set_graceful_disconnect(G_TCP_CONNECTION(connection), TRUE);
     GOutputStream *out = g_io_stream_get_output_stream(G_IO_STREAM(connection));
     char *msg = "HTTP/1.0 200 OK\r\n\
 Server: ubd/0.1\r\n\
 Connection: close\r\n\
-Content-Type: text/html\r\n\r\n\
-<html><body>Hello World</body></html>";
-
+Content-Type: text/html\r\n\r\n";
     g_output_stream_write(out, msg, strlen(msg),
                         NULL, NULL);
+    writeServices(out);
 #if 0
     g_input_stream_read_async(dsconnection->in, dsconnection->buf,
             sizeof(dsconnection->buf), G_PRIORITY_DEFAULT, NULL,
-            (GAsyncReadyCallback)dirserv_tcp_listener_read, dsconnection);
+            (GAsyncReadyCallback)dirserver_tcp_listener_read, dsconnection);
     g_object_ref(connection);
 #endif
+    //g_object_ref(connection);
+    g_output_stream_close_async(out,
+                                0, NULL,
+                                (GAsyncReadyCallback)dirserver_finish, connection);
     return FALSE;
 }
 
+
+static gboolean dirserver_tick(gpointer data)
+{
+    data = NULL;
+    GHashTableIter iter;
+    char *id;
+    struct service *service;
+    g_hash_table_iter_init (&iter, services);
+    //syslog(LOG_DEBUG,"dirserver_tick: decrement");
+    while( g_hash_table_iter_next (&iter, (void**)&id, (void**)&service) ){
+        //syslog(LOG_DEBUG,"dirserver_tick: decrementing %s", id);
+        if( service->ttl )
+            service->ttl--;
+    }
+
+    //syslog(LOG_DEBUG,"dirserver_tick: delete");
+    while( TRUE ){
+        gboolean clean = TRUE;
+        g_hash_table_iter_init (&iter, services);
+        while( g_hash_table_iter_next (&iter, (void**)&id, (void**)&service) ){
+            if( service->ttl == 0 ){
+                dirserver_deleteService(id);
+                clean = FALSE;
+                break;
+            }
+        }
+        if( clean == TRUE ){
+            //syslog(LOG_DEBUG,"dirserver_tick: clean");
+            break;
+        }
+    }
+    return TRUE;
+}
 

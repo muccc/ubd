@@ -10,4 +10,5 @@ void config_init(void)
     config.sysloglevel = LOG_DEBUG;
     config.demo = 0;
     config.dirserver = 0;
+    config.dirttl = 30;
 }
