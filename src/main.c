@@ -25,6 +25,7 @@
 #include "daemon.h"
 #include "segfault.h"
 #include "directory-server.h"
+#include "directory-client.h"
 
 int main (int argc, char *argv[])
 {
@@ -86,6 +87,7 @@ int main (int argc, char *argv[])
     
     if( config.dirserver )
         dirserver_init(config.base);
+    dirclient_init();
 
     xml_parsegroupsandnodes();
     mgt_init();

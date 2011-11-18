@@ -195,6 +195,7 @@ static void dirserver_deleteService(const char *id)
     g_free(service->json);
     g_hash_table_remove(services, id); 
 }
+
 static void dirserver_deleteServiceCmd(struct json_object *json)
 {
     const char *id = dirserver_getJsonString(json,"id", NULL);
