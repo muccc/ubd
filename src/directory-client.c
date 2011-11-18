@@ -106,5 +106,18 @@ void dirclient_removeServices(struct node *n)
 
 static gboolean dirclient_tick(gpointer data)
 {
+    data = NULL;
+    GHashTableIter iter;
+    struct socketdata *id;
+    char *service;
+
+    g_hash_table_iter_init (&iter, services);
+    //syslog(LOG_DEBUG,"dirserver_tick: decrement");
+    while( g_hash_table_iter_next (&iter, (void**)&id, (void**)&service) ){
+        //syslog(LOG_DEBUG,"dirserver_tick: decrementing %s", id);
+        g_socket_send_to(dirclientsocket, sa, service, strlen(service), NULL, NULL);
+    }
+
+
     return TRUE;
 }
