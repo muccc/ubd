@@ -274,7 +274,7 @@ static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
     gssize len;    
     if( condition == G_IO_IN ){
         len = g_socket_receive_from(socket,&src,(gchar*)buf,
-                                sizeof(buf),NULL,NULL);
+                                sizeof(buf)-1,NULL,NULL);
         if( len > 0 ){
             syslog(LOG_DEBUG,"dirserver_read: Received:");
             debug_hexdump(buf,len);
@@ -387,7 +387,7 @@ static gboolean dirserver_tcp_listener(GSocketService    *service,
     char *msg = "HTTP/1.0 200 OK\r\n\
 Server: ubd/0.1\r\n\
 Connection: close\r\n\
-Content-Type: text/html\r\n\r\n";
+Content-Type: application/json\r\n\r\n";
     g_output_stream_write(out, msg, strlen(msg),
                         NULL, NULL);
     writeServices(out);
