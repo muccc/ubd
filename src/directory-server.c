@@ -23,6 +23,7 @@ static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
 static void dirserver_announce(const char *service_type,
                                const char *protocol,
                                const gboolean local_only);
+static void dirserver_announceUpdate(void);
 
 static void dirserver_updateServiceCmd(struct json_object *json);
 static void dirserver_deleteServiceCmd(struct json_object *json);
@@ -96,8 +97,6 @@ void dirserver_init(gchar* baseaddress)
     }
     g_signal_connect(gss, "incoming", G_CALLBACK(dirserver_tcp_listener),NULL);
     g_socket_service_start(gss); 
-    g_object_unref(sa);
-
 
     g_timeout_add_seconds(1,dirserver_tick,NULL);
 }
@@ -239,6 +238,7 @@ static void dirserver_updateServiceCmd(struct json_object *json)
         service->json = g_strdup(json_object_to_json_string(json));
         service->ttl = config.dirttl;
         g_hash_table_insert(services, g_strdup(key), service);
+        dirserver_announceUpdate();
     }else{
         service->ttl = config.dirttl; 
         if(strcmp(service->json, json_object_to_json_string(json)) != 0 ){
@@ -247,6 +247,7 @@ static void dirserver_updateServiceCmd(struct json_object *json)
                     service->json, json_object_to_json_string(json));
             g_free(service->json);
             service->json = g_strdup(json_object_to_json_string(json));
+            dirserver_announceUpdate();
         }
     }
     g_free(key);
@@ -260,7 +261,14 @@ static void dirserver_announce(const char *service_type,
     if( service_type ) printf(" service-type=%s", service_type);
     if( protocol ) printf(" protocol=%s", protocol);
     printf(" local_only=%s\n", local_only?"true":"false");
-    char *response = "{\"cmd\":\"directory\", \"url\":\"http://example.com:2300\"}";
+    char *response = "{\"cmd\": \"directory\", \"url\": \"http://example.com:2300\" }";
+    g_socket_send_to(dirserversocket, sa, response, strlen(response), NULL, NULL);
+}
+
+static void dirserver_announceUpdate(void)
+{
+    char *response = "{\"cmd\": \"updated-service\", \"url\": \"http://example.com:2300\" }";
+    syslog(LOG_DEBUG,"dirserver_announceUpdate()");
     g_socket_send_to(dirserversocket, sa, response, strlen(response), NULL, NULL);
 }
 
