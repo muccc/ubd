@@ -122,7 +122,7 @@ void dirclient_removeServices(struct node *n)
 
 void dirclient_registerMulticastGroup(struct multicastgroup *g)
 {
-    printf("avahi_registerMulticastGroup()\n");
+    printf("dirclient_registerMulticastGroup()\n");
     
     char *address = g_inet_address_to_string(
                     g_inet_socket_address_get_address(
