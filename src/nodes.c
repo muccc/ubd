@@ -18,12 +18,9 @@ void nodes_init(void)
         nodes[i].version[0] = 0;
         nodes[i].netadr = NULL;
         nodes[i].ubnetd = NULL;
-        //nodes[i].avahiaddressgroup = NULL;
         gint j;
         for(j=0; j<32; j++){
             nodes[i].tcpsockets[j].listeners = NULL;
-            //nodes[i].tcpsockets[j].avahiservicegroup = NULL;
-            //nodes[i].udpsockets[j].avahiservicegroup = NULL;
         }
 
     }
@@ -39,15 +36,11 @@ struct node *nodes_getFreeNode(void)
                 nodes[i].groups[j] = -1;
             memset(nodes[i].classes,0,sizeof(nodes[i].classes));
             nodes[i].netadr = NULL;
-            //nodes[i].avahiaddressgroup = NULL;
             guint j;
             for(j=0; j<32; j++){
                 nodes[i].tcpsockets[j].listeners = NULL;
-                //nodes[i].tcpsockets[j].avahiservicegroup = NULL;
-                //nodes[i].udpsockets[j].avahiservicegroup = NULL;
             }
             nodes[i].hostname[0] = 0;
-            //nodes[i].avahiname[0] = 0;
             return &nodes[i];
         }
     }
@@ -173,10 +166,6 @@ void nodes_setNameFromID(struct node *n)
         syslog(LOG_WARNING,"ill formated id for this node: %s\n",n->id);
         n->domain[0] = 0;
     }
-    //if( n->avahiname[0] == 0 ){
-    //    //TODO: check buffer
-    //    strcpy(n->avahiname, n->name);
-    //}
     if( n->hostname[0] == 0 ){
         //TODO: check buffer
         strcpy(n->hostname, n->name);

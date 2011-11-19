@@ -10,7 +10,6 @@
 //only one service is allowed per group!
 struct multicastgroup{
     gchar           *name;
-    //gchar           *avahiname;
     gchar           hostname[100];
     guint           class;
     GSocket         *socket;
@@ -18,8 +17,6 @@ struct multicastgroup{
     GSource         *source;
     //the multicast address on the bus
     gint            busadr;
-    //AvahiSEntryGroup *avahientrygroup;
-    //char            *avahiservicename;
 };
 
 void groups_init(void);

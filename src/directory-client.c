@@ -41,13 +41,10 @@ void dirclient_init(void)
 void dirclient_addService(struct node *n, guint classid)
 {
     guint class = n->classes[classid];
-    //struct socketdata *udpsd = &(n->udpsockets[classid]);
-    struct socketdata *tcpsd = &(n->tcpsockets[classid]);
+    struct socketdata *sd = &(n->tcpsockets[classid]);
     gchar *addr = g_inet_address_to_string(n->netadr);
 
     json_object *cmd = json_object_new_string("update-service");
-    //json_object *tcp = json_object_new_string("tcp");
-    //json_object *udp = json_object_new_string("udp");
     
     json_object *service_type = json_object_new_string(classes_getClassName(class));
     json_object *url = json_object_new_string(addr);
@@ -56,8 +53,8 @@ void dirclient_addService(struct node *n, guint classid)
     json_object *port = json_object_new_int(classes_getServicePort(class));
     json_object *udpproto = json_object_new_boolean(1);
     json_object *tcpproto = json_object_new_boolean(1);
+    json_object *multicast = json_object_new_boolean(0);
 
-    
     json_object *json = json_object_new_object();
     json_object_object_add(json,"cmd", cmd);
     json_object_object_add(json,"name", name);
@@ -67,11 +64,12 @@ void dirclient_addService(struct node *n, guint classid)
     json_object_object_add(json,"service-type", service_type);
     json_object_object_add(json,"tcp", tcpproto);
     json_object_object_add(json,"udp", udpproto);
+    json_object_object_add(json,"multicast", multicast);
     
-    const char *tcpjson = json_object_to_json_string(json);
-    syslog(LOG_DEBUG,"adding tcp json: %s", tcpjson);
-    g_socket_send_to(dirclientsocket, sa, tcpjson, strlen(tcpjson), NULL, NULL);
-    g_hash_table_insert(services, tcpsd, g_strdup(tcpjson));
+    const char *jsons = json_object_to_json_string(json);
+    syslog(LOG_DEBUG,"sending json: %s", jsons);
+    g_socket_send_to(dirclientsocket, sa, jsons, strlen(jsons), NULL, NULL);
+    g_hash_table_insert(services, sd, g_strdup(jsons));
     
     json_object_put(json);
     g_free(addr);
@@ -79,7 +77,24 @@ void dirclient_addService(struct node *n, guint classid)
 
 void dirclient_removeService(struct node *n, guint classid)
 {
+    guint class = n->classes[classid];
     struct socketdata *sd = &(n->tcpsockets[classid]);
+
+    json_object *cmd = json_object_new_string("delete-service");
+    
+    json_object *service_type = json_object_new_string(classes_getClassName(class));
+    json_object *id = json_object_new_string(n->id);
+
+    json_object *json = json_object_new_object();
+    json_object_object_add(json,"cmd", cmd);
+    json_object_object_add(json,"id", id);
+    json_object_object_add(json,"service-type", service_type);
+    
+    const char *jsons = json_object_to_json_string(json);
+    syslog(LOG_DEBUG,"sending json: %s", jsons);
+    g_socket_send_to(dirclientsocket, sa, jsons, strlen(jsons), NULL, NULL);
+    json_object_put(json);
+
     g_hash_table_remove(services, sd);
 }
 
@@ -105,6 +120,47 @@ void dirclient_removeServices(struct node *n)
     }
 }
 
+void dirclient_registerMulticastGroup(struct multicastgroup *g)
+{
+    printf("avahi_registerMulticastGroup()\n");
+    
+    char *address = g_inet_address_to_string(
+                    g_inet_socket_address_get_address(
+                    (GInetSocketAddress*)g->sa));
+    guint class = g->class;
+
+    json_object *cmd = json_object_new_string("update-service");
+    
+    json_object *service_type = json_object_new_string(classes_getClassName(class));
+    json_object *url = json_object_new_string(address);
+    json_object *id = json_object_new_string(g->name);
+    json_object *name = json_object_new_string(g->name);
+    json_object *port = json_object_new_int(classes_getServicePort(class));
+    json_object *udpproto = json_object_new_boolean(1);
+    json_object *tcpproto = json_object_new_boolean(0);
+    json_object *multicast = json_object_new_boolean(1);
+
+    json_object *json = json_object_new_object();
+    json_object_object_add(json,"cmd", cmd);
+    json_object_object_add(json,"name", name);
+    json_object_object_add(json,"id", id);
+    json_object_object_add(json,"url", url);
+    json_object_object_add(json,"port", port);
+    json_object_object_add(json,"service-type", service_type);
+    json_object_object_add(json,"tcp", tcpproto);
+    json_object_object_add(json,"udp", udpproto);
+    json_object_object_add(json,"multicast", multicast);
+    
+    const char *jsons = json_object_to_json_string(json);
+    syslog(LOG_DEBUG,"sending json: %s", jsons);
+    g_socket_send_to(dirclientsocket, sa, jsons, strlen(jsons), NULL, NULL);
+    g_hash_table_insert(services, g, g_strdup(jsons));
+    
+    json_object_put(json);
+
+    g_free(address);
+}
+
 static gboolean dirclient_tick(gpointer data)
 {
     data = NULL;
@@ -122,3 +178,4 @@ static gboolean dirclient_tick(gpointer data)
 
     return TRUE;
 }
+

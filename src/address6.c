@@ -30,15 +30,12 @@ void address6_createAddress(struct node *n)
         n->netadr = address6db_getFreeAddr(n->id);
 	ub_assert(n->netadr);
     }
-    //avahi_removeNode(n);
     interface_removeAddress(n);
-    //avahi_registerNode(n);
     interface_createAddress(n);
 }
 
 void address6_removeAddress(struct node *n)
 {
-   //avahi_removeNode(n);
    interface_removeAddress(n);
 }
 

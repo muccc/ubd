@@ -18,15 +18,12 @@ struct socketdata{
     GSocketAddress *socketaddress;
     guint classid;
     GSList          *listeners;
-    //AvahiSEntryGroup *avahiservicegroup;
-    //gchar           *avahiservicename;
 };
 
 struct node{
     gint        type;
     gchar       id[MAX_ID];
     gchar       name[MAX_ID];
-    //gchar       avahiname[MAX_ID];
     gchar       domain[MAX_ID];
     gchar       version[MAX_ID];
     gchar       hostname[MAX_ID];
@@ -48,7 +45,6 @@ struct node{
 
     //unicast address of the node
     GInetAddress    *netadr;
-    //AvahiSEntryGroup *avahiaddressgroup;
     gboolean        netup;
 
     //connection to the ubnetd used to create

@@ -11,6 +11,7 @@
 #include "bus.h"
 #include "classes.h"
 #include "net_multicast.h"
+#include "directory-client.h"
 
 struct multicastgroup groups[MAX_GROUPS];
 gint groupcount = 0;
@@ -77,7 +78,6 @@ void groups_addGroup(gchar *groupname, gchar *hostname, gchar *classname)
         GSocket *socket = multicast_createSocket(groupname, udpport, &sa);
         if( socket != NULL){
             groups[g].name = g_strdup(groupname);
-            //groups[g].avahiname = g_strdup(hostname);
             //TODO: check buffer
             groups[g].hostname[0] = 0;
             strcpy(groups[g].hostname, hostname);
@@ -98,7 +98,7 @@ void groups_addGroup(gchar *groupname, gchar *hostname, gchar *classname)
             syslog(LOG_INFO,"groups.c: added new group %s as %d\n", groupname,
                     groups[g].busadr);
 
-            //avahi_registerMulticastGroup(&groups[g]);
+            dirclient_registerMulticastGroup(&groups[g]);
         }else{
             //TODO:log error
             syslog(LOG_WARNING,"groups.c: warning: could not create socket\n");
