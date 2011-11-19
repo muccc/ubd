@@ -41,19 +41,21 @@ void dirclient_init(void)
 void dirclient_addService(struct node *n, guint classid)
 {
     guint class = n->classes[classid];
-    struct socketdata *udpsd = &(n->udpsockets[classid]);
+    //struct socketdata *udpsd = &(n->udpsockets[classid]);
     struct socketdata *tcpsd = &(n->tcpsockets[classid]);
     gchar *addr = g_inet_address_to_string(n->netadr);
 
     json_object *cmd = json_object_new_string("update-service");
-    json_object *tcp = json_object_new_string("tcp");
-    json_object *udp = json_object_new_string("udp");
+    //json_object *tcp = json_object_new_string("tcp");
+    //json_object *udp = json_object_new_string("udp");
     
     json_object *service_type = json_object_new_string(classes_getClassName(class));
     json_object *url = json_object_new_string(addr);
     json_object *id = json_object_new_string(n->id);
     json_object *name = json_object_new_string(n->name);
     json_object *port = json_object_new_int(classes_getServicePort(class));
+    json_object *udpproto = json_object_new_boolean(1);
+    json_object *tcpproto = json_object_new_boolean(1);
 
     
     json_object *json = json_object_new_object();
@@ -63,20 +65,14 @@ void dirclient_addService(struct node *n, guint classid)
     json_object_object_add(json,"url", url);
     json_object_object_add(json,"port", port);
     json_object_object_add(json,"service-type", service_type);
-    json_object_object_add(json,"protocol", tcp);
+    json_object_object_add(json,"tcp", tcpproto);
+    json_object_object_add(json,"udp", udpproto);
     
     const char *tcpjson = json_object_to_json_string(json);
     syslog(LOG_DEBUG,"adding tcp json: %s", tcpjson);
     g_socket_send_to(dirclientsocket, sa, tcpjson, strlen(tcpjson), NULL, NULL);
     g_hash_table_insert(services, tcpsd, g_strdup(tcpjson));
     
-    json_object_object_del(json, "protocol");
-    json_object_object_add(json,"protocol", udp);
-    
-    const char *udpjson = json_object_to_json_string(json);
-    g_socket_send_to(dirclientsocket, sa, udpjson, strlen(udpjson), NULL, NULL);
-    g_hash_table_insert(services, udpsd, g_strdup(udpjson));
- 
     json_object_put(json);
     g_free(addr);
 }
@@ -84,9 +80,7 @@ void dirclient_addService(struct node *n, guint classid)
 void dirclient_removeService(struct node *n, guint classid)
 {
     struct socketdata *sd = &(n->tcpsockets[classid]);
-
-    sd = &(n->udpsockets[classid]);
-
+    g_hash_table_remove(services, sd);
 }
 
 void dirclient_registerServices(struct node *n)
@@ -102,6 +96,13 @@ void dirclient_registerServices(struct node *n)
 
 void dirclient_removeServices(struct node *n)
 {
+    guint i;
+    for(i=0; i<sizeof(n->classes); i++){
+        if( n->classes[i] != 0 ){
+            syslog(LOG_DEBUG,"removing service %d\n", n->classes[i]);
+            dirclient_removeService(n, i);
+        }
+    }
 }
 
 static gboolean dirclient_tick(gpointer data)

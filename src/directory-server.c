@@ -199,15 +199,13 @@ static void dirserver_deleteService(const char *key)
 static void dirserver_deleteServiceCmd(struct json_object *json)
 {
     const char *id = dirserver_getJsonString(json,"id", NULL);
-    const char *protocol = dirserver_getJsonString(json,"protocol", NULL);
     const char *service_type = dirserver_getJsonString(json,"service-type", NULL);
     if( id == NULL ) syslog(LOG_DEBUG,"dirserver_deleteService: invalid id");
-    if( protocol == NULL ) syslog(LOG_DEBUG,"dirserver_deleteService: invalid protocl");
     if( service_type == NULL ) syslog(LOG_DEBUG,"dirserver_deleteService: invalid service-type");
     
-    if( id == NULL || protocol == NULL || service_type == NULL)
+    if( id == NULL || service_type == NULL)
         return;
-    char *key = g_strdup_printf("%s%s%s", id, service_type, protocol);
+    char *key = g_strdup_printf("%s%s", id, service_type);
     dirserver_deleteService(key);
     g_free(key);
 }
@@ -218,22 +216,20 @@ static void dirserver_updateServiceCmd(struct json_object *json)
     const char *url = dirserver_getJsonString(json,"url", NULL);
     const char *id = dirserver_getJsonString(json,"id", NULL);
     const char *name = dirserver_getJsonString(json,"name", NULL);
-    const char *protocol = dirserver_getJsonString(json,"protocol", NULL);
     int32_t port = dirserver_getJsonInt(json,"port", 0);
 
     if( service_type == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid service-type");
     if( url == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid url");
     if( id == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid id");
     if( name == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid name");
-    if( protocol == NULL ) syslog(LOG_DEBUG,"dirserver_updateService: invalid protocl");
     if( port < 1 || port > 65635) syslog(LOG_DEBUG,"dirserver_updateService: invalid port");
     if( service_type == NULL || url == NULL || id == NULL
-        || name == NULL || port < 1 || port > 65635 || protocol == NULL){
+        || name == NULL || port < 1 || port > 65635 ){
         syslog(LOG_DEBUG,"dirserver_updateService: invalid fields");
         return;
     }
 
-    char *key = g_strdup_printf("%s%s%s", id, service_type, protocol);
+    char *key = g_strdup_printf("%s%s", id, service_type);
     syslog(LOG_DEBUG, "update for service %s", key);
 
     struct service *service = g_hash_table_lookup(services, key);
