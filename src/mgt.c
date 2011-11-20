@@ -90,6 +90,7 @@ static void mgt_checkTimeout(void)
                 address6_removeAddress(n);
                 n->type = TYPE_NONE;
                 nodes_deactivateNode(n);
+                n->state = NODE_TIMEOUT;
             }
         }
     }
