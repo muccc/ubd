@@ -134,7 +134,7 @@ void dirclient_registerMulticastGroup(struct multicastgroup *g)
     json_object *service_type = json_object_new_string(classes_getClassName(class));
     json_object *url = json_object_new_string(address);
     json_object *id = json_object_new_string(g->name);
-    json_object *name = json_object_new_string(g->name);
+    json_object *name = json_object_new_string(g->hostname);
     json_object *port = json_object_new_int(classes_getServicePort(class));
     json_object *udpproto = json_object_new_boolean(1);
     json_object *tcpproto = json_object_new_boolean(0);

@@ -81,7 +81,7 @@ void groups_addGroup(gchar *groupname, gchar *hostname, gchar *classname)
             //TODO: check buffer
             groups[g].hostname[0] = 0;
             strcpy(groups[g].hostname, hostname);
-            strcat(groups[g].hostname, ".local");
+            //strcat(groups[g].hostname, ".local");
 
             groups[g].busadr = g + GROUPS_STARTADDRESS;
             groups[g].class = class;
