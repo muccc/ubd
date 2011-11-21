@@ -40,7 +40,7 @@ void daemon_init(void)
     int fd;
     char buf[BUF_SIZE];
     char *pidFile = "/var/run/ubd.pid";
-    char *progName = "ubd";
+    //char *progName = "ubd";
 
     /* already a daemon */
     // PID = 1: init
@@ -83,7 +83,7 @@ void daemon_init(void)
     }
 
     snprintf(buf, BUF_SIZE, "%ld\n", (long) getpid());
-    if (write(fd, buf, strlen(buf)) != strlen(buf)){
+    if (write(fd, buf, strlen(buf)) != (int)strlen(buf)){
         syslog(LOG_ERR,"Writing to PID file '/var/run/ubd.pid'");
         exit(EXIT_FAILURE);
     }

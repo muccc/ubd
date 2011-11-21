@@ -257,6 +257,8 @@ static void dirserver_announce(const char *service_type,
                                const char *protocol,
                                const gboolean local_only)
 {
+    service_type = NULL;
+    protocol = (char*)&local_only;
     char *response = g_strdup_printf(
         "{\"cmd\": \"directory\", \"url\": \"%s\" \"port\": %d }",
         config.base, config.dirserverport);
