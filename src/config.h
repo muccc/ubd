@@ -13,6 +13,7 @@ struct ubconfig {
     gint demo;
     gint dirserver;
     gint dirttl;
+    gint dirserverport;
 };
 
 extern struct ubconfig config;

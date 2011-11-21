@@ -11,4 +11,5 @@ void config_init(void)
     config.demo = 0;
     config.dirserver = 0;
     config.dirttl = 30;
+    config.dirserverport = 8080;
 }

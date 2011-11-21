@@ -257,19 +257,21 @@ static void dirserver_announce(const char *service_type,
                                const char *protocol,
                                const gboolean local_only)
 {
-    printf("announcing");    
-    if( service_type ) printf(" service-type=%s", service_type);
-    if( protocol ) printf(" protocol=%s", protocol);
-    printf(" local_only=%s\n", local_only?"true":"false");
-    char *response = "{\"cmd\": \"directory\", \"url\": \"http://example.com:2300\" }";
+    char *response = g_strdup_printf(
+        "{\"cmd\": \"directory\", \"url\": \"%s\" \"port\": %d }",
+        config.base, config.dirserverport);
     g_socket_send_to(dirserversocket, sa, response, strlen(response), NULL, NULL);
+    g_free(response);
 }
 
 static void dirserver_announceUpdate(void)
 {
-    char *response = "{\"cmd\": \"updated-service\", \"url\": \"http://example.com:2300\" }";
     syslog(LOG_DEBUG,"dirserver_announceUpdate()");
+    char *response = g_strdup_printf(
+        "{\"cmd\": \"updated-service\", \"url\": \"%s\" \"port\": %d }",
+        config.base, config.dirserverport);
     g_socket_send_to(dirserversocket, sa, response, strlen(response), NULL, NULL);
+    g_free(response);
 }
 
 static enum commandlist dirserver_parseCommand(const char *cmd)
