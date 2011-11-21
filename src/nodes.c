@@ -14,7 +14,9 @@ void nodes_init(void)
         nodes[i].type=TYPE_NONE;
         nodes[i].id[0] = 0;
         nodes[i].name[0] = 0;
+        #if 0
         nodes[i].domain[0] = 0;
+        #endif
         nodes[i].version[0] = 0;
         nodes[i].netadr = NULL;
         nodes[i].ubnetd = NULL;
@@ -40,7 +42,7 @@ struct node *nodes_getFreeNode(void)
             for(j=0; j<32; j++){
                 nodes[i].tcpsockets[j].listeners = NULL;
             }
-            nodes[i].hostname[0] = 0;
+            //nodes[i].hostname[0] = 0;
             return &nodes[i];
         }
     }
@@ -154,22 +156,29 @@ void nodes_setNameFromID(struct node *n)
 {
     //n->name is of size n->id
     ub_assert(sizeof(n->name) >= sizeof(n->id));
-    strcpy(n->name,n->id);
-    char *s = strchr(n->name,',');
-
-    if( s != NULL){
-        *s = 0;
-        ub_assert(sizeof(n->domain) >= sizeof(n->id));
+    if( n->name[0] == 0 ){
+        strcpy(n->name,n->id);
+        char *t = strchr(n->name,',');
+        if( t != NULL )
+            *t = 0;
+    }
+    
+    #if 0
+    ub_assert(sizeof(n->domain) >= sizeof(n->id));
+    char *s = strchr(n->id,',');
+    if( s != NULL ){
         strcpy(n->domain,++s);
     }else{
         //there was no domain in the id
         syslog(LOG_WARNING,"ill formated id for this node: %s\n",n->id);
         n->domain[0] = 0;
     }
-    if( n->hostname[0] == 0 ){
-        //TODO: check buffer
-        strcpy(n->hostname, n->name);
-        strcat(n->hostname, ".local");
-    }
+    #endif
+
+    //if( n->hostname[0] == 0 ){
+    //    //TODO: check buffer
+    //    strcpy(n->hostname, n->name);
+    //    strcat(n->hostname, ".local");
+    //}
 }
 

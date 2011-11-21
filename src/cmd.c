@@ -14,8 +14,8 @@ gchar *cmd_list_nodes(void)
         struct node *n = nodes_getNode(i);
         if( n->active ){
             pos += sprintf(pos,"id=\"%s\" version=\"%s\" busadr=%d "
-                "name=\"%s\" domain=\"%s\"\n",
-                n->id, n->version, n->busadr, n->name, n->domain);
+                "name=\"%s\"\n",
+                n->id, n->version, n->busadr, n->name);
         }
     }
     return result;

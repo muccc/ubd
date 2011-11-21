@@ -24,9 +24,11 @@ struct node{
     gint        type;
     gchar       id[MAX_ID];
     gchar       name[MAX_ID];
+    #if 0
     gchar       domain[MAX_ID];
+    #endif
     gchar       version[MAX_ID];
-    gchar       hostname[MAX_ID];
+    //gchar       hostname[MAX_ID];
     gint        groups[32];
     guchar      classes[32];
     
