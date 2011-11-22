@@ -1,0 +1,6 @@
+#!/bin/bash
+name=`head /dev/urandom | uuencode -m - | sed -n 2p | cut -c1-${1:-8}`
+
+#echo '{"cmd":"delete-service", "id":"no idea3"}' | nc -u ff18:583:786d:8ec9:d3d6:fd2b:1155:e066 2323
+
+echo {\"cmd\":\"update-service\", \"service-type\":\"foobar\", \"id\":\"$name\", \"url\":\"somewhere\",\"name\":\"einname\", \"port\":23, \"fnord\":23} | nc -u ff18:583:786d:8ec9:d3d6:fd2b:1155:e066 2323 -q0
