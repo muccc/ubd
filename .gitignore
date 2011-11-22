@@ -9,4 +9,7 @@
 *.elf
 *.lss
 *.sym
+autom4te.cache
+*.tar.gz
+core
 
