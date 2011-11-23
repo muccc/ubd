@@ -114,11 +114,10 @@ void xml_parseNode(mxml_node_t *node)
     n->id[MAX_ID-1] = 0;
 
     if( hostname != NULL && strlen(hostname) != 0 ){
-        strncpy(n->avahiname, hostname, MAX_ID);
-        strncpy(n->hostname, hostname, MAX_ID);
+        strncpy(n->name, hostname, MAX_ID);
         //TODO: check buffer len
-        strcat(n->hostname, ".local");
-        n->hostname[MAX_ID-1] = 0;
+        //strcat(n->hostname, ".local");
+        n->name[MAX_ID-1] = 0;
     }
 
     if( address != NULL && strlen(address) != 0 ){
@@ -206,6 +205,34 @@ void xml_parsebase(void)
                 config.sysloglevel = LOG_INFO;
             }else if( strcmp(sysloglevel,"WARNING") == 0 ){
                 config.sysloglevel = LOG_WARNING;
+            }
+        }
+    }
+
+    mxml_node_t *simulation = mxmlFindElement(
+        tree, tree, "simulation", NULL, NULL, MXML_DESCEND);
+    if( simulation != NULL ){
+        gchar *level = xml_getAttribute(
+                    simulation, "mode");
+        if( level != NULL ){
+            if( strcmp(level,"off") == 0 ){
+                config.demo = 0;
+            }else if( strcmp(level,"demo") == 0 ){
+                config.demo = 1;
+            }
+        }
+    }
+
+    mxml_node_t *directory = mxmlFindElement(
+        tree, tree, "directory", NULL, NULL, MXML_DESCEND);
+    if( simulation != NULL ){
+        gchar *server = xml_getAttribute(
+                    directory, "server");
+        if( server != NULL ){
+            if( strcmp(server,"disabled") == 0 ){
+                config.dirserver = 0;
+            }else if( strcmp(server,"enabled") == 0 ){
+                config.dirserver = 1;
             }
         }
     }

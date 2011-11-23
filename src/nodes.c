@@ -14,16 +14,15 @@ void nodes_init(void)
         nodes[i].type=TYPE_NONE;
         nodes[i].id[0] = 0;
         nodes[i].name[0] = 0;
+        #if 0
         nodes[i].domain[0] = 0;
+        #endif
         nodes[i].version[0] = 0;
         nodes[i].netadr = NULL;
         nodes[i].ubnetd = NULL;
-        nodes[i].avahiaddressgroup = NULL;
         gint j;
         for(j=0; j<32; j++){
             nodes[i].tcpsockets[j].listeners = NULL;
-            nodes[i].tcpsockets[j].avahiservicegroup = NULL;
-            nodes[i].udpsockets[j].avahiservicegroup = NULL;
         }
 
     }
@@ -39,15 +38,11 @@ struct node *nodes_getFreeNode(void)
                 nodes[i].groups[j] = -1;
             memset(nodes[i].classes,0,sizeof(nodes[i].classes));
             nodes[i].netadr = NULL;
-            nodes[i].avahiaddressgroup = NULL;
             guint j;
             for(j=0; j<32; j++){
                 nodes[i].tcpsockets[j].listeners = NULL;
-                nodes[i].tcpsockets[j].avahiservicegroup = NULL;
-                nodes[i].udpsockets[j].avahiservicegroup = NULL;
             }
-            nodes[i].hostname[0] = 0;
-            nodes[i].avahiname[0] = 0;
+            //nodes[i].hostname[0] = 0;
             return &nodes[i];
         }
     }
@@ -161,26 +156,29 @@ void nodes_setNameFromID(struct node *n)
 {
     //n->name is of size n->id
     ub_assert(sizeof(n->name) >= sizeof(n->id));
-    strcpy(n->name,n->id);
-    char *s = strchr(n->name,',');
-
-    if( s != NULL){
-        *s = 0;
-        ub_assert(sizeof(n->domain) >= sizeof(n->id));
+    if( n->name[0] == 0 ){
+        strcpy(n->name,n->id);
+        char *t = strchr(n->name,',');
+        if( t != NULL )
+            *t = 0;
+    }
+    
+    #if 0
+    ub_assert(sizeof(n->domain) >= sizeof(n->id));
+    char *s = strchr(n->id,',');
+    if( s != NULL ){
         strcpy(n->domain,++s);
     }else{
         //there was no domain in the id
         syslog(LOG_WARNING,"ill formated id for this node: %s\n",n->id);
         n->domain[0] = 0;
     }
-    if( n->avahiname[0] == 0 ){
-        //TODO: check buffer
-        strcpy(n->avahiname, n->name);
-    }
-    if( n->hostname[0] == 0 ){
-        //TODO: check buffer
-        strcpy(n->hostname, n->name);
-        strcat(n->hostname, ".local");
-    }
+    #endif
+
+    //if( n->hostname[0] == 0 ){
+    //    //TODO: check buffer
+    //    strcpy(n->hostname, n->name);
+    //    strcat(n->hostname, ".local");
+    //}
 }
 

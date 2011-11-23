@@ -2,7 +2,6 @@
 #define _GROUPS_H_
 #include <glib.h>
 #include <gio/gio.h>
-#include "avahi.h"
 
 //multicast addresses on the bus range from 0x80 to 0xFF-1
 #define MAX_GROUPS (0xFF-0x80)
@@ -11,7 +10,6 @@
 //only one service is allowed per group!
 struct multicastgroup{
     gchar           *name;
-    gchar           *avahiname;
     gchar           hostname[100];
     guint           class;
     GSocket         *socket;
@@ -19,8 +17,6 @@ struct multicastgroup{
     GSource         *source;
     //the multicast address on the bus
     gint            busadr;
-    AvahiSEntryGroup *avahientrygroup;
-    char            *avahiservicename;
 };
 
 void groups_init(void);

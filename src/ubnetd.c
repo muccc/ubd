@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
     }
 
     snprintf(buf, BUF_SIZE, "%ld\n", (long) getpid());
-    if (write(fd, buf, strlen(buf)) != strlen(buf)){
+    if (write(fd, buf, strlen(buf)) != (int)strlen(buf)){
         syslog(LOG_ERR,"Writing to PID file '/var/run/ubnetd.pid'");
         exit(EXIT_FAILURE);
     }

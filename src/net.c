@@ -16,6 +16,7 @@
 #include "net_udp.h"
 #include "broadcast.h"
 #include "nodes.h"
+#include "directory-client.h"
 
 GInetAddress    *net_base;
 GInetAddress    *net_multicastbase;
@@ -203,13 +204,13 @@ void net_createSockets(struct node *n)
 
     syslog(LOG_DEBUG,"net_createSockets: activating network for this node\n");
    
-    avahi_registerServices(n);
+    dirclient_registerServices(n);
     n->netup = TRUE;
 }
 
 void net_removeSockets(struct node *n)
 {
-    avahi_removeServices(n);
+    dirclient_removeServices(n);
     syslog(LOG_DEBUG,"net_removeSockets: Closing sockets of node %s\n",n->id);
 
     guint i;

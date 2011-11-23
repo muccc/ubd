@@ -21,10 +21,11 @@
 #include "xmlconfig.h"
 #include "groups.h"
 #include "config.h"
-#include "avahi.h"
 #include "broadcast.h"
 #include "daemon.h"
 #include "segfault.h"
+#include "directory-server.h"
+#include "directory-client.h"
 
 int main (int argc, char *argv[])
 {
@@ -36,7 +37,6 @@ int main (int argc, char *argv[])
     GMainLoop * mainloop = g_main_loop_new(NULL,FALSE);
     
     config_init();
-    avahi_init(mainloop);
 
     nodes_init();
     groups_init();
@@ -72,23 +72,29 @@ int main (int argc, char *argv[])
         return -1;
     }
 
-    if( serial_open(config.device) ){
+    if( !config.demo && serial_open(config.device) ){
         syslog(LOG_ERR, "Failed to open serial device %s. "
                 "Aborting.", config.device);
         return -1;
     }
 
     if( argc < 2 ){
+        printf("deamonizing\n");
         daemon_init();
         openlog("ubd", LOG_PID , LOG_DAEMON);
         daemon_close_stderror();
     }
+    
+    if( config.dirserver )
+        dirserver_init(config.base);
+    dirclient_init();
 
     xml_parsegroupsandnodes();
     mgt_init();
 
     //activate bridge
-    serial_switch();
+    if( !config.demo )
+        serial_switch();
     packet_init();     
     busmgt_init();
     cmdparser_init();

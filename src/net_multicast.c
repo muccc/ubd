@@ -27,6 +27,9 @@ GSocket *multicast_createSocket(gchar *groupname, guint port,
                         G_SOCKET_PROTOCOL_UDP,
                         NULL);
     ub_assert(socket != NULL);
+    
+    int on = 1;
+    setsockopt(g_socket_get_fd(socket), SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 
     if( g_socket_bind(socket, *sa, TRUE, &err) == FALSE ){
         syslog(LOG_ERR, "net_createSockets: Error while binding udp socket: %s\n", err->message);
@@ -41,8 +44,14 @@ GSocket *multicast_createSocket(gchar *groupname, guint port,
     mreq.ipv6mr_interface = if_nametoindex(config.interface);
     gchar *tmp = g_inet_address_to_string(addr);
     syslog(LOG_DEBUG,"using address: %s\n",tmp);
-    getaddrinfo(tmp, NULL, NULL, &resmulti);
+    int ret = getaddrinfo(tmp, NULL, NULL, &resmulti);
     g_free(tmp);
+    if( ret ){
+        syslog(LOG_ERR,"net_multicast.c: %s",  gai_strerror(ret));
+        g_object_unref(*sa);
+        g_object_unref(socket);
+        return NULL;
+    }
     mreq.ipv6mr_multiaddr = ((struct sockaddr_in6 *)resmulti->ai_addr)->sin6_addr;
     setsockopt(g_socket_get_fd(socket), IPPROTO_IPV6,
         IPV6_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq));

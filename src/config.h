@@ -10,6 +10,10 @@ struct ubconfig {
     gint rate;
     gint nodetimeout;
     gint sysloglevel;
+    gint demo;
+    gint dirserver;
+    gint dirttl;
+    gint dirserverport;
 };
 
 extern struct ubconfig config;

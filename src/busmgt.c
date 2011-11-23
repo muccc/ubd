@@ -94,6 +94,11 @@ void busmgt_inpacket(struct ubpacket* p)
                 busmgt_sendReset(p->src);
                 return;
             }
+            if( n->state != NODE_IDENTIFY ){
+                syslog(LOG_WARNING,"busmgt: node in wrong state");
+                busmgt_sendReset(p->src);
+                return;
+            }
             //send the OK if we have our interface ready
             if( n->netup == TRUE){
                 syslog(LOG_DEBUG,"busmgt: node known\n");

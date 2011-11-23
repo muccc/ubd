@@ -8,4 +8,8 @@ void config_init(void)
     config.nodetimeout = 120;
     config.rate = 115200;
     config.sysloglevel = LOG_DEBUG;
+    config.demo = 0;
+    config.dirserver = 0;
+    config.dirttl = 30;
+    config.dirserverport = 8080;
 }
