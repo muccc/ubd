@@ -2,22 +2,22 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_REV:=bd9081031dda7a61cbb6d18894e34f7f9847b61f
+PKG_REV:=77fa083fa4acfd73a191367c9c4368a85d03b8c7
 PKG_NAME:=ubd
 PKG_VERSION:=0.2.0
 PKG_RELEASE:=9
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
-#PKG_SOURCE_PROTO:=git
-#PKG_SOURCE_SUBDIR:=$(PKG_NAME)
-#PKG_SOURCE_VERSION:=$(PKG_REV)
-#PKG_SOURCE:=$(PKG_NAME)-$(PKG_REV).tar.gz
-#PKG_SOURCE_URL:=https://github.com/schneider42/ubd.git
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)
+PKG_SOURCE_VERSION:=$(PKG_REV)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_REV).tar.gz
+PKG_SOURCE_URL:=https://github.com/muccc/ubd.git
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_URL:=http://web.xtort.eu/~schneider/
+#PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+#PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+#PKG_SOURCE_URL:=http://web.xtort.eu/~schneider/
 #PKG_FIXUP:=libtool
 
 
@@ -62,7 +62,7 @@ define Package/ubd/install
 	$(INSTALL_BIN) ./files/ubnetd.init $(1)/etc/init.d/ubnetd
 
 	$(INSTALL_DIR) $(1)/etc/
-	$(INSTALL_BIN) ./files/ubdconfig.xml $(1)/etc/ubdconfig.xml
+	$(INSTALL_CONF) ./files/ubdconfig.xml $(1)/etc/ubdconfig.xml
 endef
 
 $(eval $(call BuildPackage,ubd))
