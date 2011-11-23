@@ -60,6 +60,9 @@ define Package/ubd/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/ubd.init $(1)/etc/init.d/ubd
 	$(INSTALL_BIN) ./files/ubnetd.init $(1)/etc/init.d/ubnetd
+
+	$(INSTALL_DIR) $(1)/etc/
+	$(INSTALL_BIN) ./files/ubdconfig.xml $(1)/etc/ubdconfig.xml
 endef
 
 $(eval $(call BuildPackage,ubd))

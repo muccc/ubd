@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding='UTF-8'?>
+<ubdconfig version="1">
+    <network interface="eth0"
+             base="<YOUR_PREFIX>::1:1"
+             multicastbase="ff18::" />
+    <serial device="/dev/ttyUSB0" rate="115200" />
+    <bus timeout="120" />
+    <simulation mode="off" />
+    <directory client="enabled" remotedirectory="directory.example.com" 
+               server="enabled" directoryname="ubdirectory" />
+    <nodes>
+        <node id="foo,example.com" hostname="foolamp">
+            <group name="room1-lamps"/>
+        </node>
+        <node id="bar,example.com">
+            <group name="room2-lamps"/>
+            <group name="sofa"/>
+        </node>
+        <node id="baz,example.com">
+            <group name="room2-lamps"/>
+            <group name="sofa"/>
+        </node>
+    </nodes>
+    <groups>
+        <group name="room1-lamps" hostname="Room1Lamps"  class="moodlamp" />
+        <group name="room2-lamps" hostname="Room2Lamps"  class="moodlamp" />
+        <group name="sofa"        hostname="Sofa"        class="moodlamp" />
+    </groups>
+</ubdconfig>
