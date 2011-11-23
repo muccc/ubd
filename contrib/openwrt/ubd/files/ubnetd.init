@@ -4,7 +4,7 @@ START=80
 
 BIN=ubnetd
 DEFAULT=/etc/default/$BIN
-INTERFACE="br-lan"
+INTERFACE="eth0"
 
 start() {
 	[ -f $DEFAULT ] && . $DEFAULT
