@@ -264,7 +264,7 @@ static void dirserver_announce(const char *service_type,
     service_type = NULL;
     protocol = (char*)&local_only;
     char *response = g_strdup_printf(
-        "{\"cmd\": \"directory\", \"url\": \"%s\" \"port\": %d }",
+        "{\"cmd\": \"directory\", \"url\": \"http://[%s]:%d\" }",
         config.base, config.dirserverport);
     
     //send to multicast group
@@ -351,7 +351,7 @@ static inline void writeString(GOutputStream *out, char *s)
 
 static void writeServices(GOutputStream *out)
 {
-    writeString(out,"{");
+    writeString(out,"{ \"services\": [");
     gboolean first = TRUE;
 
     GHashTableIter iter;
@@ -363,10 +363,9 @@ static void writeServices(GOutputStream *out)
         if( !first)
             writeString(out,",");
         first = FALSE;
-        writeString(out,"\"service\":");
         writeString(out,service->json);
     }
-    writeString(out,"}");
+    writeString(out,"]}");
 }
 
 static void dirserver_finish(GOutputStream *out,
