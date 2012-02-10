@@ -22,7 +22,9 @@ static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
 
 static void dirserver_announce(const char *service_type,
                                const char *protocol,
-                               const gboolean local_only);
+                               const gboolean local_only,
+                               GSocketAddress * src);
+
 static void dirserver_announceUpdate(void);
 
 static void dirserver_updateServiceCmd(struct json_object *json);
@@ -141,7 +143,7 @@ static int32_t dirserver_getJsonInt(struct json_object *json,
 }
 
 //Make sure data is sanatized
-static void dirserver_newMCData(const char *data)
+static void dirserver_newMCData(const char *data, GSocketAddress *src)
 {
     struct json_object *json_tmp;
     struct json_object *json = json_tokener_parse(data);
@@ -169,7 +171,8 @@ static void dirserver_newMCData(const char *data)
         case DISCOVER_DIRECTORY:
             dirserver_announce(dirserver_getJsonString(json, "service-type",NULL),
                                dirserver_getJsonString(json, "protocol",NULL),
-                               dirserver_getJsonBool(json, "local-only",FALSE));
+                               dirserver_getJsonBool(json, "local-only",FALSE),
+                               src);
             break;
         case UPDATE_SERVICE:
             dirserver_updateServiceCmd(json);
@@ -255,14 +258,25 @@ static void dirserver_updateServiceCmd(struct json_object *json)
 
 static void dirserver_announce(const char *service_type,
                                const char *protocol,
-                               const gboolean local_only)
+                               const gboolean local_only,
+                               GSocketAddress * src)
 {
     service_type = NULL;
     protocol = (char*)&local_only;
     char *response = g_strdup_printf(
         "{\"cmd\": \"directory\", \"url\": \"%s\" \"port\": %d }",
         config.base, config.dirserverport);
+    
+    //send to multicast group
     g_socket_send_to(dirserversocket, sa, response, strlen(response), NULL, NULL);
+
+    //and directly to the source of the command
+    if( src ){
+        GSocketAddress *dest = g_inet_socket_address_new(g_inet_socket_address_get_address((GInetSocketAddress*)sa), 2323);
+        g_socket_send_to(dirserversocket, dest, response, strlen(response), NULL, NULL);
+        g_object_unref(dest);
+    }
+
     g_free(response);
 }
 
@@ -291,9 +305,10 @@ static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
 {
     uint8_t buf[1500];
     user_data = NULL;
+    GSocketAddress *src = NULL;
     gssize len;    
     if( condition == G_IO_IN ){
-        len = g_socket_receive_from(socket,NULL,(gchar*)buf,
+        len = g_socket_receive_from(socket,&src,(gchar*)buf,
                                 sizeof(buf)-1,NULL,NULL);
         if( len > 0 ){
             syslog(LOG_DEBUG,"dirserver_read: Received:");
@@ -301,10 +316,13 @@ static gboolean dirserver_read(GSocket *socket, GIOCondition condition,
             
             buf[len] = 0;
             //validate(buf, len);
-            dirserver_newMCData((char*)buf);
+            dirserver_newMCData((char*)buf, src);
         }else{
             syslog(LOG_WARNING,
                 "dirserver_read: Error while receiving: len=%d",len);
+        }
+        if( src != NULL ){
+            g_object_unref(src);
         }
     }else{
         syslog(LOG_DEBUG,"dirserver_read: Received ");
