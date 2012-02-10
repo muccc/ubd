@@ -7,6 +7,9 @@
 struct classdata classes[] =
 {
 {0,"unknown class","_unknown._tcp","_unknown._udp",2300},
+{10,"hid","_hid._tcp","_hid._udp",2310},
+{11,"digitalinput","_digitaloutput._tcp","_digitaloutput._udp",2311},
+{12,"digitalinput","_digitalinput._tcp","_digitalinput._udp",2312},
 {23,"moodlamp","_moodlamp._tcp","_moodlamp._udp",2323},
 {42,"switch","_switch._tcp","_switch._udp",2342}
 };
