@@ -284,7 +284,7 @@ static void dirserver_announceUpdate(void)
 {
     syslog(LOG_DEBUG,"dirserver_announceUpdate()");
     char *response = g_strdup_printf(
-        "{\"cmd\": \"updated-service\", \"url\": \"%s\" \"port\": %d }",
+        "{\"cmd\": \"updated-service\", \"url\": \"%s\", \"port\": %d }",
         config.base, config.dirserverport);
     g_socket_send_to(dirserversocket, sa, response, strlen(response), NULL, NULL);
     g_free(response);
