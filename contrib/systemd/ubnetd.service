@@ -1,0 +1,17 @@
+[Unit]
+
+Description=ubnetd service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+
+Type=forking
+
+EnvironmentFile=/etc/default/ubnetd
+
+ExecStartPre=/bin/sleep 30
+ExecStart=/usr/local/bin/ubnetd $INTERFACE
+
+[Install]
+WantedBy=multi-user.target

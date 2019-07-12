@@ -1,0 +1,18 @@
+[Unit]
+
+Description=ubd moodlamp service
+Wants=network-online.target
+Wants=ubnetd.service
+After=network-online.target
+After=ubnetd.service
+
+[Service]
+
+Type=simple
+
+ExecStartPre=/bin/sleep 10
+ExecStart=/usr/local/bin/ubd
+
+[Install]
+WantedBy=multi-user.target
+Also=ubnetd.service
