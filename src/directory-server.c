@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <gio/gio.h>
 #include <syslog.h>
-#include <json/json.h>
+#include <json-c/json.h>
 
 #include "groups.h"
 #include "debug.h"
